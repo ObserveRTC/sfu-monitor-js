@@ -1,22 +1,22 @@
 {
   "name": "sfu-observer",
   "version": "1.0.0",
-  "description": "A client library to observe SFUs",
+  "description": "ObserveRTC client library to observe SFUs, make samples and send to a server",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
     "lib/**/*"
   ],
   "scripts": {
-    "prepare" : "npm run build",
-    "prepublishOnly" : "npm test && npm run lint",
-    "preversion" : "npm run lint",
-    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint",
+    "format": "prettier --write \"src/**/*.ts\"",
     "lint": "tslint -p tsconfig.json",
     "build": "tsc",
     "test": "jest --config jestconfig.json",
-    "version" : "npm run format && git add -A src",
-    "postversion" : "git push && git push --tags"
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags"
   },
   "repository": {
     "type": "git",
@@ -34,12 +34,20 @@
   },
   "homepage": "https://github.com/ObserveRTC/sfu-observer-js#readme",
   "devDependencies": {
+    "@types/event-emitter": "^0.3.3",
     "@types/jest": "^26.0.24",
     "jest": "^27.0.6",
+    "jest-websocket-mock": "^2.2.1",
+    "mock-socket": "^9.0.3",
     "prettier": "^2.3.2",
     "ts-jest": "^27.0.3",
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
+    "typed-emitter": "^1.3.1",
     "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "@types/node": "^16.3.1",
+    "typescript-logging": "^1.0.0"
   }
 }
