@@ -14,8 +14,13 @@ in your code:
 
 ```javascript
     const sfuObserver = MediasoupSfuObserver.builder()
-        .withMediasoup(mediasoup) // the mediasoup global object
-        .withEndpoint("wss://localhost:7080/sfusamples/my-sfu-media-unit") // the observer access point for sfu samples
+        
+        // the mediasoup global object
+        .withMediasoup(mediasoup) 
+        
+        // the observer access point for sfu samples
+        .withEndpoint("wss://localhost:7080/sfusamples/my-sfu-media-unit") 
+        
         .build();
 
     // hook event handler and start monitoring
@@ -26,6 +31,8 @@ in your code:
         .onError(error => {
             console.warn("An error occurred", error);
         })
+
+        // Let's Rock!
         .start();
 
     // and stop monitoring whenever you wish
