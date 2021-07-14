@@ -1,6 +1,11 @@
 import { SfuTransport } from "./SfuSample";
 
-class SfuTransportStatBuilder {
+export class SfuTransportStatBuilder {
+    
+    public static create(): SfuTransportStatBuilder {
+        return new SfuTransportStatBuilder();
+    }
+
     private _transportId: string | null = null;
     private _serviceId?: string | undefined;
     private _dtlsState?: string | undefined;
@@ -27,7 +32,7 @@ class SfuTransportStatBuilder {
     private _sctpPacketsReceived?: number | undefined;
     private _sctpPacketsSent?: number | undefined;
 
-    constructor() {
+    private constructor() {
         this._transportId = null;
     }
 
@@ -194,8 +199,4 @@ class SfuTransportStatBuilder {
             sctpPacketsSent: this._sctpPacketsSent,
         };
     }
-}
-
-export function builder(): SfuTransportStatBuilder {
-    return new SfuTransportStatBuilder();
 }

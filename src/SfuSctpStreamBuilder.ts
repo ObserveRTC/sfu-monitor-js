@@ -1,6 +1,9 @@
 import { SctpStream } from "./SfuSample";
 
-class SfuSctpStreamBuilder {
+export class SfuSctpStreamBuilder {
+    public static create(): SfuSctpStreamBuilder {
+        return new SfuSctpStreamBuilder();
+    }
 
     private _transportId: string | null = null;
     private _streamId: string | null = null;
@@ -16,7 +19,7 @@ class SfuSctpStreamBuilder {
     private _bytesReceived?: number | undefined;
     private _bytesSent?: number | undefined;
 
-    constructor() {
+    private constructor() {
         this._transportId = null;
     }
 
@@ -109,8 +112,4 @@ class SfuSctpStreamBuilder {
             bytesSent: this._bytesSent,
         };
     }
-}
-
-export function builder(): SfuSctpStreamBuilder {
-    return new SfuSctpStreamBuilder();
 }

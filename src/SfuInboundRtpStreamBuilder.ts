@@ -1,6 +1,11 @@
 import { SfuInboundRtpStream } from "./SfuSample";
 
-class SfuInboundRtpStreamBuilder {
+export class SfuInboundRtpStreamBuilder {
+    
+    public static create(): SfuInboundRtpStreamBuilder {
+        // because I want to control the new keyword!
+        return new SfuInboundRtpStreamBuilder();
+    }
 
     private _transportId: string | null = null;
     private _trackId?: string | undefined;
@@ -41,8 +46,8 @@ class SfuInboundRtpStreamBuilder {
     private _roundTripTime?: number | undefined;
     private _attachments?: string | undefined;
 
-    constructor() {
-    
+    private constructor() {
+        // empty
     }
     
     withTransportId(value: string): SfuInboundRtpStreamBuilder {
@@ -283,10 +288,4 @@ class SfuInboundRtpStreamBuilder {
             attachments: this._attachments,
         };
     }
-
-    
-}
-
-export function builder(): SfuInboundRtpStreamBuilder {
-    return new SfuInboundRtpStreamBuilder();
 }

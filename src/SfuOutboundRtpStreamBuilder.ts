@@ -1,6 +1,13 @@
 import { SfuOutboundRtpStream } from "./SfuSample";
 
-class SfuOutboundRtpStreamBuilder {
+export class SfuOutboundRtpStreamBuilder {
+    static builder() {
+        throw new Error("Method not implemented.");
+    }
+    
+    public static create(): SfuOutboundRtpStreamBuilder {
+        return new SfuOutboundRtpStreamBuilder();
+    }
 
     private _transportId: string | null = null;
     private _trackId?: string | undefined;
@@ -37,8 +44,8 @@ class SfuOutboundRtpStreamBuilder {
     private _keyFramesEncoded?: number | undefined;
     private _attachments?: string | undefined;
 
-    constructor() {
-    
+    private constructor() {
+        // empty
     }
     
     withTransportId(value: string): SfuOutboundRtpStreamBuilder {
@@ -257,8 +264,4 @@ class SfuOutboundRtpStreamBuilder {
     }
 
     
-}
-
-export function builder(): SfuOutboundRtpStreamBuilder {
-    return new SfuOutboundRtpStreamBuilder();
 }

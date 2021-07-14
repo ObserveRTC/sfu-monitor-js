@@ -2,7 +2,15 @@ import { SfuSample, SfuTransport, SctpStream, SfuInboundRtpStream, SfuOutboundRt
 
 const TIME_ZONE_OFFSET_IN_HOURS = new Date().getTimezoneOffset();
 
-class SfuSampleBuilder {
+export class SfuSampleBuilder {
+
+    public static create() {
+        const now = Date.now();
+        return new SfuSampleBuilder()
+            .withTimestamp(now)
+            .withTimeZoneOffsetInHours(TIME_ZONE_OFFSET_IN_HOURS);
+    }
+
     private _sfuId?: string;
     private _timestamp?: number;
     private _timeZoneOffsetInHours?: number;
@@ -12,7 +20,7 @@ class SfuSampleBuilder {
     private _outboundRtpStreams?: SfuOutboundRtpStream[];
     private _marker?: string;
 
-    constructor() {
+    private constructor() {
         // empty
     }
 
@@ -84,11 +92,4 @@ class SfuSampleBuilder {
             marker: this._marker,
         };
     }
-}
-
-export function builder(): SfuSampleBuilder {
-    const now = Date.now();
-    return new SfuSampleBuilder()
-        .withTimestamp(now)
-        .withTimeZoneOffsetInHours(TIME_ZONE_OFFSET_IN_HOURS);
 }

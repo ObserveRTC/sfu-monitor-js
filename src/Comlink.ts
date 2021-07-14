@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { EventEmitter } from "events"
 import { factory } from "./ConfigLog4j";
 import { SfuSample } from "./SfuSample";
@@ -45,12 +46,15 @@ export class Comlink {
         }
     }
     
+    public readonly id : string;
+    private _closed: boolean = false;
     private _buffer: string[];
     private _emitter: EventEmitter;
     private _ws: WebSocket;
     private _reconnectWaitingTimeInMs: number;
 
     private constructor(wsUrl: string, reconnectWaitingTimeInMs: number) {
+        this.id = randomUUID();
         this._buffer = [];
         this._emitter = new EventEmitter();
         this._ws = this._makeWebsocket(wsUrl, undefined);
@@ -66,7 +70,7 @@ export class Comlink {
         return this;
     }
 
-    public onError(listener: () => void): Comlink {
+    public onError(listener: (error: Event) => void): Comlink {
         this._emitter.addListener(ON_ERROR_EVENT_NAME, listener);
         return this;
     }
@@ -76,22 +80,29 @@ export class Comlink {
         return this;
     }
 
-    public async send(sample: SfuSample): Promise<void> {
-        const serializedSample = JSON.stringify(sample);
-        this._buffer.push(serializedSample);
+    public async send(message: string): Promise<void> {
+        this._buffer.push(message);
         const length = this._buffer.length;
         for (let i = 0; i < length; ++i) {
-            const message = this._buffer.shift();
-            if (message === undefined) {
+            const bufferedMessage = this._buffer.shift();
+            if (bufferedMessage === undefined) {
                 continue;
             }
-            await this._send(message);
+            await this._send(bufferedMessage);
         }
+    }
+
+    public close() {
+        if (this._closed) {
+            return;
+        }
+        this._close();
     }
 
     private _close(): void {
         this._ws.close();
         this._emitter.emit(ON_CLOSED_EVENT_NAME);
+        this._closed = true;
     }
 
     private async _send(message: string): Promise<void> {

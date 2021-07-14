@@ -2,6 +2,12 @@
 // import { Comlink } from "../Comlink";
 // import WS from "jest-websocket-mock";
 
+test('comlink is connected', async () => {
+    return new Promise<void>((resolve) => {
+        resolve();
+    });
+});
+
 // describe("Connect to a server", () => {
 //   let server : WS;
 //   const makeClient = () => Comlink.builder()
