@@ -62,7 +62,6 @@ export class MediasoupSfuObserver implements SfuObserver{
         };
         return result;
     }
-
     private _emitter : EventEmitter = new EventEmitter();
     private _comlinks : Map<string, Comlink> = new Map();
     private _pollingIntervalInMs: number;

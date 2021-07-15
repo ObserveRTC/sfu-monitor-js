@@ -51,8 +51,10 @@ export class SfuSampleRelayer {
     start(): void {
         this._timer = setInterval(() => {
             try {
-                const sampleBuilder = this._sampleProvider.getSample();
-                this._emitter.emit(ON_SAMPLE_EVENT_NAME, sampleBuilder);
+                (async () => {
+                    const sampleBuilder = await this._sampleProvider.getSample();
+                    this._emitter.emit(ON_SAMPLE_EVENT_NAME, sampleBuilder);
+                })();
             } catch (error) {
                 logger.error("An error occurred while observing sample");
                 this._emitter.emit(ON_ERROR_EVENT_NAME, error);

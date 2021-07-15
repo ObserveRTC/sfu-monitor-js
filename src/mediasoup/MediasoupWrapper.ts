@@ -100,16 +100,24 @@ interface Builder {
 
 function validateMediasoupObject(obj: any, subject: string): void {
     if (!obj) {
-        throw new Error(`${subject} cannot be null`);
+        const message = `${subject} cannot be null`;
+        logger.error(message);
+        throw new Error(message);
     }
     if (obj.id === null || obj.id === undefined) {
-        throw new Error(`${subject} id property cannot be null or undefined`);
+        const message = `${subject} id property cannot be null or undefined`;
+        logger.error(message);
+        throw new Error(message);
     }
     if (obj.observer === null || obj.observer === undefined) {
-        throw new Error(`${subject}  observer property cannot be null or undefined`);
+        const message = `${subject}  observer property cannot be null or undefined`;
+        logger.error(message);
+        throw new Error(message);
     }
     if (typeof obj.observer.on !== 'function') {
-        throw new Error(`${subject} observer.on must be a function`);
+        const message = `${subject} observer.on must be a function`;
+        logger.error(message);
+        throw new Error(message);
     }
 }
 
@@ -127,6 +135,7 @@ export class MediasoupWrapper {
                     throw new Error("mediasoup must exists");
                 }
                 const version = MediasoupVersion.parse(mediasoup.version);
+                logger.info(`Wrapping mediasoup version ${version.toString()}`);
                 if (version.major < 3 || 3 < version.major) {
                     throw new Error("Can only support mediasoup major version 3 at the moment");
                 }
@@ -135,46 +144,58 @@ export class MediasoupWrapper {
                 // Observe events and track maps depending on version
 
                 const _observeDataProducer = (dataProducer: any) => {
+                    logger.info(`Begin observing Mediasoup DataProducer ${dataProducer.id}`);
                     validateMediasoupObject(dataProducer, "dataProducer");
                     result._dataProducers.set(dataProducer.id, dataProducer);
                     dataProducer.observer.on("close", () => {
                         result._dataProducers.delete(dataProducer.id);
                         result._streamTransportsMap.delete(dataProducer.id);
+                        logger.info(`End observing DataProducer ${dataProducer.id}`);
                     });
                 };
 
                 const _observeDataConsumer = (dataConsumer: any) => {
+                    logger.info(`Begin observing Mediasoup DataConsumer ${dataConsumer.id}`);
                     validateMediasoupObject(dataConsumer, "dataConsumer");
                     result._dataConsumers.set(dataConsumer.id, dataConsumer);
                     dataConsumer.observer.on("close", () => {
                         result._dataConsumers.delete(dataConsumer.id);
                         result._streamTransportsMap.delete(dataConsumer.id);
+                        logger.info(`End observing DataConsumer ${dataConsumer.id}`);
                     });
                 };
 
                 const _observeProducer = (producer: any) => {
+                    logger.info(`Begin observing Mediasoup Producer ${producer.id}`);
                     validateMediasoupObject(producer, "producer");
                     result._producers.set(producer.id, producer);
                     producer.observer.on("close", () => {
                         result._producers.delete(producer.id);
                         result._streamTransportsMap.delete(producer.id);
+                        logger.info(`End observing Producer ${producer.id}`);
                     });
                 };
 
                 const _observeConsumer = (consumer: any) => {
+                    logger.info(`Begin observing Mediasoup Consumer ${consumer.id}`);
                     validateMediasoupObject(consumer, "consumer");
                     result._consumers.set(consumer.id, consumer);
                     consumer.observer.on("close", () => {
                         result._consumers.delete(consumer.id);
                         result._streamTransportsMap.delete(consumer.id);
+                        logger.info(`End observing Consumer ${consumer.id}`);
                     });
                 };
 
                 const _observeTransport = (transport: any) => {
+                    logger.info(`Begin observing Mediasoup Transport ${transport.id}`);
                     validateMediasoupObject(transport, "transport");
                     result._transports.set(transport.id, transport);
                     const transportId = transport.id;
-                    transport.observer.on("close", () => result._transports.delete(transportId));
+                    transport.observer.on("close", () => {
+                        result._transports.delete(transportId);
+                        logger.info(`End observing Mediasoup Transport ${transport.id}`);
+                    });
                     transport.observer.on("newproducer", (producer: any) => {
                         result._streamTransportsMap.set(producer.id, transportId);
                         _observeProducer(producer);
@@ -194,21 +215,34 @@ export class MediasoupWrapper {
                 };
 
                 const _observeRouter = (router: any) => {
+                    logger.info(`Begin observing Mediasoup Router ${router.id}`);
                     validateMediasoupObject(router, "router");
                     result._routers.set(router.id, router);
-                    router.observer.on("close", () => result._routers.delete(router.id));
+                    router.observer.on("close", () => {
+                        result._routers.delete(router.id);
+                        logger.info(`End observing Mediasoup Router ${router.id}`);
+                    });
                     router.observer.on("newtransport", (transport: any) => _observeTransport(transport));
                 };
 
                 const _observeWorker = (worker: any) => {
-                    validateMediasoupObject(worker, "worker");
+                    validateMediasoupObject({
+                        id: worker.pid,
+                        observer: worker.observer,
+                    }, "worker");
+                    logger.info(`Begin observing Mediasoup Worker ${worker.pid}`);
                     result._workers.set(worker.pid, worker);
-                    worker.observer.on("close", () => result._workers.delete(worker.pid));
+                    worker.observer.on("close", () => {
+                        result._workers.delete(worker.pid);
+                        logger.info(`End observing Mediasoup Worker ${worker.pid}`);
+                    });
                     worker.observer.on("newrouter", (router: any) => _observeRouter(router));
                 };
 
                 // here it comes the hook!
-                mediasoup.observer.on("newworker", (worker: any) => _observeWorker(worker));
+                mediasoup.observer.on("newworker", (worker: any) => {
+                    _observeWorker(worker);
+                });
 
                 return result;
             }
@@ -244,96 +278,145 @@ export class MediasoupWrapper {
         return this._streamTransportsMap.get(streamId);
     }
 
-    *producerStats(): IterableIterator<ProducerStats> {
+    async *producerStats(): AsyncGenerator<ProducerStats, void, void> {
         // any version specific adjustment for producers can be done here
+        const meta: any[] = [];
+        const promises: Promise<any>[] = [];
         for (const producer of this._producers.values()) {
             const id = producer.id;
             const transportId = this._streamTransportsMap.get(id);
-            const statsArray = producer.getStats();
+            meta.push({
+                id,
+                transportId,
+            })
+            promises.push(producer.getStats());
+        }
+        const responses = await Promise.all(promises);
+        for (let i = 0; i < responses.length; ++i) {
+            const producerMeta = meta[i];
+            const statsArray = responses[i];
             if (!Array.isArray(statsArray)) {
-                logger.warn(`Producer ${producer.id} does not provide array of stats`);
+                logger.warn(`Producer ${producerMeta.id} does not provide array of stats`);
                 continue;
             }
             for (const stats of statsArray) {
                 yield {
-                    id,
-                    transportId,
+                    ...producerMeta,
                     ...stats,
                 }
             }
         }
     }
     
-    *consumerStats(): IterableIterator<ConsumerStats> {
+    async *consumerStats(): AsyncGenerator<ConsumerStats, void, void> {
         // any version specific adjustment for consumers can be done here
+        const meta: any[] = [];
+        const promises: Promise<any>[] = [];
         for (const consumer of this._consumers.values()) {
             const id = consumer.id;
             const producerId = consumer.producerId;
             const transportId = this._streamTransportsMap.get(id);
-            const statsArray = consumer.getStats();
+            meta.push({
+                id,
+                producerId,
+                transportId,
+            })
+            promises.push(consumer.getStats());
+        }
+        const responses = await Promise.all(promises);
+        for (let i = 0; i < responses.length; ++i) {
+            const consumerMeta = meta[i];
+            const statsArray = responses[i];
             if (!Array.isArray(statsArray)) {
-                logger.warn(`Consumer ${consumer.id} does not provide array of stats`);
+                logger.warn(`Consumer ${consumerMeta.id} does not provide array of stats`);
                 continue;
             }
             for (const stats of statsArray) {
                 yield {
-                    id,
-                    producerId,
-                    transportId,
+                    ...consumerMeta,
                     ...stats,
                 }
             }
         }
     }
 
-    *dataProducerStats(): IterableIterator<DataProducerStats> {
+    async *dataProducerStats(): AsyncGenerator<DataProducerStats, void, void> {
         // any version specific adjustment for dataProducers can be done here
+        const meta: any[] = [];
+        const promises: Promise<any>[] = [];
         for (const dataProducer of this._dataProducers.values()) {
             const id = dataProducer.id;
             const transportId = this._streamTransportsMap.get(id);
-            const statsArray = dataProducer.getStats();
+            meta.push({
+                id,
+                transportId,
+            })
+            promises.push(dataProducer.getStats());
+        }
+        const responses = await Promise.all(promises);
+        for (let i = 0; i < responses.length; ++i) {
+            const dataProducerMeta = meta[i];
+            const statsArray = responses[i];
             if (!Array.isArray(statsArray)) {
-                logger.warn(`DataProducer ${dataProducer.id} does not provide array of stats`);
+                logger.warn(`DataProducer ${dataProducerMeta.id} does not provide array of stats`);
                 continue;
             }
             for (const stats of statsArray) {
                 yield {
-                    id,
-                    transportId,
+                    ...dataProducerMeta,
                     ...stats,
                 }
             }
         }
     }
     
-    *dataConsumerStats(): IterableIterator<DataConsumerStats> {
+    async *dataConsumerStats(): AsyncGenerator<DataConsumerStats, void, void> {
         // any version specific adjustment for dataConsumers can be done here
+        const meta: any[] = [];
+        const promises: Promise<any>[] = [];
         for (const dataConsumer of this._dataConsumers.values()) {
             const id = dataConsumer.id;
             const transportId = this._streamTransportsMap.get(id);
-            const statsArray = dataConsumer.getStats();
+            meta.push({
+                id,
+                transportId,
+            })
+            promises.push(dataConsumer.getStats());
+        }
+        const responses = await Promise.all(promises);
+        for (let i = 0; i < responses.length; ++i) {
+            const dataConsumerMeta = meta[i];
+            const statsArray = responses[i];
             if (!Array.isArray(statsArray)) {
-                logger.warn(`DataConsumer ${dataConsumer.id} does not provide array of stats`);
+                logger.warn(`DataConsumer ${dataConsumerMeta.id} does not provide array of stats`);
                 continue;
             }
             for (const stats of statsArray) {
                 yield {
-                    id,
-                    transportId,
+                    ...dataConsumerMeta,
                     ...stats,
                 }
             }
         }
     }
     
-    *transportStats(): IterableIterator<TransportStats> {
+    async *transportStats(): AsyncGenerator<TransportStats, void, void> {
         // any version specific adjustment for transports can be done here
+        const meta: any[] = [];
+        const promises: Promise<any>[] = [];
         for (const transport of this._transports.values()) {
-            const id = transport.id;
-            const serviceId = transport.appData?.serviceId;
-            const statsArray = transport.getStats();
+            meta.push({
+                id: transport.id,
+                serviceId:  transport.appData?.serviceId,
+            })
+            promises.push(transport.getStats());
+        }
+        const responses = await Promise.all(promises);
+        for (let i = 0; i < responses.length; ++i) {
+            const { id, serviceId } = meta[i];
+            const statsArray = responses[i];
             if (!Array.isArray(statsArray)) {
-                logger.warn(`Transport ${transport.id} does not provide array of stats`);
+                logger.warn(`Transport ${id} does not provide array of stats`);
                 continue;
             }
             for (const stats of statsArray) {
@@ -343,7 +426,7 @@ export class MediasoupWrapper {
                     serviceId,
                     ...selectedIce,
                     ...stats,
-                }
+                };
             }
         }
     }

@@ -39,9 +39,9 @@ export class MediasoupVisitor implements SfuVisitor {
         this._mediasoup = mediasoup;
     }
 
-    *visitInboundRtpStreams(): IterableIterator<SfuInboundRtpStream> {
+    async *visitInboundRtpStreams(): AsyncGenerator<SfuInboundRtpStream, void, void> {
         const version = this._mediasoup.version;
-        for (const producerStats of this._mediasoup.producerStats()) {
+        for await (const producerStats of this._mediasoup.producerStats()) {
             if (producerStats.type !== "inbound-rtp") {
                 continue;
             }
@@ -88,9 +88,9 @@ export class MediasoupVisitor implements SfuVisitor {
         }
     }
     
-    *visitOutboundRtpStreams(): IterableIterator<SfuOutboundRtpStream> {
+    async *visitOutboundRtpStreams(): AsyncGenerator<SfuOutboundRtpStream, void, void> {
         const version = this._mediasoup.version;
-        for (const consumerStats of this._mediasoup.consumerStats()) {
+        for await (const consumerStats of this._mediasoup.consumerStats()) {
             if (consumerStats.type !== "outbound-rtp") {
                 continue;
             }
@@ -133,12 +133,12 @@ export class MediasoupVisitor implements SfuVisitor {
         }
     }
     
-    *visitTransports(): IterableIterator<SfuTransport> {
-        for (const transportStats of this._mediasoup.transportStats()) {
+    async *visitTransports(): AsyncGenerator<SfuTransport, void, void> {
+        for await (const transportStats of this._mediasoup.transportStats()) {
             if (transportStats.type !== "webrtc-transport") {
                 continue;
             }
-            const builder =  SfuTransportStatBuilder.create()
+            const builder = SfuTransportStatBuilder.create()
                 .withTransportId(transportStats.id)
                 .withServiceId(transportStats.serviceId)
                 .withDtlsState(transportStats.dtlsState)
@@ -160,7 +160,7 @@ export class MediasoupVisitor implements SfuVisitor {
         
     }
     
-    *visitSctpStreams(): IterableIterator<SctpStream> {
+    async *visitSctpStreams(): AsyncGenerator<SctpStream, void, void> {
         const sctpStreamBuilders = new Map<string, SfuSctpStreamBuilder>();
         const _getSctpStreamBuilder = (transportId: any, streamId: any, label: any, protocol: any): SfuSctpStreamBuilder => {
             const retrieveId = transportId + streamId;
@@ -177,7 +177,7 @@ export class MediasoupVisitor implements SfuVisitor {
             sctpStreamBuilders.set(retrieveId, builder);
             return builder;   
         }
-        for (const dataConsumerStats of this._mediasoup.dataConsumerStats()) {
+        for await (const dataConsumerStats of this._mediasoup.dataConsumerStats()) {
             const builder = _getSctpStreamBuilder(
                 dataConsumerStats.transportId,
                 dataConsumerStats.streamId,
@@ -189,7 +189,7 @@ export class MediasoupVisitor implements SfuVisitor {
                 .withBytesReceived(dataConsumerStats.bytesReceived)
             ;
         }
-        for (const dataProducerStats of this._mediasoup.dataProducerStats()) {
+        for await (const dataProducerStats of this._mediasoup.dataProducerStats()) {
             const builder = _getSctpStreamBuilder(
                 dataProducerStats.transportId,
                 dataProducerStats.streamId,
@@ -201,6 +201,8 @@ export class MediasoupVisitor implements SfuVisitor {
                 .withBytesReceived(dataProducerStats.bytesSent)
             ;
         }
-        return sctpStreamBuilders.values();
+        for (const builder of sctpStreamBuilders.values()) {
+            yield builder.build();
+        }
     }
 }

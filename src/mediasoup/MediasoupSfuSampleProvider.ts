@@ -37,18 +37,24 @@ export class MediasoupSfuSampleProvider implements SfuSampleProvider {
         this._visitor = visitor;
     }
 
-    getSample(): SfuSample {
+    async getSample(): Promise<SfuSample> {
         const builder = SfuSampleBuilder.create().withSfuId(this._sfuId);
-        for (const inboundRtpStream of this._visitor.visitInboundRtpStreams()) {
+        const promises = [
+            // 0 -> transports
+            this._visitor.visitTransports(),
+        ];
+        const responses = await Promise.all(promises);
+        const transports = responses[0];
+        for await (const inboundRtpStream of this._visitor.visitInboundRtpStreams()) {
             builder.addInboundRtpStream(inboundRtpStream);
         }
-        for (const outboundRtpStream of this._visitor.visitOutboundRtpStreams()) {
+        for await (const outboundRtpStream of this._visitor.visitOutboundRtpStreams()) {
             builder.addOutboundRtpStream(outboundRtpStream);
         }
-        for (const transportStat of this._visitor.visitTransports()) {
+        for await (const transportStat of this._visitor.visitTransports()) {
             builder.addTransportStat(transportStat);
         }
-        for (const sctpStream of this._visitor.visitSctpStreams()) {
+        for await (const sctpStream of this._visitor.visitSctpStreams()) {
             builder.addSctpStream(sctpStream);
         }
         if (this._marker !== null) {
@@ -69,5 +75,4 @@ export class MediasoupSfuSampleProvider implements SfuSampleProvider {
     sendExtensionStats(payloadType: string, payload: string) : this {
         return this;
     }
-
 }

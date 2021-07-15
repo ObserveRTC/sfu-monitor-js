@@ -41,4 +41,8 @@ export class MediasoupVersion {
     compareTo(other: MediasoupVersion): number {
         return MediasoupVersion.compare(this, other);
     }
+
+    toString() {
+        return `${this.major}.${this.minor}.${this.patch}`;
+    }
 }
