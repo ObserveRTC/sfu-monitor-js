@@ -13,6 +13,10 @@ Let's say you want to observe a mediasoup SFU.
 in your code:
 
 ```javascript
+    const { MediasoupSfuObserver } = require("sfu-observer-js");
+
+    // ...
+    
     const sfuObserver = MediasoupSfuObserver.builder()
         .withMediasoup(mediasoup) 
         .build();
