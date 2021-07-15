@@ -1,4 +1,4 @@
-PoC for an SFU observer
+SFU observer PoC
 
 ## Quick Start
 
@@ -14,13 +14,7 @@ in your code:
 
 ```javascript
     const sfuObserver = MediasoupSfuObserver.builder()
-        
-        // the mediasoup global object
         .withMediasoup(mediasoup) 
-        
-        // the observer access point for sfu samples
-        .withEndpoint("wss://localhost:7080/sfusamples/my-sfu-media-unit") 
-        
         .build();
 
     // hook event handler and start monitoring
@@ -31,9 +25,10 @@ in your code:
         .onError(error => {
             console.warn("An error occurred", error);
         })
+    ;
 
-        // Let's Rock!
-        .start();
+    // start monitoring wherenewer you want
+    sfuObserver.start();
 
     // and stop monitoring whenever you wish
     sfuObserver.stop();
