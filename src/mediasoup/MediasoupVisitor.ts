@@ -47,9 +47,8 @@ export class MediasoupVisitor implements SfuVisitor {
             }
             const builder = SfuInboundRtpStreamBuilder.create()
                     .withTransportId(producerStats.transportId)
-                    .withTrackId(producerStats.trackId)
                     .withStreamId(producerStats.id)
-                    // .withOutboundStreamId
+                    // .withPipedStreamId
                     .withSsrc(producerStats.ssrc)
                     .withMediaType(producerStats.kind)
                     // .withPayloadType(stats.pay)
@@ -96,9 +95,8 @@ export class MediasoupVisitor implements SfuVisitor {
             }
             const builder = SfuOutboundRtpStreamBuilder.create()
                     .withTransportId(consumerStats.transportId)
-                    .withTrackId(consumerStats.trackId)
                     .withStreamId(consumerStats.id)
-                    .withInboundStreamId(consumerStats.producerId)
+                    .withPipedStreamId(consumerStats.producerId)
                     .withSsrc(consumerStats.ssrc)
                     .withMediaType(consumerStats.kind)
                     // .withPayloadType(stats.pay)

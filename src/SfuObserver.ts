@@ -10,4 +10,5 @@ export interface SfuObserver {
     stop(): this;
     markSamples(marker?: string): this;
     sendExtensionStats(payloadType: string, payload: string) : this;
+    watchTransport(transport: any): this;
 }

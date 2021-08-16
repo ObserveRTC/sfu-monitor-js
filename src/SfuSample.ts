@@ -7,14 +7,9 @@ export interface SfuInboundRtpStream {
   transportId: string;
 
   /**
-   * Indicate the id of the track the RTP stream corresponds to at the Client side
-   */
-  trackId?: string;
-
-  /**
    * id of the outbound rtp stream mapped inside SFU
    */
-  outboundStreamId?: string;
+  pipedStreamId?: string;
 
   /**
    * unique identifier for the stream
@@ -199,17 +194,12 @@ export interface SfuOutboundRtpStream {
   transportId: string;
 
   /**
-   * Indicate the id of the track the RTP stream corresponds to at the Client side
-   */
-  trackId?: string;
-
-  /**
    * id of the inbound rtp stream mapped inside SFU
    */
-  inboundStreamId?: string;
+  pipedStreamId?: string;
   
   /**
-   * unique identifier for the stream
+   * unique identifier of the stream
    */
   streamId: string
 
@@ -585,7 +575,7 @@ export interface SfuSample {
   /**
    * array of measurements related to outbound RTP streams
    */
-  outboudRtpStreams?: SfuOutboundRtpStream[];
+  outboundRtpStreams?: SfuOutboundRtpStream[];
 
   /**
    * array of measurements of SCTP streams

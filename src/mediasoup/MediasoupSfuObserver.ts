@@ -1,4 +1,3 @@
-import { uuid } from 'uuidv4';
 import { Comlink } from '../Comlink';
 import { SfuObserver } from "../SfuObserver";
 import { SfuSample } from '../SfuSample';
@@ -14,10 +13,12 @@ const logger = factory.getLogger("MediasoupSfuObserver");
 const ON_ERROR_EVENT_NAME = "onError";
 const ON_SAMPLE_EVENT_NAME = "onSample";
 
+
 interface Builder {
     withMediasoup(mediasoup: any) : this;
     withPollingInterval(intervalInMs: number) : this;
     withEndpoint(endpoint: string): this;
+    watchAllTransport(value: boolean): this;
     build() : MediasoupSfuObserver;
 }
 
@@ -27,6 +28,7 @@ export class MediasoupSfuObserver implements SfuObserver{
         let _comlink: Comlink | null = null;
         let _mediasoup: any = null;
         let _pollingIntervalInMs = 5000;
+        let _watchAllTransport = true;
         const result : Builder = {
             withMediasoup(mediasoup: any): Builder {
                 _mediasoup = mediasoup;
@@ -40,12 +42,17 @@ export class MediasoupSfuObserver implements SfuObserver{
                 _comlink = Comlink.builder().withEndpoint(endpoint).build();
                 return result;
             },
+            watchAllTransport(value: boolean): Builder {
+                _watchAllTransport = value;
+                return result;
+            },
             build(): MediasoupSfuObserver {
                 if (_mediasoup === null) {
                     throw new Error("mediasoup object cannot be null for MediasoupSfuObserver");
                 }
                 const mediasoupWrapper = MediasoupWrapper.builder()
                     .withMediasoup(_mediasoup)
+                    .watchAllTransports(_watchAllTransport)
                     .build();
                 const mediasoupVisitor = MediasoupVisitor.builder()
                     .withMediasoupWrapper(mediasoupWrapper)
@@ -57,6 +64,9 @@ export class MediasoupSfuObserver implements SfuObserver{
                 if (_comlink !== null) {
                     mediasoupSfuObserver.addComlink(_comlink);
                 }
+                mediasoupSfuObserver._watchTransportMethod = (transport: any) => {
+                    mediasoupWrapper.watchTransport(transport);
+                };
                 return mediasoupSfuObserver;
             }
         };
@@ -67,6 +77,7 @@ export class MediasoupSfuObserver implements SfuObserver{
     private _pollingIntervalInMs: number;
     private _sampleRelayer : SfuSampleRelayer;
     private _sampleProvider: MediasoupSfuSampleProvider;
+    private _watchTransportMethod?: (transport: any) => void;
 
     private constructor(pollingIntervalInMs: number, sampleProvider: MediasoupSfuSampleProvider) {
         this._pollingIntervalInMs = pollingIntervalInMs;
@@ -85,6 +96,15 @@ export class MediasoupSfuObserver implements SfuObserver{
             .onSample(sample => {
                 this._process(sample);
             })
+    }
+
+    watchTransport(transport: any): this {
+        if (this._watchTransportMethod === undefined) {
+            logger.warn(`Cannot watch transport, because the udnerlying method has not been bound`);
+            return this;
+        }
+        this._watchTransportMethod(transport);
+        return this;
     }
 
     addComlink(comlink: Comlink): this {

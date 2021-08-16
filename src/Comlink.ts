@@ -1,7 +1,9 @@
 import { randomUUID } from "crypto";
 import { EventEmitter } from "events"
+import { uuid } from "uuidv4";
 import { factory } from "./ConfigLog4j";
 import { SfuSample } from "./SfuSample";
+import * as WebSocket from 'ws';
  
 const logger = factory.getLogger("Comlink");
 
@@ -54,7 +56,7 @@ export class Comlink {
     private _reconnectWaitingTimeInMs: number;
 
     private constructor(wsUrl: string, reconnectWaitingTimeInMs: number) {
-        this.id = randomUUID();
+        this.id = uuid()
         this._buffer = [];
         this._emitter = new EventEmitter();
         this._ws = this._makeWebsocket(wsUrl, undefined);
@@ -70,7 +72,7 @@ export class Comlink {
         return this;
     }
 
-    public onError(listener: (error: Event) => void): Comlink {
+    public onError(listener: (error: WebSocket.ErrorEvent) => void): Comlink {
         this._emitter.addListener(ON_ERROR_EVENT_NAME, listener);
         return this;
     }
@@ -144,7 +146,7 @@ export class Comlink {
         }
         result.onopen = () => this._onOpen();
         result.onclose = () => this._onClose();
-        result.onerror = error => this._onError(error);
+        result.onerror = (error: WebSocket.ErrorEvent) => this._onError(error);
         return result;
     }
 
@@ -156,7 +158,7 @@ export class Comlink {
         // no empty line
     }
 
-    private _onError(error: Event): void {
+    private _onError(error: WebSocket.ErrorEvent): void {
         this._emitter.emit(ON_ERROR_EVENT_NAME, error);
     }
 }

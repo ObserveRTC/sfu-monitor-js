@@ -1,6 +1,6 @@
 {
   "name": "sfu-observer-js",
-  "version": "0.0.8",
+  "version": "0.0.17",
   "description": "ObserveRTC client library to observe SFUs, make samples and send to a server",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -36,6 +36,7 @@
   "devDependencies": {
     "@types/event-emitter": "^0.3.3",
     "@types/jest": "^26.0.24",
+    "@types/ws": "^7.4.6",
     "jest": "^27.0.6",
     "jest-websocket-mock": "^2.2.1",
     "mock-socket": "^9.0.3",
@@ -48,7 +49,9 @@
   },
   "dependencies": {
     "@types/node": "^16.3.1",
+    "@types/websocket": "^1.0.3",
     "typescript-logging": "^1.0.0",
-    "uuidv4": "^6.2.11"
+    "uuidv4": "^6.2.11",
+    "ws": "^7.5.3"
   }
 }

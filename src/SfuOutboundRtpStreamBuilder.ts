@@ -10,8 +10,7 @@ export class SfuOutboundRtpStreamBuilder {
     }
 
     private _transportId: string | null = null;
-    private _trackId?: string | undefined;
-    private _inboundStreamId?: string | undefined;
+    private _pipedStreamId?: string | undefined;
     private _streamId: string | null = null;
     private _ssrc?: number | undefined;
     private _mediaType?: string | undefined;
@@ -53,18 +52,13 @@ export class SfuOutboundRtpStreamBuilder {
         return this;
     }
 
-    withTrackId(value?: string): SfuOutboundRtpStreamBuilder {
-        this._trackId = value;
-        return this;
-    }
-
     withStreamId(value: string): SfuOutboundRtpStreamBuilder {
         this._streamId = value;
         return this;
     }
 
-    withInboundStreamId(value?: string): SfuOutboundRtpStreamBuilder {
-        this._inboundStreamId = value;
+    withPipedStreamId(value?: string): SfuOutboundRtpStreamBuilder {
+        this._pipedStreamId = value;
         return this;
     }
 
@@ -227,8 +221,7 @@ export class SfuOutboundRtpStreamBuilder {
         }
         return {
             transportId: this._transportId,
-            trackId: this._trackId,
-            inboundStreamId: this._inboundStreamId,
+            pipedStreamId: this._pipedStreamId,
             streamId: this._streamId,
             ssrc: this._ssrc,
             mediaType: this._mediaType,

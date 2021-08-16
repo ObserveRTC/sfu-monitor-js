@@ -1,4 +1,5 @@
 import { MediasoupVersion } from "./MediasoupVersion";
+import { Promises as Promises } from "../PromiseExecutor";
 import { factory } from "../ConfigLog4j";
  
 const logger = factory.getLogger("MediasoupWrapper");
@@ -95,6 +96,7 @@ interface TransportStats {
 
 interface Builder {
     withMediasoup(mediasoup: any) : Builder;
+    watchAllTransports(value: boolean) : Builder;
     build() : MediasoupWrapper;
 }
 
@@ -125,10 +127,15 @@ export class MediasoupWrapper {
     
     public static builder(): Builder {
         let mediasoup: any = null;
+        let _watchAllTransport = true;
         const mediasoupWrapperBuilder: Builder = {
             withMediasoup(ms: any): Builder {
                 mediasoup = ms;
-                return this;
+                return mediasoupWrapperBuilder;
+            },
+            watchAllTransports(value: boolean) : Builder {
+                _watchAllTransport = value;
+                return mediasoupWrapperBuilder;
             },
             build(): MediasoupWrapper {
                 if (!mediasoup) {
@@ -143,77 +150,6 @@ export class MediasoupWrapper {
                 
                 // Observe events and track maps depending on version
 
-                const _observeDataProducer = (dataProducer: any) => {
-                    logger.info(`Begin observing Mediasoup DataProducer ${dataProducer.id}`);
-                    validateMediasoupObject(dataProducer, "dataProducer");
-                    result._dataProducers.set(dataProducer.id, dataProducer);
-                    dataProducer.observer.on("close", () => {
-                        result._dataProducers.delete(dataProducer.id);
-                        result._streamTransportsMap.delete(dataProducer.id);
-                        logger.info(`End observing DataProducer ${dataProducer.id}`);
-                    });
-                };
-
-                const _observeDataConsumer = (dataConsumer: any) => {
-                    logger.info(`Begin observing Mediasoup DataConsumer ${dataConsumer.id}`);
-                    validateMediasoupObject(dataConsumer, "dataConsumer");
-                    result._dataConsumers.set(dataConsumer.id, dataConsumer);
-                    dataConsumer.observer.on("close", () => {
-                        result._dataConsumers.delete(dataConsumer.id);
-                        result._streamTransportsMap.delete(dataConsumer.id);
-                        logger.info(`End observing DataConsumer ${dataConsumer.id}`);
-                    });
-                };
-
-                const _observeProducer = (producer: any) => {
-                    logger.info(`Begin observing Mediasoup Producer ${producer.id}`);
-                    validateMediasoupObject(producer, "producer");
-                    result._producers.set(producer.id, producer);
-                    producer.observer.on("close", () => {
-                        result._producers.delete(producer.id);
-                        result._streamTransportsMap.delete(producer.id);
-                        logger.info(`End observing Producer ${producer.id}`);
-                    });
-                };
-
-                const _observeConsumer = (consumer: any) => {
-                    logger.info(`Begin observing Mediasoup Consumer ${consumer.id}`);
-                    validateMediasoupObject(consumer, "consumer");
-                    result._consumers.set(consumer.id, consumer);
-                    consumer.observer.on("close", () => {
-                        result._consumers.delete(consumer.id);
-                        result._streamTransportsMap.delete(consumer.id);
-                        logger.info(`End observing Consumer ${consumer.id}`);
-                    });
-                };
-
-                const _observeTransport = (transport: any) => {
-                    logger.info(`Begin observing Mediasoup Transport ${transport.id}`);
-                    validateMediasoupObject(transport, "transport");
-                    result._transports.set(transport.id, transport);
-                    const transportId = transport.id;
-                    transport.observer.on("close", () => {
-                        result._transports.delete(transportId);
-                        logger.info(`End observing Mediasoup Transport ${transport.id}`);
-                    });
-                    transport.observer.on("newproducer", (producer: any) => {
-                        result._streamTransportsMap.set(producer.id, transportId);
-                        _observeProducer(producer);
-                    });
-                    transport.observer.on("newconsumer", (consumer: any) => {
-                        result._streamTransportsMap.set(consumer.id, transportId);
-                        _observeConsumer(consumer);
-                    });
-                    transport.observer.on("newdataproducer", (dataProducer: any) => {
-                        result._streamTransportsMap.set(dataProducer.id, transportId);
-                        _observeDataProducer(dataProducer);
-                    });
-                    transport.observer.on("newdataconsumer", (dataConsumer: any) => {
-                        result._streamTransportsMap.set(dataConsumer.id, transportId);
-                        _observeDataConsumer(dataConsumer)
-                    });
-                };
-
                 const _observeRouter = (router: any) => {
                     logger.info(`Begin observing Mediasoup Router ${router.id}`);
                     validateMediasoupObject(router, "router");
@@ -222,7 +158,9 @@ export class MediasoupWrapper {
                         result._routers.delete(router.id);
                         logger.info(`End observing Mediasoup Router ${router.id}`);
                     });
-                    router.observer.on("newtransport", (transport: any) => _observeTransport(transport));
+                    if (_watchAllTransport) {
+                        router.observer.on("newtransport", (transport: any) => result.watchTransport(transport));
+                    }
                 };
 
                 const _observeWorker = (worker: any) => {
@@ -252,6 +190,7 @@ export class MediasoupWrapper {
 
     private _mediasoup: any;
     public readonly version: MediasoupVersion;
+    private _noStats: Map<string, number>;
     private _workers: Map<any, any>;
     private _routers: Map<any, any>;
     private _transports: Map<any, any>;
@@ -272,6 +211,40 @@ export class MediasoupWrapper {
         this._dataProducers = new Map();
         this._dataConsumers = new Map();
         this._streamTransportsMap = new Map();
+        this._noStats = new Map();
+    }
+
+    watchTransport(transport: any): MediasoupWrapper {
+        logger.info(`Begin observing Mediasoup Transport ${transport.id}`);
+        validateMediasoupObject(transport, "transport");
+        this._transports.set(transport.id, transport);
+        const transportId = transport.id;
+        transport.observer.on("close", () => {
+            this._disregardTransport(transportId);
+        });
+        transport.observer.on("newproducer", (producer: any) => {
+            this._streamTransportsMap.set(producer.id, transportId);
+            this._watchProducer(producer);
+        });
+        transport.observer.on("newconsumer", (consumer: any) => {
+            this._streamTransportsMap.set(consumer.id, transportId);
+            this._watchConsumer(consumer);
+        });
+        transport.observer.on("newdataproducer", (dataProducer: any) => {
+            this._streamTransportsMap.set(dataProducer.id, transportId);
+            this._watchDataProducer(dataProducer);
+        });
+        transport.observer.on("newdataconsumer", (dataConsumer: any) => {
+            this._streamTransportsMap.set(dataConsumer.id, transportId);
+            this._watchDataConsumer(dataConsumer)
+        });
+        return this;
+    }
+
+    _disregardTransport(transportId: any): void {
+        this._noStats.delete(transportId);
+        this._transports.delete(transportId);
+        logger.info(`End observing Mediasoup Transport ${transportId}`);
     }
 
     getTransportId(streamId: string): string {
@@ -291,12 +264,25 @@ export class MediasoupWrapper {
             })
             promises.push(producer.getStats());
         }
-        const responses = await Promise.all(promises);
+        
+        const responses = await Promises
+            .from(promises)
+            .onError((err, index) => {
+                logger.warn(`Error occurred while collecting consumer stats`, err);
+                const { id } = meta[index];
+                if (id) {
+                    this._disregardProducer(id);
+                    logger.warn(`Producer with id ${id} is deleted from getting stats`);
+                }
+            })
+            .execute();
+        
         for (let i = 0; i < responses.length; ++i) {
             const producerMeta = meta[i];
+            const producerId = producerMeta.id;
             const statsArray = responses[i];
-            if (!Array.isArray(statsArray)) {
-                logger.warn(`Producer ${producerMeta.id} does not provide array of stats`);
+            const statsOk = this._checkProducerStats(producerId, statsArray);
+            if (!statsOk) {
                 continue;
             }
             for (const stats of statsArray) {
@@ -323,12 +309,25 @@ export class MediasoupWrapper {
             })
             promises.push(consumer.getStats());
         }
-        const responses = await Promise.all(promises);
+
+        const responses = await Promises
+            .from(promises)
+            .onError((err, index) => {
+                logger.warn(`Error occurred while collecting consumer stats`, err);
+                const { id } = meta[index];
+                if (id) {
+                    this._disregardConsumer(id);
+                    logger.warn(`Consumer with id ${id} is deleted from getting stats`);
+                }
+            })
+            .execute();
+        
         for (let i = 0; i < responses.length; ++i) {
             const consumerMeta = meta[i];
+            const consumerId = consumerMeta.id;
             const statsArray = responses[i];
-            if (!Array.isArray(statsArray)) {
-                logger.warn(`Consumer ${consumerMeta.id} does not provide array of stats`);
+            const statsOk = this._checkConsumerStats(consumerId, statsArray);
+            if (!statsOk) {
                 continue;
             }
             for (const stats of statsArray) {
@@ -353,12 +352,25 @@ export class MediasoupWrapper {
             })
             promises.push(dataProducer.getStats());
         }
-        const responses = await Promise.all(promises);
+
+        const responses = await Promises
+            .from(promises)
+            .onError((err, index) => {
+                logger.warn(`Error occurred while collecting dataproducer stats`, err);
+                const { id } = meta[index];
+                if (id) {
+                    this._disregardDataProducer(id);
+                    logger.warn(`DataProducer with id ${id} is deleted from getting stats`);
+                }
+            })
+            .execute();
+
         for (let i = 0; i < responses.length; ++i) {
             const dataProducerMeta = meta[i];
+            const dataProducerId = dataProducerMeta.id;
             const statsArray = responses[i];
-            if (!Array.isArray(statsArray)) {
-                logger.warn(`DataProducer ${dataProducerMeta.id} does not provide array of stats`);
+            const statsOk = this._checkDataProducerStats(dataProducerId, statsArray);
+            if (!statsOk) {
                 continue;
             }
             for (const stats of statsArray) {
@@ -383,12 +395,25 @@ export class MediasoupWrapper {
             })
             promises.push(dataConsumer.getStats());
         }
-        const responses = await Promise.all(promises);
+        
+        const responses = await Promises
+            .from(promises)
+            .onError((err, index) => {
+                logger.warn(`Error occurred while collecting dataconsumer stats`, err);
+                const { id } = meta[index];
+                if (id) {
+                    this._disregardDataConsumer(id);
+                    logger.warn(`DataConsumer with id ${id} is deleted from getting stats`);
+                }
+            })
+            .execute();
+
         for (let i = 0; i < responses.length; ++i) {
             const dataConsumerMeta = meta[i];
+            const dataConsumerId = dataConsumerMeta.id;
             const statsArray = responses[i];
-            if (!Array.isArray(statsArray)) {
-                logger.warn(`DataConsumer ${dataConsumerMeta.id} does not provide array of stats`);
+            const statsOk = this._checkDataConsumerStats(dataConsumerId, statsArray);
+            if (!statsOk) {
                 continue;
             }
             for (const stats of statsArray) {
@@ -411,12 +436,24 @@ export class MediasoupWrapper {
             })
             promises.push(transport.getStats());
         }
-        const responses = await Promise.all(promises);
+        
+        const responses = await Promises
+            .from(promises)
+            .onError((err, index) => {
+                logger.warn(`Error occurred while collecting transport stats`, err);
+                const { id } = meta[index];
+                if (id) {
+                    this._disregardTransport(id);
+                    logger.warn(`Transport with id ${id} is deleted from getting stats`);
+                }
+            })
+            .execute();
+            
         for (let i = 0; i < responses.length; ++i) {
             const { id, serviceId } = meta[i];
             const statsArray = responses[i];
-            if (!Array.isArray(statsArray)) {
-                logger.warn(`Transport ${id} does not provide array of stats`);
+            const statsOk = this._checkTransportStats(id, statsArray);
+            if (!statsOk) {
                 continue;
             }
             for (const stats of statsArray) {
@@ -430,4 +467,141 @@ export class MediasoupWrapper {
             }
         }
     }
+
+    private _checkTransportStats(transportId: any, statsArray: any): boolean {
+        return this._checkStats(
+            transportId,
+            statsArray,
+            `Transport`,
+            this._disregardTransport
+        );
+    }
+
+    private _checkProducerStats(producerId: any, statsArray: any): boolean {
+        return this._checkStats(
+            producerId,
+            statsArray,
+            `Producer`,
+            this._disregardProducer
+        );
+    }
+
+    private _checkConsumerStats(consumerId: any, statsArray: any): boolean {
+        return this._checkStats(
+            consumerId,
+            statsArray,
+            `Consumer`,
+            this._disregardConsumer
+        );
+    }
+
+    private _checkDataProducerStats(dataProducerId: any, statsArray: any): boolean {
+        return this._checkStats(
+            dataProducerId,
+            statsArray,
+            `DataProducer`,
+            this._disregardDataProducer
+        );
+    }
+
+    private _checkDataConsumerStats(dataConsumerId: any, statsArray: any): boolean {
+        return this._checkStats(
+            dataConsumerId,
+            statsArray,
+            `DataConsumer`,
+            this._disregardDataConsumer
+        );
+    }
+
+    private _checkStats(id: any, statsArray: any, context: string, disregardCb: (id:any) => void): boolean {
+        const isArray = Array.isArray(statsArray);
+        if (isArray) {
+            this._noStats.delete(id);
+            return true;
+        }
+        
+        logger.warn(`${context} ${id} does not provide array of stats`);
+        const noStats = this._noStats.get(id);
+        if (noStats === undefined || noStats === null) {
+            this._noStats.set(id, 1);
+            return false;
+        }
+        if (3 < noStats) {
+            disregardCb(id);
+        }
+        this._noStats.set(id, noStats + 1);
+        return false;
+    }
+
+    _watchConsumer(consumer: any): MediasoupWrapper {
+        const consumerId = consumer.id;
+        logger.info(`Begin observing Mediasoup Consumer ${consumerId}`);
+        validateMediasoupObject(consumer, "consumer");
+        this._consumers.set(consumerId, consumer);
+        consumer.observer.on("close", () => {
+            this._disregardConsumer(consumerId);
+        });
+        return this;
+    }
+
+    _disregardConsumer(consumerId: any): void {
+        this._noStats.delete(consumerId);
+        this._consumers.delete(consumerId);
+        this._streamTransportsMap.delete(consumerId);
+        logger.info(`End observing Consumer ${consumerId}`);
+    }
+
+    _watchProducer(producer: any): MediasoupWrapper {
+        const producerId = producer.id;
+        logger.info(`Begin observing Mediasoup Producer ${producerId}`);
+        validateMediasoupObject(producer, "producer");
+        this._producers.set(producerId, producer);
+        producer.observer.on("close", () => {
+            this._disregardProducer(producerId);
+        });
+        return this;
+    }
+
+    _disregardProducer(producerId: any): void {
+        this._noStats.delete(producerId);
+        this._producers.delete(producerId);
+        this._streamTransportsMap.delete(producerId);
+        logger.info(`End observing Producer ${producerId}`);
+    }
+
+    _watchDataProducer(dataProducer: any): MediasoupWrapper {
+        const dataProducerId = dataProducer.id;
+        logger.info(`Begin observing Mediasoup DataProducer ${dataProducerId}`);
+        validateMediasoupObject(dataProducer, "dataProducer");
+        this._dataProducers.set(dataProducerId, dataProducer);
+        dataProducer.observer.on("close", () => {
+           this._disregardDataProducer(dataProducerId);
+        });
+        return this;
+    }
+
+    _disregardDataProducer(dataProducerId: any): void {
+        this._noStats.delete(dataProducerId);
+        this._dataProducers.delete(dataProducerId);
+        this._streamTransportsMap.delete(dataProducerId);
+        logger.info(`End observing DataProducer ${dataProducerId}`);
+    }
+
+    _watchDataConsumer(dataConsumer: any): MediasoupWrapper {
+        const dataConsumerId = dataConsumer.id;
+        logger.info(`Begin observing Mediasoup DataConsumer ${dataConsumerId}`);
+        validateMediasoupObject(dataConsumer, "dataConsumer");
+        this._dataConsumers.set(dataConsumerId, dataConsumer);
+        dataConsumer.observer.on("close", () => {
+           this._disregardDataConsumer(dataConsumerId);
+        });
+        return this;
+    }
+
+    _disregardDataConsumer(dataConsumerId: any): void {
+        this._noStats.delete(dataConsumerId);
+        this._dataConsumers.delete(dataConsumerId);
+        this._streamTransportsMap.delete(dataConsumerId);
+        logger.info(`End observing DataConsumer ${dataConsumerId}`);
+    } 
 }
