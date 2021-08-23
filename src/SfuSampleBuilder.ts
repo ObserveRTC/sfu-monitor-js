@@ -1,4 +1,4 @@
-import { SfuSample, SfuTransport, SctpStream, SfuInboundRtpStream, SfuOutboundRtpStream } from "./SfuSample";
+import { SfuSample, SfuTransport, SctpStream, SfuRtpSource, SfuRtpSink } from "./SfuSample";
 
 const TIME_ZONE_OFFSET_IN_HOURS = new Date().getTimezoneOffset();
 
@@ -12,12 +12,13 @@ export class SfuSampleBuilder {
     }
 
     private _sfuId?: string;
+    private _sfuName?: string;
     private _timestamp?: number;
     private _timeZoneOffsetInHours?: number;
     private _sfuTransports?: SfuTransport[];
     private _sctpStream?: SctpStream[];
-    private _inboundRtpStreams?: SfuInboundRtpStream[];
-    private _outboundRtpStreams?: SfuOutboundRtpStream[];
+    private _rtpSources?: SfuRtpSource[];
+    private _rtpSinks?: SfuRtpSink[];
     private _marker?: string;
 
     private constructor() {
@@ -26,6 +27,11 @@ export class SfuSampleBuilder {
 
     withSfuId(sfuId: string): SfuSampleBuilder {
         this._sfuId = sfuId;
+        return this;
+    }
+
+    withSfuName(sfuName: string): SfuSampleBuilder {
+        this._sfuName = sfuName;
         return this;
     }
 
@@ -52,19 +58,19 @@ export class SfuSampleBuilder {
         return this;
     }
 
-    addInboundRtpStream(sfuRtpStream: SfuInboundRtpStream): SfuSampleBuilder {
-        if (this._inboundRtpStreams === null || this._inboundRtpStreams === undefined) {
-            this._inboundRtpStreams = [];
+    addRtpSource(sfuRtpSource: SfuRtpSource): SfuSampleBuilder {
+        if (this._rtpSources === null || this._rtpSources === undefined) {
+            this._rtpSources = [];
         }
-        this._inboundRtpStreams!.push(sfuRtpStream);
+        this._rtpSources!.push(sfuRtpSource);
         return this;
     }
 
-    addOutboundRtpStream(sfuRtpStream: SfuOutboundRtpStream): SfuSampleBuilder {
-        if (this._outboundRtpStreams === null || this._outboundRtpStreams === undefined) {
-            this._outboundRtpStreams = [];
+    addRtpSink(sfuRtpSink: SfuRtpSink): SfuSampleBuilder {
+        if (this._rtpSinks === null || this._rtpSinks === undefined) {
+            this._rtpSinks = [];
         }
-        this._outboundRtpStreams!.push(sfuRtpStream);
+        this._rtpSinks!.push(sfuRtpSink);
         return this;
     }
 
@@ -83,8 +89,9 @@ export class SfuSampleBuilder {
 
         return {
             sfuId: this._sfuId!,
-            inboundRtpStreams: this._inboundRtpStreams,
-            outboundRtpStreams: this._outboundRtpStreams,
+            sfuName: this._sfuName,
+            rtpSources: this._rtpSources,
+            rtpSinks: this._rtpSinks,
             sctpStreams: this._sctpStream,
             sfuTransports: this._sfuTransports,
             timestamp: this._timestamp!,

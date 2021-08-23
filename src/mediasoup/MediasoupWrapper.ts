@@ -1,11 +1,13 @@
 import { MediasoupVersion } from "./MediasoupVersion";
 import { Promises as Promises } from "../PromiseExecutor";
 import { factory } from "../ConfigLog4j";
+import { uuid } from "uuidv4";
  
 const logger = factory.getLogger("MediasoupWrapper");
 
 interface ProducerStats {
     id: string;
+    sourceId: string;
     transportId: string;
     trackId?: string;
     ssrc?: number;
@@ -58,6 +60,7 @@ interface ConsumerStats {
 
 interface DataProducerStats {
     streamId: any;
+    sourceId: any;
     transportId: any;
     label: any;
     protocol: any;
@@ -198,7 +201,7 @@ export class MediasoupWrapper {
     private _consumers: Map<any, any>;
     private _dataProducers: Map<any, any>;
     private _dataConsumers: Map<any, any>;
-    private _streamTransportsMap: Map<any, any>;
+    private _streamsMeta: Map<any, any>;
 
     private constructor(mediasoup: any, version: MediasoupVersion) {
         this.version = version;
@@ -210,7 +213,7 @@ export class MediasoupWrapper {
         this._consumers = new Map();
         this._dataProducers = new Map();
         this._dataConsumers = new Map();
-        this._streamTransportsMap = new Map();
+        this._streamsMeta = new Map();
         this._noStats = new Map();
     }
 
@@ -223,19 +226,31 @@ export class MediasoupWrapper {
             this._disregardTransport(transportId);
         });
         transport.observer.on("newproducer", (producer: any) => {
-            this._streamTransportsMap.set(producer.id, transportId);
+            const sourceId = producer?.appData?.sourceId ?? uuid();
+            this._streamsMeta.set(producer.id, {
+                transportId,
+                sourceId,
+            });
             this._watchProducer(producer);
         });
         transport.observer.on("newconsumer", (consumer: any) => {
-            this._streamTransportsMap.set(consumer.id, transportId);
+            this._streamsMeta.set(consumer.id, {
+                transportId,
+            });
             this._watchConsumer(consumer);
         });
         transport.observer.on("newdataproducer", (dataProducer: any) => {
-            this._streamTransportsMap.set(dataProducer.id, transportId);
+            const sourceId = dataProducer?.appData?.sourceId ?? uuid();
+            this._streamsMeta.set(dataProducer.id, {
+                transportId,
+                sourceId,
+            });
             this._watchDataProducer(dataProducer);
         });
         transport.observer.on("newdataconsumer", (dataConsumer: any) => {
-            this._streamTransportsMap.set(dataConsumer.id, transportId);
+            this._streamsMeta.set(dataConsumer.id, {
+                transportId,
+            });
             this._watchDataConsumer(dataConsumer)
         });
         return this;
@@ -247,20 +262,16 @@ export class MediasoupWrapper {
         logger.info(`End observing Mediasoup Transport ${transportId}`);
     }
 
-    getTransportId(streamId: string): string {
-        return this._streamTransportsMap.get(streamId);
-    }
-
     async *producerStats(): AsyncGenerator<ProducerStats, void, void> {
         // any version specific adjustment for producers can be done here
         const meta: any[] = [];
         const promises: Promise<any>[] = [];
         for (const producer of this._producers.values()) {
             const id = producer.id;
-            const transportId = this._streamTransportsMap.get(id);
+            const streamMeta = this._streamsMeta.get(id) ?? {};
             meta.push({
                 id,
-                transportId,
+                ...streamMeta,
             })
             promises.push(producer.getStats());
         }
@@ -301,11 +312,11 @@ export class MediasoupWrapper {
         for (const consumer of this._consumers.values()) {
             const id = consumer.id;
             const producerId = consumer.producerId;
-            const transportId = this._streamTransportsMap.get(id);
+            const streamMeta = this._streamsMeta.get(id) ?? {};
             meta.push({
                 id,
                 producerId,
-                transportId,
+                ...streamMeta,
             })
             promises.push(consumer.getStats());
         }
@@ -345,10 +356,10 @@ export class MediasoupWrapper {
         const promises: Promise<any>[] = [];
         for (const dataProducer of this._dataProducers.values()) {
             const id = dataProducer.id;
-            const transportId = this._streamTransportsMap.get(id);
+            const streamMeta = this._streamsMeta.get(id) ?? {};
             meta.push({
                 id,
-                transportId,
+                ...streamMeta,
             })
             promises.push(dataProducer.getStats());
         }
@@ -388,10 +399,10 @@ export class MediasoupWrapper {
         const promises: Promise<any>[] = [];
         for (const dataConsumer of this._dataConsumers.values()) {
             const id = dataConsumer.id;
-            const transportId = this._streamTransportsMap.get(id);
+            const streamMeta = this._streamsMeta.get(id) ?? {};
             meta.push({
                 id,
-                transportId,
+                ...streamMeta,
             })
             promises.push(dataConsumer.getStats());
         }
@@ -547,7 +558,7 @@ export class MediasoupWrapper {
     _disregardConsumer(consumerId: any): void {
         this._noStats.delete(consumerId);
         this._consumers.delete(consumerId);
-        this._streamTransportsMap.delete(consumerId);
+        this._streamsMeta.delete(consumerId);
         logger.info(`End observing Consumer ${consumerId}`);
     }
 
@@ -565,7 +576,7 @@ export class MediasoupWrapper {
     _disregardProducer(producerId: any): void {
         this._noStats.delete(producerId);
         this._producers.delete(producerId);
-        this._streamTransportsMap.delete(producerId);
+        this._streamsMeta.delete(producerId);
         logger.info(`End observing Producer ${producerId}`);
     }
 
@@ -583,7 +594,7 @@ export class MediasoupWrapper {
     _disregardDataProducer(dataProducerId: any): void {
         this._noStats.delete(dataProducerId);
         this._dataProducers.delete(dataProducerId);
-        this._streamTransportsMap.delete(dataProducerId);
+        this._streamsMeta.delete(dataProducerId);
         logger.info(`End observing DataProducer ${dataProducerId}`);
     }
 
@@ -601,7 +612,7 @@ export class MediasoupWrapper {
     _disregardDataConsumer(dataConsumerId: any): void {
         this._noStats.delete(dataConsumerId);
         this._dataConsumers.delete(dataConsumerId);
-        this._streamTransportsMap.delete(dataConsumerId);
+        this._streamsMeta.delete(dataConsumerId);
         logger.info(`End observing DataConsumer ${dataConsumerId}`);
     } 
 }

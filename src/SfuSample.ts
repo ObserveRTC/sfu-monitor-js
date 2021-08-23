@@ -1,20 +1,20 @@
 // @revision: 1
 
-export interface SfuInboundRtpStream {
+export interface SfuRtpSource {
   /**
    * The id of the transport the stream belongs to
    */
   transportId: string;
 
   /**
-   * id of the outbound rtp stream mapped inside SFU
-   */
-  pipedStreamId?: string;
-
-  /**
    * unique identifier for the stream
    */
   streamId: string
+
+  /**
+   * id of the source pod
+   */
+  sourceId: string;
 
   /**
    * The SSRC identifier of the corresponded RTP stream
@@ -187,21 +187,21 @@ export interface SfuInboundRtpStream {
   attachments?: string;
 }
 
-export interface SfuOutboundRtpStream {
+export interface SfuRtpSink {
   /**
    * The id of the transport the stream belongs to
    */
   transportId: string;
 
   /**
-   * id of the inbound rtp stream mapped inside SFU
-   */
-  pipedStreamId?: string;
-  
-  /**
    * unique identifier of the stream
    */
   streamId: string
+
+  /**
+   * id of the sink pod
+   */
+  sinkId?: string;
 
   /**
    * The SSRC identifier of the corresponded RTP stream
@@ -277,6 +277,11 @@ export interface SfuOutboundRtpStream {
    * The total number of packets sent on the corresponded RTP stream,
    */
   packetsSent?: number;
+  
+  /**
+   * The total number of packets lost on the corresponded RTP stream
+   */
+  packetsLost?: number;
 
   /**
    * The total number of discarded packets on the corresponded RTP stream.
@@ -568,14 +573,19 @@ export interface SfuSample {
   sfuId: string;
 
   /**
+   * A given name for a certain SFU
+   */
+  sfuName?: string;
+
+  /**
    * array of measurements related to inbound RTP streams
    */
-  inboundRtpStreams?: SfuInboundRtpStream[];
+  rtpSources?: SfuRtpSource[];
 
   /**
    * array of measurements related to outbound RTP streams
    */
-  outboundRtpStreams?: SfuOutboundRtpStream[];
+  rtpSinks?: SfuRtpSink[];
 
   /**
    * array of measurements of SCTP streams

@@ -1,16 +1,16 @@
-import { SfuOutboundRtpStream } from "./SfuSample";
+import { SfuRtpSink } from "./SfuSample";
 
-export class SfuOutboundRtpStreamBuilder {
+export class SfuRtpSinkBuilder {
     static builder() {
         throw new Error("Method not implemented.");
     }
     
-    public static create(): SfuOutboundRtpStreamBuilder {
-        return new SfuOutboundRtpStreamBuilder();
+    public static create(): SfuRtpSinkBuilder {
+        return new SfuRtpSinkBuilder();
     }
 
     private _transportId: string | null = null;
-    private _pipedStreamId?: string | undefined;
+    private _sinkId?: string | null = null;
     private _streamId: string | null = null;
     private _ssrc?: number | undefined;
     private _mediaType?: string | undefined;
@@ -47,182 +47,185 @@ export class SfuOutboundRtpStreamBuilder {
         // empty
     }
     
-    withTransportId(value: string): SfuOutboundRtpStreamBuilder {
+    withTransportId(value: string): SfuRtpSinkBuilder {
         this._transportId = value;
         return this;
     }
 
-    withStreamId(value: string): SfuOutboundRtpStreamBuilder {
+    withStreamId(value: string): SfuRtpSinkBuilder {
         this._streamId = value;
         return this;
     }
 
-    withPipedStreamId(value?: string): SfuOutboundRtpStreamBuilder {
-        this._pipedStreamId = value;
+    withSinkId(value?: string): SfuRtpSinkBuilder {
+        this._sinkId = value;
         return this;
     }
 
-    withSsrc(value?: number): SfuOutboundRtpStreamBuilder {
+    withSsrc(value?: number): SfuRtpSinkBuilder {
         this._ssrc = value;
         return this;
     }
 
-    withMediaType(value?: string): SfuOutboundRtpStreamBuilder {
+    withMediaType(value?: string): SfuRtpSinkBuilder {
         this._mediaType = value;
         return this;
     }
 
-    withPayloadType(value?: number): SfuOutboundRtpStreamBuilder {
+    withPayloadType(value?: number): SfuRtpSinkBuilder {
         this._payloadType = value;
         return this;
     }
 
-    withMimeType(value?: string): SfuOutboundRtpStreamBuilder {
+    withMimeType(value?: string): SfuRtpSinkBuilder {
         this._mimeType = value;
         return this;
     }
 
-    withClockRate(value?: number): SfuOutboundRtpStreamBuilder {
+    withClockRate(value?: number): SfuRtpSinkBuilder {
         this._clockRate = value;
         return this;
     }
 
-    withSdpFmtpLine(value?: string): SfuOutboundRtpStreamBuilder {
+    withSdpFmtpLine(value?: string): SfuRtpSinkBuilder {
         this._sdpFmtpLine = value;
         return this;
     }
 
-    withRid(value?: string): SfuOutboundRtpStreamBuilder {
+    withRid(value?: string): SfuRtpSinkBuilder {
         this._rid = value;
         return this;
     }
 
-    withRtxSsrc(value?: number): SfuOutboundRtpStreamBuilder {
+    withRtxSsrc(value?: number): SfuRtpSinkBuilder {
         this._rtxSsrc = value;
         return this;
     }
 
-    withTargetBitrate(value?: number): SfuOutboundRtpStreamBuilder {
+    withTargetBitrate(value?: number): SfuRtpSinkBuilder {
         this._targetBitrate = value;
         return this;
     }
 
-    withVoiceActivityFlag(value?: boolean): SfuOutboundRtpStreamBuilder {
+    withVoiceActivityFlag(value?: boolean): SfuRtpSinkBuilder {
         this._voiceActivityFlag = value;
         return this;
     }
 
-    withFirCount(value?: number): SfuOutboundRtpStreamBuilder {
+    withFirCount(value?: number): SfuRtpSinkBuilder {
         this._firCount = value;
         return this;
     }
 
-    withPliCount(value?: number): SfuOutboundRtpStreamBuilder {
+    withPliCount(value?: number): SfuRtpSinkBuilder {
         this._pliCount = value;
         return this;
     }
 
-    withNackCount(value?: number): SfuOutboundRtpStreamBuilder {
+    withNackCount(value?: number): SfuRtpSinkBuilder {
         this._nackCount = value;
         return this;
     }
 
-    withSliCount(value?: number): SfuOutboundRtpStreamBuilder {
+    withSliCount(value?: number): SfuRtpSinkBuilder {
         this._sliCount = value;
         return this;
     }
 
-    withPacketsSent(value?: number): SfuOutboundRtpStreamBuilder {
+    withPacketsSent(value?: number): SfuRtpSinkBuilder {
         this._packetsSent = value;
         return this;
     }
 
-    withPacketsDiscarded(value?: number): SfuOutboundRtpStreamBuilder {
+    withPacketsDiscarded(value?: number): SfuRtpSinkBuilder {
         this._packetsDiscarded = value;
         return this;
     }
 
-    withPacketsRetransmitted(value?: number): SfuOutboundRtpStreamBuilder {
+    withPacketsRetransmitted(value?: number): SfuRtpSinkBuilder {
         this._packetsRetransmitted = value;
         return this;
     }
 
-    withPacketsFailedEncryption(value?: number): SfuOutboundRtpStreamBuilder {
+    withPacketsFailedEncryption(value?: number): SfuRtpSinkBuilder {
         this._packetsFailedEncryption = value;
         return this;
     }
 
-    withPacketsDuplicated(value?: number): SfuOutboundRtpStreamBuilder {
+    withPacketsDuplicated(value?: number): SfuRtpSinkBuilder {
         this._packetsDuplicated = value;
         return this;
     }
 
-    withFecPacketsSent(value?: number): SfuOutboundRtpStreamBuilder {
+    withFecPacketsSent(value?: number): SfuRtpSinkBuilder {
         this._fecPacketsSent = value;
         return this;
     }
 
-    withFecPacketsDiscarded(value?: number): SfuOutboundRtpStreamBuilder {
+    withFecPacketsDiscarded(value?: number): SfuRtpSinkBuilder {
         this._fecPacketsDiscarded = value;
         return this;
     }
 
-    withBytesSent(value?: number): SfuOutboundRtpStreamBuilder {
+    withBytesSent(value?: number): SfuRtpSinkBuilder {
         this._bytesSent = value;
         return this;
     }
 
-    withRtcpSrSent(value?: number): SfuOutboundRtpStreamBuilder {
+    withRtcpSrSent(value?: number): SfuRtpSinkBuilder {
         this._rtcpSrSent = value;
         return this;
     }
 
-    withRtcpRrReceived(value?: number): SfuOutboundRtpStreamBuilder {
+    withRtcpRrReceived(value?: number): SfuRtpSinkBuilder {
         this._rtcpRrReceived = value;
         return this;
     }
 
-    withRtxPacketsSent(value?: number): SfuOutboundRtpStreamBuilder {
+    withRtxPacketsSent(value?: number): SfuRtpSinkBuilder {
         this._rtxPacketsSent = value;
         return this;
     }
 
-    withRtxPacketsDiscarded(value?: number): SfuOutboundRtpStreamBuilder {
+    withRtxPacketsDiscarded(value?: number): SfuRtpSinkBuilder {
         this._rtxPacketsDiscarded = value;
         return this;
     }
 
-    withFramesSent(value?: number): SfuOutboundRtpStreamBuilder {
+    withFramesSent(value?: number): SfuRtpSinkBuilder {
         this._framesSent = value;
         return this;
     }
 
-    withFramesEncoded(value?: number): SfuOutboundRtpStreamBuilder {
+    withFramesEncoded(value?: number): SfuRtpSinkBuilder {
         this._framesEncoded = value;
         return this;
     }
 
-    withKeyFramesEncoded(value?: number): SfuOutboundRtpStreamBuilder {
+    withKeyFramesEncoded(value?: number): SfuRtpSinkBuilder {
         this._keyFramesEncoded = value;
         return this;
     }
 
-    withAttachments(value?: string): SfuOutboundRtpStreamBuilder {
+    withAttachments(value?: string): SfuRtpSinkBuilder {
         this._attachments = value;
         return this;
     }
 
-    build(): SfuOutboundRtpStream {
+    build(): SfuRtpSink {
         if (this._transportId === null) {
             throw new Error("TransportId cannot be null");
         }
         if (this._streamId === null) {
             throw new Error("StreamId cannot be null");
         }
+        if (this._sinkId === null) {
+            throw new Error("SinkId cannot be null");
+        }
         return {
             transportId: this._transportId,
-            pipedStreamId: this._pipedStreamId,
             streamId: this._streamId,
+            sinkId: this._sinkId,
             ssrc: this._ssrc,
             mediaType: this._mediaType,
             payloadType: this._payloadType,
@@ -255,6 +258,4 @@ export class SfuOutboundRtpStreamBuilder {
             attachments: this._attachments,
         };
     }
-
-    
 }

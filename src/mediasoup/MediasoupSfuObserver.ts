@@ -16,6 +16,8 @@ const ON_SAMPLE_EVENT_NAME = "onSample";
 
 interface Builder {
     withMediasoup(mediasoup: any) : this;
+    withSfuId(value: string) : this;
+    withSfuName(value: string) : this;
     withPollingInterval(intervalInMs: number) : this;
     withEndpoint(endpoint: string): this;
     watchAllTransport(value: boolean): this;
@@ -29,10 +31,20 @@ export class MediasoupSfuObserver implements SfuObserver{
         let _mediasoup: any = null;
         let _pollingIntervalInMs = 5000;
         let _watchAllTransport = true;
+        let _sfuId : string | null = null;
+        let _sfuName : string | null = null;
         const result : Builder = {
             withMediasoup(mediasoup: any): Builder {
                 _mediasoup = mediasoup;
                 return result;
+            },
+            withSfuId(value: string) : Builder {
+                _sfuId = value;
+                return this;
+            },
+            withSfuName(value: string): Builder {
+                _sfuName = value;
+                return this;
             },
             withPollingInterval(intervalInMs: number): Builder {
                 _pollingIntervalInMs = intervalInMs;
@@ -57,8 +69,12 @@ export class MediasoupSfuObserver implements SfuObserver{
                 const mediasoupVisitor = MediasoupVisitor.builder()
                     .withMediasoupWrapper(mediasoupWrapper)
                     .build();
-                const mediasoupSfuSampleProvider = MediasoupSfuSampleProvider.builder()
-                    .withMediasoupVisitor(mediasoupVisitor)
+                const mediasoupSfuSampleProviderBuilder = MediasoupSfuSampleProvider.builder()
+                    .withMediasoupVisitor(mediasoupVisitor);
+                if (_sfuId !== null) {
+                    mediasoupSfuSampleProviderBuilder.withSfuId(_sfuId);
+                }
+                const mediasoupSfuSampleProvider = mediasoupSfuSampleProviderBuilder
                     .build();
                 const mediasoupSfuObserver = new MediasoupSfuObserver(_pollingIntervalInMs, mediasoupSfuSampleProvider);
                 if (_comlink !== null) {

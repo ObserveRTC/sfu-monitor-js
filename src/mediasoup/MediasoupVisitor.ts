@@ -1,11 +1,11 @@
-import { SfuInboundRtpStreamBuilder } from "../SfuInboundRtpStreamBuilder";
-import { SfuOutboundRtpStreamBuilder } from "../SfuOutboundRtpStreamBuilder";
+import { SfuRtpSourceBuilder } from "../SfuRtpSourceBuilder";
+import { SfuRtpSinkBuilder } from "../SfuRtpSinkBuilder";
 import { SfuSctpStreamBuilder } from "../SfuSctpStreamBuilder";
 import { SfuTransportStatBuilder } from "../SfuTransportStatBuilder";
 import { SfuVisitor } from "../SfuVisitor";
 import { MediasoupWrapper } from "./MediasoupWrapper";
 import { factory } from "../ConfigLog4j";
-import { SctpStream, SfuInboundRtpStream, SfuOutboundRtpStream, SfuTransport } from "../SfuSample";
+import { SctpStream, SfuRtpSource, SfuRtpSink, SfuTransport } from "../SfuSample";
  
 const logger = factory.getLogger("MediasoupVisitor");
 
@@ -39,16 +39,16 @@ export class MediasoupVisitor implements SfuVisitor {
         this._mediasoup = mediasoup;
     }
 
-    async *visitInboundRtpStreams(): AsyncGenerator<SfuInboundRtpStream, void, void> {
+    async *visitRtpSources(): AsyncGenerator<SfuRtpSource, void, void> {
         const version = this._mediasoup.version;
         for await (const producerStats of this._mediasoup.producerStats()) {
             if (producerStats.type !== "inbound-rtp") {
                 continue;
             }
-            const builder = SfuInboundRtpStreamBuilder.create()
+            const builder = SfuRtpSourceBuilder.create()
                     .withTransportId(producerStats.transportId)
                     .withStreamId(producerStats.id)
-                    // .withPipedStreamId
+                    .withSourceId(producerStats.sourceId)
                     .withSsrc(producerStats.ssrc)
                     .withMediaType(producerStats.kind)
                     // .withPayloadType(stats.pay)
@@ -87,16 +87,16 @@ export class MediasoupVisitor implements SfuVisitor {
         }
     }
     
-    async *visitOutboundRtpStreams(): AsyncGenerator<SfuOutboundRtpStream, void, void> {
+    async *visitRtpSinks(): AsyncGenerator<SfuRtpSink, void, void> {
         const version = this._mediasoup.version;
         for await (const consumerStats of this._mediasoup.consumerStats()) {
             if (consumerStats.type !== "outbound-rtp") {
                 continue;
             }
-            const builder = SfuOutboundRtpStreamBuilder.create()
+            const builder = SfuRtpSinkBuilder.create()
                     .withTransportId(consumerStats.transportId)
                     .withStreamId(consumerStats.id)
-                    .withPipedStreamId(consumerStats.producerId)
+                    .withSinkId(consumerStats.producerId)
                     .withSsrc(consumerStats.ssrc)
                     .withMediaType(consumerStats.kind)
                     // .withPayloadType(stats.pay)

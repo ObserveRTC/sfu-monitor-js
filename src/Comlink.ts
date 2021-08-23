@@ -24,7 +24,7 @@ function sleep(ms: number) {
 export class Comlink {
     public static builder(): Builder {
         let _endpoint: string | null = null;
-        let _reconnectWaitingTimeInMs: number = 1000;
+        let _reconnectWaitingTimeInMs: number = 10000;
         return {
             withEndpoint(endpoint: string): Builder {
                 _endpoint = endpoint;

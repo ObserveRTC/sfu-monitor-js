@@ -1,9 +1,9 @@
-import { SfuInboundRtpStreamBuilder } from "./SfuInboundRtpStreamBuilder";
-import { SctpStream, SfuInboundRtpStream, SfuOutboundRtpStream, SfuTransport } from "./SfuSample";
+import { SfuRtpSourceBuilder } from "./SfuRtpSourceBuilder";
+import { SctpStream, SfuRtpSource, SfuRtpSink, SfuTransport } from "./SfuSample";
 
 export interface SfuVisitor {
-    visitInboundRtpStreams(): AsyncGenerator<SfuInboundRtpStream, void, void>;
-    visitOutboundRtpStreams() : AsyncGenerator<SfuOutboundRtpStream, void, void>;
+    visitRtpSources(): AsyncGenerator<SfuRtpSource, void, void>;
+    visitRtpSinks() : AsyncGenerator<SfuRtpSink, void, void>;
     visitTransports() : AsyncGenerator<SfuTransport, void, void>;
     visitSctpStreams() : AsyncGenerator<SctpStream, void, void>;
 }
