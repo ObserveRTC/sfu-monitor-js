@@ -95,8 +95,8 @@ export class MediasoupVisitor implements SfuVisitor {
             }
             const builder = SfuRtpSinkBuilder.create()
                     .withTransportId(consumerStats.transportId)
-                    .withStreamId(consumerStats.id)
-                    .withSinkId(consumerStats.producerId)
+                    .withStreamId(consumerStats.producerId)
+                    .withSinkId(consumerStats.id)
                     .withSsrc(consumerStats.ssrc)
                     .withMediaType(consumerStats.kind)
                     // .withPayloadType(stats.pay)
