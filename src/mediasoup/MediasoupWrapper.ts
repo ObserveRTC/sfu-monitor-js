@@ -226,7 +226,10 @@ export class MediasoupWrapper {
             this._disregardTransport(transportId);
         });
         transport.observer.on("newproducer", (producer: any) => {
-            const sourceId = producer?.appData?.sourceId ?? uuid();
+            let sourceId = transport.iceState ? producer.id : uuid();
+            if (producer?.appData?.sourceId) {
+                sourceId = producer?.appData?.sourceId;
+            }
             this._streamsMeta.set(producer.id, {
                 transportId,
                 sourceId,
