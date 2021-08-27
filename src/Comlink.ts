@@ -112,7 +112,7 @@ export class Comlink {
         do {
             try {
                 this._ws.send(message);
-            } catch (error) {
+            } catch (error: any) {
                 logger.warn("Websocket encountered an error while sending message", error);
                 for (let attempt = 0; attempt < 3 && retry === false; ++attempt) {
                     await sleep(this._reconnectWaitingTimeInMs);
@@ -132,7 +132,7 @@ export class Comlink {
         const protocol = this._ws.protocol;
         try {
             this._ws = this._makeWebsocket(url, protocol);
-        } catch (error) {
+        } catch (error: any) {
             logger.warn("Cannot connect to server.", error);
             return false;
         }
