@@ -48,18 +48,22 @@ export class SfuSampleRelayer {
         return this;
     }
 
+    proceed() {
+        try {
+            (async () => {
+                const sampleBuilder = await this._sampleProvider.getSample();
+                this._emitter.emit(ON_SAMPLE_EVENT_NAME, sampleBuilder);
+            })();
+        } catch (error) {
+            logger.error("An error occurred while observing sample");
+            this._emitter.emit(ON_ERROR_EVENT_NAME, error);
+            this.stop();
+        }
+    }
+
     start(): void {
         this._timer = setInterval(() => {
-            try {
-                (async () => {
-                    const sampleBuilder = await this._sampleProvider.getSample();
-                    this._emitter.emit(ON_SAMPLE_EVENT_NAME, sampleBuilder);
-                })();
-            } catch (error) {
-                logger.error("An error occurred while observing sample");
-                this._emitter.emit(ON_ERROR_EVENT_NAME, error);
-                this.stop();
-            }
+            this.proceed();
         }, this._intervalInMs);
         this._emitter.emit(ON_STARTED_EVENT_NAME);
     }

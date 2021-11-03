@@ -1,11 +1,11 @@
-import { SfuRtpSourceBuilder } from "../SfuRtpSourceBuilder";
-import { SfuRtpSinkBuilder } from "../SfuRtpSinkBuilder";
+import { SfuInboundRtpPadBuilder } from "../SfuInboundRtpPadBuilder";
+import { SfuOutboundRtpPadBuilder } from "../SfuOutboundRtpPadBuilder";
 import { SfuSctpStreamBuilder } from "../SfuSctpStreamBuilder";
 import { SfuTransportStatBuilder } from "../SfuTransportStatBuilder";
 import { SfuVisitor } from "../SfuVisitor";
 import { MediasoupWrapper } from "./MediasoupWrapper";
 import { factory } from "../ConfigLog4j";
-import { SctpStream, SfuRtpSource, SfuRtpSink, SfuTransport } from "../SfuSample";
+import { SctpStream, SfuOutboundRtpPad, SfuInboundRtpPad, SfuTransport } from "../SfuSample";
  
 const logger = factory.getLogger("MediasoupVisitor");
 
@@ -39,16 +39,16 @@ export class MediasoupVisitor implements SfuVisitor {
         this._mediasoup = mediasoup;
     }
 
-    async *visitRtpSources(): AsyncGenerator<SfuRtpSource, void, void> {
+    async *visitInboundRtpPads(): AsyncGenerator<SfuInboundRtpPad, void, void> {
         const version = this._mediasoup.version;
         for await (const producerStats of this._mediasoup.producerStats()) {
             if (producerStats.type !== "inbound-rtp") {
                 continue;
             }
-            const builder = SfuRtpSourceBuilder.create()
+            const builder = SfuInboundRtpPadBuilder.create()
                     .withTransportId(producerStats.transportId)
-                    .withStreamId(producerStats.id)
-                    .withSourceId(producerStats.sourceId)
+                    .withRtpStreamId(producerStats.id)
+                    .withPadId(producerStats.padId)
                     .withSsrc(producerStats.ssrc)
                     .withMediaType(producerStats.kind)
                     // .withPayloadType(stats.pay)
@@ -83,20 +83,24 @@ export class MediasoupVisitor implements SfuVisitor {
                     .withJitter(producerStats.jitter)
                     .withRoundTripTime(producerStats.roundTripTime)
                 ;
+                if (producerStats.piped) {
+                    builder.withOutboundPadId(producerStats.id);
+                }
                 yield builder.build();
         }
     }
     
-    async *visitRtpSinks(): AsyncGenerator<SfuRtpSink, void, void> {
+    async *visitOutbooundRtpPads(): AsyncGenerator<SfuOutboundRtpPad, void, void> {
         const version = this._mediasoup.version;
         for await (const consumerStats of this._mediasoup.consumerStats()) {
             if (consumerStats.type !== "outbound-rtp") {
                 continue;
             }
-            const builder = SfuRtpSinkBuilder.create()
+            const builder = SfuOutboundRtpPadBuilder.create()
                     .withTransportId(consumerStats.transportId)
-                    .withStreamId(consumerStats.producerId)
-                    .withSinkId(consumerStats.id)
+                    .withRtpStreamId(consumerStats.producerId)
+                    .withPadId(consumerStats.padId)
+                    .withPiped(consumerStats.piped)
                     .withSsrc(consumerStats.ssrc)
                     .withMediaType(consumerStats.kind)
                     // .withPayloadType(stats.pay)

@@ -7,7 +7,8 @@ const logger = factory.getLogger("MediasoupWrapper");
 
 interface ProducerStats {
     id: string;
-    sourceId: string;
+    padId: string;
+    piped: boolean;
     transportId: string;
     trackId?: string;
     ssrc?: number;
@@ -33,6 +34,8 @@ interface ProducerStats {
 
 interface ConsumerStats {
     id: string;
+    padId: string;
+    piped: boolean,
     producerId: string;
     transportId: string;
     trackId?: string;
@@ -222,23 +225,27 @@ export class MediasoupWrapper {
         validateMediasoupObject(transport, "transport");
         this._transports.set(transport.id, transport);
         const transportId = transport.id;
+        const piped = transport && transport.constructor && transport.constructor.name === "PipeTransport";
         transport.observer.on("close", () => {
             this._disregardTransport(transportId);
         });
         transport.observer.on("newproducer", (producer: any) => {
-            let sourceId = transport.iceState ? producer.id : uuid();
-            if (producer?.appData?.sourceId) {
-                sourceId = producer?.appData?.sourceId;
-            }
+            const padId = piped ? uuid() : producer.id;
             this._streamsMeta.set(producer.id, {
                 transportId,
-                sourceId,
+                piped,
+                padId,
             });
             this._watchProducer(producer);
         });
         transport.observer.on("newconsumer", (consumer: any) => {
+            const padId = piped ? uuid() : consumer.id;
+            const producerId = consumer.producerId;
             this._streamsMeta.set(consumer.id, {
                 transportId,
+                piped,
+                padId,
+                producerId,
             });
             this._watchConsumer(consumer);
         });

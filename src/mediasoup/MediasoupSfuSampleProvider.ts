@@ -63,11 +63,11 @@ export class MediasoupSfuSampleProvider implements SfuSampleProvider {
         ];
         const responses = await Promise.all(promises);
         const transports = responses[0];
-        for await (const rtpSource of this._visitor.visitRtpSources()) {
-            builder.addRtpSource(rtpSource);
+        for await (const rtpSource of this._visitor.visitInboundRtpPads()) {
+            builder.addInboundRtpPad(rtpSource);
         }
-        for await (const rtpSink of this._visitor.visitRtpSinks()) {
-            builder.addRtpSink(rtpSink);
+        for await (const rtpSink of this._visitor.visitOutbooundRtpPads()) {
+            builder.addOutboundRtpPad(rtpSink);
         }
         for await (const transportStat of this._visitor.visitTransports()) {
             builder.addTransportStat(transportStat);

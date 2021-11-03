@@ -1,4 +1,4 @@
-import { SfuSample, SfuTransport, SctpStream, SfuRtpSource, SfuRtpSink } from "./SfuSample";
+import { SfuSample, SfuTransport, SctpStream, SfuOutboundRtpPad, SfuInboundRtpPad } from "./SfuSample";
 
 const TIME_ZONE_OFFSET_IN_HOURS = new Date().getTimezoneOffset();
 
@@ -17,8 +17,8 @@ export class SfuSampleBuilder {
     private _timeZoneOffsetInHours?: number;
     private _sfuTransports?: SfuTransport[];
     private _sctpStream?: SctpStream[];
-    private _rtpSources?: SfuRtpSource[];
-    private _rtpSinks?: SfuRtpSink[];
+    private _inboundRtpPads?: SfuInboundRtpPad[];
+    private _outboundRtpPads?: SfuOutboundRtpPad[];
     private _marker?: string;
 
     private constructor() {
@@ -58,19 +58,19 @@ export class SfuSampleBuilder {
         return this;
     }
 
-    addRtpSource(sfuRtpSource: SfuRtpSource): SfuSampleBuilder {
-        if (this._rtpSources === null || this._rtpSources === undefined) {
-            this._rtpSources = [];
+    addInboundRtpPad(inboundRtpPad: SfuInboundRtpPad): SfuSampleBuilder {
+        if (this._inboundRtpPads === null || this._inboundRtpPads === undefined) {
+            this._inboundRtpPads = [];
         }
-        this._rtpSources!.push(sfuRtpSource);
+        this._inboundRtpPads!.push(inboundRtpPad);
         return this;
     }
 
-    addRtpSink(sfuRtpSink: SfuRtpSink): SfuSampleBuilder {
-        if (this._rtpSinks === null || this._rtpSinks === undefined) {
-            this._rtpSinks = [];
+    addOutboundRtpPad(outboundRtpPad: SfuOutboundRtpPad): SfuSampleBuilder {
+        if (this._outboundRtpPads === null || this._outboundRtpPads === undefined) {
+            this._outboundRtpPads = [];
         }
-        this._rtpSinks!.push(sfuRtpSink);
+        this._outboundRtpPads!.push(outboundRtpPad);
         return this;
     }
 
@@ -90,8 +90,8 @@ export class SfuSampleBuilder {
         return {
             sfuId: this._sfuId!,
             sfuName: this._sfuName,
-            rtpSources: this._rtpSources,
-            rtpSinks: this._rtpSinks,
+            outboundRtpStreams: this._outboundRtpPads,
+            inboundRtpStreams: this._inboundRtpPads,
             sctpStreams: this._sctpStream,
             sfuTransports: this._sfuTransports,
             timestamp: this._timestamp!,

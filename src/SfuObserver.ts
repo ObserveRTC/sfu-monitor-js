@@ -3,7 +3,6 @@ import { Comlink } from "./Comlink";
 import { SfuSample } from "./SfuSample";
 
 export interface SfuObserver {
-    addComlink(comlink: Comlink): this;
     onError(listener: (event: Event) => void): this;
     onSample(listener: (sample: SfuSample) => void): this;
     start(): this;

@@ -1,6 +1,6 @@
 // @revision: 1
 
-export interface SfuRtpSource {
+export interface SfuInboundRtpPad {
   /**
    * The id of the transport the stream belongs to
    */
@@ -9,12 +9,17 @@ export interface SfuRtpSource {
   /**
    * unique identifier for the stream
    */
-  streamId: string
+  rtpStreamId: string
 
   /**
    * id of the source pod
    */
-  sourceId: string;
+  padId: string;
+
+  /**
+   * if the sink is internally piped between the SFUs, this id represents the remote SFU outbound pad id
+   */
+  outboundPadId?: string;
 
   /**
    * The SSRC identifier of the corresponded RTP stream
@@ -187,7 +192,7 @@ export interface SfuRtpSource {
   attachments?: string;
 }
 
-export interface SfuRtpSink {
+export interface SfuOutboundRtpPad {
   /**
    * The id of the transport the stream belongs to
    */
@@ -196,12 +201,17 @@ export interface SfuRtpSink {
   /**
    * unique identifier of the stream
    */
-  streamId: string
+  rtpStreamId: string
 
   /**
    * id of the sink pod
    */
-  sinkId?: string;
+  padId?: string;
+
+  /**
+   * Indicate if the oubtound pad is internally piped to another SFU or directed to a client (default: false)
+   */
+  piped?: boolean;
 
   /**
    * The SSRC identifier of the corresponded RTP stream
@@ -580,12 +590,12 @@ export interface SfuSample {
   /**
    * array of measurements related to inbound RTP streams
    */
-  rtpSources?: SfuRtpSource[];
+  inboundRtpStreams?: SfuInboundRtpPad[];
 
   /**
    * array of measurements related to outbound RTP streams
    */
-  rtpSinks?: SfuRtpSink[];
+  outboundRtpStreams?: SfuOutboundRtpPad[];
 
   /**
    * array of measurements of SCTP streams
