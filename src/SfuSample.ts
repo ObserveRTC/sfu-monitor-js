@@ -17,6 +17,16 @@ export interface SfuInboundRtpPad {
   padId: string;
 
   /**
+   * Indicates if this transport is not receive or send traffic outside of the SFU mesh.
+   */
+  internal?: boolean;
+
+  /**
+   * Indicate if this message measurements should be kept and oly used as keep alive message for the transports
+   */
+  skipMeasurements?: boolean;
+
+  /**
    * if the sink is internally piped between the SFUs, this id represents the remote SFU outbound pad id
    */
   outboundPadId?: string;
@@ -209,9 +219,14 @@ export interface SfuOutboundRtpPad {
   padId?: string;
 
   /**
-   * Indicate if the oubtound pad is internally piped to another SFU or directed to a client (default: false)
+   * Indicates if this transport is not receive or send traffic outside of the SFU mesh.
    */
-  piped?: boolean;
+  internal?: boolean;
+
+  /**
+   * Indicate if this message measurements should be kept and oly used as keep alive message for the transports
+   */
+  skipMeasurements?: boolean;
 
   /**
    * The SSRC identifier of the corresponded RTP stream
@@ -442,13 +457,16 @@ export interface SfuTransport {
    * The identifier of the transport
    */
   transportId: string;
-  
+
   /**
-   * The id of the service the transport belongs to
-   * 
-   * NOTE: As one SFU may used by many service by one organization, this is an additional information should/can be provided to the Sfu transport
+   * Indicates if this transport is not receive or send traffic outside of the SFU mesh.
    */
-  serviceId?: string;
+  internal?: boolean;
+
+  /**
+   * Indicate if this message measurements should be kept and oly used as keep alive message for the transports
+   */
+  skipMeasurements?: boolean;
 
   /**
    * Set to the current value of the state attribute of the underlying RTCDtlsTransport.
@@ -583,19 +601,14 @@ export interface SfuSample {
   sfuId: string;
 
   /**
-   * A given name for a certain SFU
-   */
-  sfuName?: string;
-
-  /**
    * array of measurements related to inbound RTP streams
    */
-  inboundRtpStreams?: SfuInboundRtpPad[];
+  inboundRtpPads?: SfuInboundRtpPad[];
 
   /**
    * array of measurements related to outbound RTP streams
    */
-  outboundRtpStreams?: SfuOutboundRtpPad[];
+  outboundRtpPads?: SfuOutboundRtpPad[];
 
   /**
    * array of measurements of SCTP streams

@@ -5,7 +5,7 @@ import { factory } from "./ConfigLog4j";
 import { SfuSample } from "./SfuSample";
 import * as WebSocket from 'ws';
  
-const logger = factory.getLogger("Comlink");
+const logger = factory.getLogger("SfuObserver.Comlink");
 
 const ON_CONNECTED_EVENT_NAME = "onConnected";
 const ON_CLOSED_EVENT_NAME = "onClosed";
@@ -44,11 +44,16 @@ export class Comlink {
     private _url: string | null = null;
     private _ws: WebSocket | null = null;
     private _connecting: boolean = false;
+    private _maxRetry: number = 30;
 
     private constructor() {
         this.id = uuid()
         this._buffer = [];
         this._emitter = new EventEmitter();
+    }
+
+    public get closed() {
+        return this._closed;
     }
 
     public get url() {
@@ -70,10 +75,24 @@ export class Comlink {
         return this;
     }
 
+    setMaxRetry(maxRetry: number) {
+        this._maxRetry = maxRetry;
+        return this;
+    }
+
     public async send(message: string): Promise<void> {
+        if (this._closed) {
+            logger.warn(`Attempted to send message on a closed comlink (${this.url})`);
+            return;
+        }
         if (this._ws === null || this._ws.readyState !== WebSocket.OPEN) {
             if (!this._connecting) {
-                this._connect();
+                this._connect().catch(error => {
+                    logger.error(`Connection failed, comlink will be closed`, error);
+                    if (!this._closed) {
+                        this.close();
+                    }
+                });
             }
             this._buffer.push(message);
             logger.debug(`Message is buffered`);
@@ -81,12 +100,14 @@ export class Comlink {
         }
         try {
             if (0 < this._buffer.length) {
-                for (let i = 0; i < this._buffer.length; ++i) {
-                    const prevMessage = this._buffer[i];
+                for (const prevMessage of this._buffer) {
+                    if (!prevMessage) {
+                        continue;
+                    }
                     this._ws.send(prevMessage);
                 }
                 this._buffer = [];
-                logger.debug(`Buffered messages are sent, buffer is reset`);
+                logger.info(`Buffered messages are sent, buffer is reset`);
             }
             this._ws.send(message);
             logger.debug(`Message is sent`);
@@ -110,13 +131,14 @@ export class Comlink {
         }
         this._emitter.emit(ON_CLOSED_EVENT_NAME);
         this._closed = true;
+        logger.info(`Comlink to ${this._url} is closed`);
     }
 
     private async _connect(retried: number = 0): Promise<void> {
         if (this._url === null) {
             throw new Error(`Cannot connect to undefined or null URL`);
         }
-        if (30 < retried) {
+        if (this._maxRetry < retried) {
             throw new Error(`Cannot connect to url ${this._url}`);
         }
         this._connecting = true;
@@ -124,23 +146,18 @@ export class Comlink {
             await this._waitBeforeReconnect(retried);
         }
         const url = this._url;
-        logger.info(`Connecting to remote endpoint ${url}, attempt: ${retried + 1}`);
+        logger.info(`Connecting to remote endpoint ${url}, attempt: ${retried + 1}, maxRetry: ${this._maxRetry}`);
         try {
             const ws = new WebSocket(url);
             ws.onclose = this._onClose.bind(this);
             ws.onerror = this._onError.bind(this);
-            return new Promise((resolve, reject) => {
+            await new Promise<void>((resolve, reject) => {
                 const opened = () => {
                     this._ws = ws;
                     resolve();
                     this._emitter.emit(ON_CONNECTED_EVENT_NAME);
                     this._connecting = false;
-                    logger.info(`Connected to ${url}`);
-                };
-                ws.onerror = () => {
-                    this._connect(retried + 1)
-                        .then(() => resolve())
-                        .catch(error => reject(error));
+                    logger.info(`Connection is established to ${url}`);
                 };
                 if (ws.readyState === WebSocket.OPEN) {
                     opened();
@@ -148,11 +165,14 @@ export class Comlink {
                     ws.onopen = () => {
                         opened();
                     };
+                    ws.onerror = error => {
+                        reject(error);
+                    };
                 }
             });
         } catch (error: any) {
             logger.warn(`Connection failed to url ${url}, retried: ${retried}`, error);
-            return this._connect(retried + 1);
+            return await this._connect(retried + 1);
         }
     }
 

@@ -1,6 +1,5 @@
-import EventEmitter = require("events");
-import { Comlink } from "./Comlink";
 import { SfuSample } from "./SfuSample";
+import { WatchTransportConfig } from "./WatchTransportConfig";
 
 export interface SfuObserver {
     onError(listener: (event: Event) => void): this;
@@ -9,5 +8,5 @@ export interface SfuObserver {
     stop(): this;
     markSamples(marker?: string): this;
     sendExtensionStats(payloadType: string, payload: string) : this;
-    watchTransport(transport: any): this;
+    watchTransport(transport: any, watchConfig?: WatchTransportConfig): this;
 }

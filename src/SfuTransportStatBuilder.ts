@@ -8,6 +8,8 @@ export class SfuTransportStatBuilder {
 
     private _transportId: string | null = null;
     private _serviceId?: string | undefined;
+    private _internal?: boolean | undefined = false;
+    private _skipMeasurements?: boolean | undefined = false;
     private _dtlsState?: string | undefined;
     private _iceState?: string | undefined;
     private _sctpState?: string | undefined;
@@ -41,8 +43,13 @@ export class SfuTransportStatBuilder {
         return this;
     }
 
-    withServiceId(value?: string): SfuTransportStatBuilder {
-        this._serviceId = value;
+    withSkipMeasurements(value?: boolean): SfuTransportStatBuilder {
+        this._skipMeasurements = value;
+        return this;
+    }
+
+    withInternal(value?: boolean): SfuTransportStatBuilder {
+        this._internal = value;
         return this;
     }
 
@@ -173,7 +180,8 @@ export class SfuTransportStatBuilder {
         }
         return {
             transportId: this._transportId,
-            serviceId: this._serviceId,
+            internal: this._internal,
+            skipMeasurements: this._skipMeasurements,
             dtlsState: this._dtlsState,
             iceState: this._iceState,
             sctpState: this._sctpState,

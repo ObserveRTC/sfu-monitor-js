@@ -89,9 +89,8 @@ export class SfuSampleBuilder {
 
         return {
             sfuId: this._sfuId!,
-            sfuName: this._sfuName,
-            outboundRtpStreams: this._outboundRtpPads,
-            inboundRtpStreams: this._inboundRtpPads,
+            outboundRtpPads: this._outboundRtpPads,
+            inboundRtpPads: this._inboundRtpPads,
             sctpStreams: this._sctpStream,
             sfuTransports: this._sfuTransports,
             timestamp: this._timestamp!,

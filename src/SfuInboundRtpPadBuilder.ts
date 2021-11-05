@@ -9,6 +9,8 @@ export class SfuInboundRtpPadBuilder {
 
     private _transportId: string | null = null;
     private _rtpStreamId: string | null = null;
+    private _internal?: boolean | undefined = false;
+    private _skipMeasurements?: boolean | undefined = false;
     private _padId: string | null = null;
     private _outboundPadId: string | undefined;
     private _ssrc?: number | undefined;
@@ -62,6 +64,16 @@ export class SfuInboundRtpPadBuilder {
 
     withPadId(value: string): SfuInboundRtpPadBuilder {
         this._padId = value;
+        return this;
+    }
+
+    withSkipMeasurements(value?: boolean): SfuInboundRtpPadBuilder {
+        this._skipMeasurements = value;
+        return this;
+    }
+
+    withInternal(value?: boolean): SfuInboundRtpPadBuilder {
+        this._internal = value;
         return this;
     }
 
@@ -254,6 +266,8 @@ export class SfuInboundRtpPadBuilder {
             transportId: this._transportId,
             rtpStreamId: this._rtpStreamId,
             padId: this._padId,
+            internal: this._internal,
+            skipMeasurements: this._skipMeasurements,
             outboundPadId: this._outboundPadId,
             ssrc: this._ssrc,
             mediaType: this._mediaType,

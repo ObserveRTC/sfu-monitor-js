@@ -61,7 +61,15 @@ export class SfuSampleRelayer {
         }
     }
 
+    get run(): boolean {
+        return this._timer !== null;
+    }
+
     start(): void {
+        if (this._timer) {
+            logger.warn(`Attempted to set the timer twice`);
+            return;
+        }
         this._timer = setInterval(() => {
             this.proceed();
         }, this._intervalInMs);
@@ -71,6 +79,7 @@ export class SfuSampleRelayer {
     stop(): void {
         if (this._timer !== null) {
             clearInterval(this._timer);
+            this._timer = null;
         }
         this._emitter.emit(ON_STOPPED_EVENT_NAME);
     }
