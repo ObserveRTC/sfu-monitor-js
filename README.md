@@ -1,4 +1,7 @@
-This client application helps you sampling your SFU. After configuring the client app it generates an [SfuSample](https://github.com/ObserveRTC/schemas-2.0/blob/main/generated-schemas/samples/v2/SfuSample.md), which can be processed by an [observer](https://github.com/ObserveRTC/observer). Observer match [samples originated from client applications](https://github.com/ObserveRTC/schemas-2.0/blob/main/generated-schemas/samples/v2/ClientSample.md) and samples originated from SFU. After you setup an observer, you can integrate your SFU and start watching your transports.
+Sfu Observer
+===
+
+This client application helps you sampling your SFU. After it is started, it generates [SfuSample](https://github.com/ObserveRTC/schemas-2.0/blob/main/generated-schemas/samples/v2/SfuSample.md)s. SfuSamples can be processed by an [observer](https://github.com/ObserveRTC/observer). Observer match [samples originated from client applications](https://github.com/ObserveRTC/schemas-2.0/blob/main/generated-schemas/samples/v2/ClientSample.md) and samples originated from SFU. After you setup an observer, you can integrate your SFU and start watching your transports.
 
 ## Install
 
