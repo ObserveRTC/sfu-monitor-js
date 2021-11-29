@@ -2,12 +2,26 @@ import { MediasoupVersion } from "./MediasoupVersion";
 import { Promises as Promises } from "../PromiseExecutor";
 import { factory } from "../ConfigLog4j";
 import { uuid } from "uuidv4";
+import { WatchTransportConfig } from "../WatchTransportConfig";
  
-const logger = factory.getLogger("MediasoupWrapper");
+const logger = factory.getLogger("SfuObserver.MediasoupWrapper");
+const EMPTY_PRODUCER_STATS = {
+    type: "inbound-rtp",
+};
+
+const EMPTY_CONSUMER_STATS = {
+    type: "inbound-rtp",
+};
+
+const EMPTY_TRANSPORT_STATS = {
+    type: "webrtc-transport",
+};
 
 interface ProducerStats {
     id: string;
-    sourceId: string;
+    padId: string;
+    piped: boolean;
+    statsIncluded: boolean;
     transportId: string;
     trackId?: string;
     ssrc?: number;
@@ -33,6 +47,9 @@ interface ProducerStats {
 
 interface ConsumerStats {
     id: string;
+    padId: string;
+    piped: boolean;
+    statsIncluded: boolean;
     producerId: string;
     transportId: string;
     trackId?: string;
@@ -80,6 +97,8 @@ interface DataConsumerStats {
 interface TransportStats {
     type: string;
     id: any;
+    piped: boolean;
+    statsIncluded: boolean;
     rtxBytesSent: any;
     rtxBytesReceived: any;
     rtpBytesSent: any;
@@ -93,13 +112,12 @@ interface TransportStats {
     sctpState: any;
     iceState: any;
     dtlsState: any;
-    serviceId: any;
-
 }
 
 interface Builder {
     withMediasoup(mediasoup: any) : Builder;
     watchAllTransports(value: boolean) : Builder;
+    withDefaultWatchConfig(value: WatchTransportConfig): Builder;
     build() : MediasoupWrapper;
 }
 
@@ -131,6 +149,7 @@ export class MediasoupWrapper {
     public static builder(): Builder {
         let mediasoup: any = null;
         let _watchAllTransport = true;
+        let defaultWatchConfig: WatchTransportConfig | null = null;
         const mediasoupWrapperBuilder: Builder = {
             withMediasoup(ms: any): Builder {
                 mediasoup = ms;
@@ -138,6 +157,10 @@ export class MediasoupWrapper {
             },
             watchAllTransports(value: boolean) : Builder {
                 _watchAllTransport = value;
+                return mediasoupWrapperBuilder;
+            },
+            withDefaultWatchConfig(watchConfig: WatchTransportConfig): Builder {
+                defaultWatchConfig = watchConfig;
                 return mediasoupWrapperBuilder;
             },
             build(): MediasoupWrapper {
@@ -150,14 +173,16 @@ export class MediasoupWrapper {
                     throw new Error("Can only support mediasoup major version 3 at the moment");
                 }
                 const result = new MediasoupWrapper(mediasoup, version);
-                
+                if (defaultWatchConfig !== null) {
+                    result._defaultWatchConfig = defaultWatchConfig;
+                }
                 // Observe events and track maps depending on version
 
                 const _observeRouter = (router: any) => {
                     logger.info(`Begin observing Mediasoup Router ${router.id}`);
                     validateMediasoupObject(router, "router");
                     result._routers.set(router.id, router);
-                    router.observer.on("close", () => {
+                    router.observer.once("close", () => {
                         result._routers.delete(router.id);
                         logger.info(`End observing Mediasoup Router ${router.id}`);
                     });
@@ -167,13 +192,16 @@ export class MediasoupWrapper {
                 };
 
                 const _observeWorker = (worker: any) => {
+                    if (!result._enabled) {
+                        return;
+                    }
                     validateMediasoupObject({
                         id: worker.pid,
                         observer: worker.observer,
                     }, "worker");
                     logger.info(`Begin observing Mediasoup Worker ${worker.pid}`);
                     result._workers.set(worker.pid, worker);
-                    worker.observer.on("close", () => {
+                    worker.observer.once("close", () => {
                         result._workers.delete(worker.pid);
                         logger.info(`End observing Mediasoup Worker ${worker.pid}`);
                     });
@@ -193,6 +221,7 @@ export class MediasoupWrapper {
 
     private _mediasoup: any;
     public readonly version: MediasoupVersion;
+    private _defaultWatchConfig: WatchTransportConfig;
     private _noStats: Map<string, number>;
     private _workers: Map<any, any>;
     private _routers: Map<any, any>;
@@ -202,6 +231,7 @@ export class MediasoupWrapper {
     private _dataProducers: Map<any, any>;
     private _dataConsumers: Map<any, any>;
     private _streamsMeta: Map<any, any>;
+    private _enabled: boolean = false;
 
     private constructor(mediasoup: any, version: MediasoupVersion) {
         this.version = version;
@@ -215,46 +245,90 @@ export class MediasoupWrapper {
         this._dataConsumers = new Map();
         this._streamsMeta = new Map();
         this._noStats = new Map();
+        this._defaultWatchConfig = {
+            includeInboundRtpPadMeasurements: true,
+            includeOutboundRtpPadMeasurements: true,
+            includeTransportMeasurements: true,
+        }
     }
 
-    watchTransport(transport: any): MediasoupWrapper {
-        logger.info(`Begin observing Mediasoup Transport ${transport.id}`);
+    enable(): void {
+        this._enabled = true;
+        logger.info("Enabled");
+    }
+
+    disable(): void {
+        this._enabled = false;
+        logger.info("Disabled");
+    }
+
+    watchTransport(transport: any, watchConfig?: WatchTransportConfig): MediasoupWrapper {
+        if (!this._enabled) {
+            return this;
+        }
         validateMediasoupObject(transport, "transport");
+        const {
+            includeInboundRtpPadMeasurements,
+            includeOutboundRtpPadMeasurements,
+            includeTransportMeasurements,
+        } = watchConfig ?? this._defaultWatchConfig;
+        logger.info(`Begin observing Mediasoup Transport ${transport.id}. 
+                    Pull outbound-rtp stats: ${includeOutboundRtpPadMeasurements}, 
+                    pull inbound-rtp stats: ${includeInboundRtpPadMeasurements}, 
+                    pull transport stats: ${includeTransportMeasurements}.`);
         this._transports.set(transport.id, transport);
         const transportId = transport.id;
-        transport.observer.on("close", () => {
-            this._disregardTransport(transportId);
+        const piped = transport && transport.constructor && transport.constructor.name === "PipeTransport";
+        this._streamsMeta.set(transportId, {
+            piped,
+            statsIncluded: includeTransportMeasurements,
         });
-        transport.observer.on("newproducer", (producer: any) => {
-            let sourceId = transport.iceState ? producer.id : uuid();
-            if (producer?.appData?.sourceId) {
-                sourceId = producer?.appData?.sourceId;
-            }
+        const newProducerCallback = (producer: any) => {
+            const padId = piped ? uuid() : producer.id;
             this._streamsMeta.set(producer.id, {
                 transportId,
-                sourceId,
+                padId,
+                piped,
+                statsIncluded: includeInboundRtpPadMeasurements
             });
             this._watchProducer(producer);
-        });
-        transport.observer.on("newconsumer", (consumer: any) => {
+        };
+        transport.observer.on("newproducer", newProducerCallback);
+        const newConsumerCallback = (consumer: any) => {
+            const padId = piped ? uuid() : consumer.id;
+            const producerId = consumer.producerId;
             this._streamsMeta.set(consumer.id, {
                 transportId,
+                padId,
+                producerId,
+                piped,
+                statsIncluded: includeOutboundRtpPadMeasurements,
             });
             this._watchConsumer(consumer);
-        });
-        transport.observer.on("newdataproducer", (dataProducer: any) => {
+        };
+        transport.observer.on("newconsumer", newConsumerCallback);
+        const newDataProducerCallback = (dataProducer: any) => {
             const sourceId = dataProducer?.appData?.sourceId ?? uuid();
             this._streamsMeta.set(dataProducer.id, {
                 transportId,
                 sourceId,
             });
             this._watchDataProducer(dataProducer);
-        });
-        transport.observer.on("newdataconsumer", (dataConsumer: any) => {
+        };
+        transport.observer.on("newdataproducer", newDataProducerCallback);
+        const newDataConsumerCallback = (dataConsumer: any) => {
             this._streamsMeta.set(dataConsumer.id, {
                 transportId,
             });
             this._watchDataConsumer(dataConsumer)
+        };
+        transport.observer.on("newdataconsumer", newDataConsumerCallback);
+        transport.observer.once("close", () => {
+            this._disregardTransport(transportId);
+            transport.observer.removeListener('newproducer', newProducerCallback);
+            transport.observer.removeListener('newdataproducer', newDataProducerCallback);
+            transport.observer.removeListener('newconsumer', newConsumerCallback);
+            transport.observer.removeListener('newdataconsumer', newDataConsumerCallback);
         });
         return this;
     }
@@ -267,6 +341,7 @@ export class MediasoupWrapper {
 
     async *producerStats(): AsyncGenerator<ProducerStats, void, void> {
         // any version specific adjustment for producers can be done here
+        const EMPTY_ARRAY:any[] = [EMPTY_PRODUCER_STATS];
         const meta: any[] = [];
         const promises: Promise<any>[] = [];
         for (const producer of this._producers.values()) {
@@ -276,7 +351,11 @@ export class MediasoupWrapper {
                 id,
                 ...streamMeta,
             })
-            promises.push(producer.getStats());
+            if (streamMeta?.statsIncluded) {
+                promises.push(producer.getStats());
+            } else {
+                promises.push(Promise.resolve(EMPTY_ARRAY));
+            }
         }
         
         const responses = await Promises
@@ -310,6 +389,7 @@ export class MediasoupWrapper {
     
     async *consumerStats(): AsyncGenerator<ConsumerStats, void, void> {
         // any version specific adjustment for consumers can be done here
+        const EMPTY_ARRAY:any[] = [EMPTY_CONSUMER_STATS];
         const meta: any[] = [];
         const promises: Promise<any>[] = [];
         for (const consumer of this._consumers.values()) {
@@ -321,7 +401,11 @@ export class MediasoupWrapper {
                 producerId,
                 ...streamMeta,
             })
-            promises.push(consumer.getStats());
+            if (streamMeta?.statsIncluded) {
+                promises.push(consumer.getStats());
+            } else {
+                promises.push(Promise.resolve(EMPTY_ARRAY));
+            }
         }
 
         const responses = await Promises
@@ -441,14 +525,23 @@ export class MediasoupWrapper {
     
     async *transportStats(): AsyncGenerator<TransportStats, void, void> {
         // any version specific adjustment for transports can be done here
+        const EMPTY_ARRAY:any[] = [EMPTY_TRANSPORT_STATS];
         const meta: any[] = [];
         const promises: Promise<any>[] = [];
         for (const transport of this._transports.values()) {
+            const id = transport.id;
+            const streamMeta = this._streamsMeta.get(id) ?? {};
             meta.push({
-                id: transport.id,
+                ...streamMeta,
+                id,
                 serviceId:  transport.appData?.serviceId,
-            })
-            promises.push(transport.getStats());
+            });
+            if (streamMeta?.statsIncluded) {
+                promises.push(transport.getStats());
+            } else {
+                promises.push(Promise.resolve(EMPTY_ARRAY));
+            }
+            
         }
         
         const responses = await Promises
@@ -552,7 +645,7 @@ export class MediasoupWrapper {
         logger.info(`Begin observing Mediasoup Consumer ${consumerId}`);
         validateMediasoupObject(consumer, "consumer");
         this._consumers.set(consumerId, consumer);
-        consumer.observer.on("close", () => {
+        consumer.observer.once("close", () => {
             this._disregardConsumer(consumerId);
         });
         return this;
@@ -570,7 +663,7 @@ export class MediasoupWrapper {
         logger.info(`Begin observing Mediasoup Producer ${producerId}`);
         validateMediasoupObject(producer, "producer");
         this._producers.set(producerId, producer);
-        producer.observer.on("close", () => {
+        producer.observer.once("close", () => {
             this._disregardProducer(producerId);
         });
         return this;
@@ -588,7 +681,7 @@ export class MediasoupWrapper {
         logger.info(`Begin observing Mediasoup DataProducer ${dataProducerId}`);
         validateMediasoupObject(dataProducer, "dataProducer");
         this._dataProducers.set(dataProducerId, dataProducer);
-        dataProducer.observer.on("close", () => {
+        dataProducer.observer.once("close", () => {
            this._disregardDataProducer(dataProducerId);
         });
         return this;
@@ -606,7 +699,7 @@ export class MediasoupWrapper {
         logger.info(`Begin observing Mediasoup DataConsumer ${dataConsumerId}`);
         validateMediasoupObject(dataConsumer, "dataConsumer");
         this._dataConsumers.set(dataConsumerId, dataConsumer);
-        dataConsumer.observer.on("close", () => {
+        dataConsumer.observer.once("close", () => {
            this._disregardDataConsumer(dataConsumerId);
         });
         return this;

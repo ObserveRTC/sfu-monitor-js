@@ -1,6 +1,6 @@
 // @revision: 1
 
-export interface SfuRtpSource {
+export interface SfuInboundRtpPad {
   /**
    * The id of the transport the stream belongs to
    */
@@ -9,12 +9,27 @@ export interface SfuRtpSource {
   /**
    * unique identifier for the stream
    */
-  streamId: string
+  rtpStreamId: string
 
   /**
    * id of the source pod
    */
-  sourceId: string;
+  padId: string;
+
+  /**
+   * Indicates if this transport is not receive or send traffic outside of the SFU mesh.
+   */
+  internal?: boolean;
+
+  /**
+   * Indicate if this message measurements should be kept and oly used as keep alive message for the transports
+   */
+  skipMeasurements?: boolean;
+
+  /**
+   * if the sink is internally piped between the SFUs, this id represents the remote SFU outbound pad id
+   */
+  outboundPadId?: string;
 
   /**
    * The SSRC identifier of the corresponded RTP stream
@@ -187,7 +202,7 @@ export interface SfuRtpSource {
   attachments?: string;
 }
 
-export interface SfuRtpSink {
+export interface SfuOutboundRtpPad {
   /**
    * The id of the transport the stream belongs to
    */
@@ -196,12 +211,22 @@ export interface SfuRtpSink {
   /**
    * unique identifier of the stream
    */
-  streamId: string
+  rtpStreamId: string
 
   /**
    * id of the sink pod
    */
-  sinkId?: string;
+  padId?: string;
+
+  /**
+   * Indicates if this transport is not receive or send traffic outside of the SFU mesh.
+   */
+  internal?: boolean;
+
+  /**
+   * Indicate if this message measurements should be kept and oly used as keep alive message for the transports
+   */
+  skipMeasurements?: boolean;
 
   /**
    * The SSRC identifier of the corresponded RTP stream
@@ -432,13 +457,16 @@ export interface SfuTransport {
    * The identifier of the transport
    */
   transportId: string;
-  
+
   /**
-   * The id of the service the transport belongs to
-   * 
-   * NOTE: As one SFU may used by many service by one organization, this is an additional information should/can be provided to the Sfu transport
+   * Indicates if this transport is not receive or send traffic outside of the SFU mesh.
    */
-  serviceId?: string;
+  internal?: boolean;
+
+  /**
+   * Indicate if this message measurements should be kept and oly used as keep alive message for the transports
+   */
+  skipMeasurements?: boolean;
 
   /**
    * Set to the current value of the state attribute of the underlying RTCDtlsTransport.
@@ -573,19 +601,14 @@ export interface SfuSample {
   sfuId: string;
 
   /**
-   * A given name for a certain SFU
-   */
-  sfuName?: string;
-
-  /**
    * array of measurements related to inbound RTP streams
    */
-  rtpSources?: SfuRtpSource[];
+  inboundRtpPads?: SfuInboundRtpPad[];
 
   /**
    * array of measurements related to outbound RTP streams
    */
-  rtpSinks?: SfuRtpSink[];
+  outboundRtpPads?: SfuOutboundRtpPad[];
 
   /**
    * array of measurements of SCTP streams

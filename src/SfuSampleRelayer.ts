@@ -48,18 +48,30 @@ export class SfuSampleRelayer {
         return this;
     }
 
+    proceed() {
+        try {
+            (async () => {
+                const sampleBuilder = await this._sampleProvider.getSample();
+                this._emitter.emit(ON_SAMPLE_EVENT_NAME, sampleBuilder);
+            })();
+        } catch (error) {
+            logger.error("An error occurred while observing sample");
+            this._emitter.emit(ON_ERROR_EVENT_NAME, error);
+            this.stop();
+        }
+    }
+
+    get run(): boolean {
+        return this._timer !== null;
+    }
+
     start(): void {
+        if (this._timer) {
+            logger.warn(`Attempted to set the timer twice`);
+            return;
+        }
         this._timer = setInterval(() => {
-            try {
-                (async () => {
-                    const sampleBuilder = await this._sampleProvider.getSample();
-                    this._emitter.emit(ON_SAMPLE_EVENT_NAME, sampleBuilder);
-                })();
-            } catch (error) {
-                logger.error("An error occurred while observing sample");
-                this._emitter.emit(ON_ERROR_EVENT_NAME, error);
-                this.stop();
-            }
+            this.proceed();
         }, this._intervalInMs);
         this._emitter.emit(ON_STARTED_EVENT_NAME);
     }
@@ -67,6 +79,7 @@ export class SfuSampleRelayer {
     stop(): void {
         if (this._timer !== null) {
             clearInterval(this._timer);
+            this._timer = null;
         }
         this._emitter.emit(ON_STOPPED_EVENT_NAME);
     }

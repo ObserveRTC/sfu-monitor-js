@@ -7,7 +7,8 @@ import { MediasoupSfuSampleProvider } from './MediasoupSfuSampleProvider';
 import { MediasoupVisitor } from './MediasoupVisitor';
 import EventEmitter = require('events');
 import { factory } from "../ConfigLog4j";
- 
+import { WatchTransportConfig } from '../WatchTransportConfig';
+
 const logger = factory.getLogger("MediasoupSfuObserver");
 
 const ON_ERROR_EVENT_NAME = "onError";
@@ -17,22 +18,24 @@ const ON_SAMPLE_EVENT_NAME = "onSample";
 interface Builder {
     withMediasoup(mediasoup: any) : this;
     withSfuId(value: string) : this;
-    withSfuName(value: string) : this;
     withPollingInterval(intervalInMs: number) : this;
     withEndpoint(endpoint: string): this;
+    withMaxConnectionRetry(maxConnectRetry: number) : this;
     watchAllTransport(value: boolean): this;
+    withDefaultWatchConfig(value: WatchTransportConfig): this;
     build() : MediasoupSfuObserver;
 }
 
 export class MediasoupSfuObserver implements SfuObserver{
 
     public static builder(): Builder {
+        let _watchConfig: WatchTransportConfig | null = null;
         let _comlink: Comlink | null = null;
         let _mediasoup: any = null;
         let _pollingIntervalInMs = 5000;
         let _watchAllTransport = true;
         let _sfuId : string | null = null;
-        let _sfuName : string | null = null;
+        let _maxRetry = 10;
         const result : Builder = {
             withMediasoup(mediasoup: any): Builder {
                 _mediasoup = mediasoup;
@@ -42,16 +45,20 @@ export class MediasoupSfuObserver implements SfuObserver{
                 _sfuId = value;
                 return this;
             },
-            withSfuName(value: string): Builder {
-                _sfuName = value;
-                return this;
-            },
             withPollingInterval(intervalInMs: number): Builder {
                 _pollingIntervalInMs = intervalInMs;
                 return result;
             },
+            withDefaultWatchConfig(watchConfig: WatchTransportConfig): Builder {
+                _watchConfig = watchConfig;
+                return result;
+            },
             withEndpoint(endpoint: string): Builder {
                 _comlink = Comlink.builder().withEndpoint(endpoint).build();
+                return result;
+            },
+            withMaxConnectionRetry(maxRetry: number) : Builder {
+                _maxRetry = maxRetry;
                 return result;
             },
             watchAllTransport(value: boolean): Builder {
@@ -62,10 +69,13 @@ export class MediasoupSfuObserver implements SfuObserver{
                 if (_mediasoup === null) {
                     throw new Error("mediasoup object cannot be null for MediasoupSfuObserver");
                 }
-                const mediasoupWrapper = MediasoupWrapper.builder()
+                const mediasoupWrapperBuilder = MediasoupWrapper.builder()
                     .withMediasoup(_mediasoup)
-                    .watchAllTransports(_watchAllTransport)
-                    .build();
+                    .watchAllTransports(_watchAllTransport);
+                if (_watchConfig !== null) {
+                    mediasoupWrapperBuilder.withDefaultWatchConfig(_watchConfig);
+                }
+                const mediasoupWrapper = mediasoupWrapperBuilder.build();
                 const mediasoupVisitor = MediasoupVisitor.builder()
                     .withMediasoupWrapper(mediasoupWrapper)
                     .build();
@@ -78,22 +88,29 @@ export class MediasoupSfuObserver implements SfuObserver{
                     .build();
                 const mediasoupSfuObserver = new MediasoupSfuObserver(_pollingIntervalInMs, mediasoupSfuSampleProvider);
                 if (_comlink !== null) {
-                    mediasoupSfuObserver.addComlink(_comlink);
+                    _comlink.setMaxRetry(_maxRetry);
+                    _comlink.onClosed(() => {
+                        mediasoupSfuObserver._comlink = null;
+                    });
+                    mediasoupSfuObserver._comlink = _comlink;
                 }
-                mediasoupSfuObserver._watchTransportMethod = (transport: any) => {
-                    mediasoupWrapper.watchTransport(transport);
+                mediasoupSfuObserver._watchTransportMethod = (transport: any, watchConfig?: WatchTransportConfig) => {
+                    mediasoupWrapper.watchTransport(transport, watchConfig);
                 };
+                // mediasoupSfuObserver._mediasoupWrapper = mediasoupWrapper
+                logger.info("SfuObserver is loaded 2");
                 return mediasoupSfuObserver;
             }
         };
         return result;
     }
+    private _rendered: boolean = false;
     private _emitter : EventEmitter = new EventEmitter();
-    private _comlinks : Map<string, Comlink> = new Map();
+    private _comlink :Comlink | null = null;
     private _pollingIntervalInMs: number;
     private _sampleRelayer : SfuSampleRelayer;
     private _sampleProvider: MediasoupSfuSampleProvider;
-    private _watchTransportMethod?: (transport: any) => void;
+    private _watchTransportMethod?: (transport: any, watchConfig?: WatchTransportConfig) => void;
 
     private constructor(pollingIntervalInMs: number, sampleProvider: MediasoupSfuSampleProvider) {
         this._pollingIntervalInMs = pollingIntervalInMs;
@@ -106,34 +123,20 @@ export class MediasoupSfuObserver implements SfuObserver{
             .onStopped(() => {
                 logger.info("Sample Relayer has been stopped");
             })
-            .onError(() => {
-                this._emitter.emit(ON_ERROR_EVENT_NAME);
+            .onError(error => {
+                this._emitter.emit(ON_ERROR_EVENT_NAME, error);
             })
             .onSample(sample => {
                 this._process(sample);
             })
     }
 
-    watchTransport(transport: any): this {
+    watchTransport(transport: any, watchConfig?: WatchTransportConfig): this {
         if (this._watchTransportMethod === undefined) {
             logger.warn(`Cannot watch transport, because the udnerlying method has not been bound`);
             return this;
         }
-        this._watchTransportMethod(transport);
-        return this;
-    }
-
-    addComlink(comlink: Comlink): this {
-        comlink
-            .onConnected(() => {
-                this._comlinks.set(comlink.id, comlink);
-            })
-            .onError(error => {
-                this._emitter.emit(ON_ERROR_EVENT_NAME, error);
-            })
-            .onClosed(() => {
-                this._comlinks.delete(comlink.id);
-            });
+        this._watchTransportMethod(transport, watchConfig);
         return this;
     }
 
@@ -148,12 +151,27 @@ export class MediasoupSfuObserver implements SfuObserver{
     }
 
     start(): this {
+        if (this._sampleRelayer.run) {
+            logger.warn(`Attempted to start the observer twice`);
+            return this;
+        }
+        this._sampleProvider.start();
         this._sampleRelayer.start();
+        if (!this._rendered) {
+            this._render();
+        }
+        logger.info(`Started`);
         return this;
     }
 
     stop(): this {
+        if (this._sampleRelayer.run) {
+            logger.info(`Observer was not running`);
+            return this;
+        }
+        this._sampleProvider.stop();
         this._sampleRelayer.stop();
+        logger.info(`Stopped`);
         return this;
     }
 
@@ -169,13 +187,30 @@ export class MediasoupSfuObserver implements SfuObserver{
 
     _process(sample: SfuSample): void {
         this._emitter.emit(ON_SAMPLE_EVENT_NAME, sample);
+        if (this._comlink === null) {
+            logger.warn("No comlink has added, sample will not be sent to anywhere");
+            return;
+        }
         const serializedSample = JSON.stringify(sample);
-        for (const comlink of this._comlinks.values()) {
-            try {
-                comlink.send(serializedSample);
-            } catch (error) {
-                comlink.close();
+        try {
+            this._comlink.send(serializedSample).catch(error => {
+                const url = this._comlink?.url;
+                logger.error(`Comlink cannot establish connection to ${url}`, error);
+                if (this._comlink && !this._comlink.closed) {
+                    this._comlink.close();
+                }
+            });
+        } catch (error) {
+            if (!this._comlink.closed) {
+                this._comlink.close();
             }
         }
+    }
+
+    private _render() {
+        if (this._rendered) {
+            return;
+        }
+        logger.info(`SFU-Observer Version: TBD`)
     }
 }

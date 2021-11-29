@@ -1,15 +1,18 @@
-import { SfuRtpSource } from "./SfuSample";
+import { SfuInboundRtpPad } from "./SfuSample";
 
-export class SfuRtpSourceBuilder {
+export class SfuInboundRtpPadBuilder {
     
-    public static create(): SfuRtpSourceBuilder {
+    public static create(): SfuInboundRtpPadBuilder {
         // because I want to control the new keyword!
-        return new SfuRtpSourceBuilder();
+        return new SfuInboundRtpPadBuilder();
     }
 
     private _transportId: string | null = null;
-    private _streamId: string | null = null;
-    private _sourceId: string | null = null;
+    private _rtpStreamId: string | null = null;
+    private _internal?: boolean | undefined = false;
+    private _skipMeasurements?: boolean | undefined = false;
+    private _padId: string | null = null;
+    private _outboundPadId: string | undefined;
     private _ssrc?: number | undefined;
     private _mediaType?: string | undefined;
     private _payloadType?: number | undefined;
@@ -49,205 +52,223 @@ export class SfuRtpSourceBuilder {
         // empty
     }
     
-    withTransportId(value: string): SfuRtpSourceBuilder {
+    withTransportId(value: string): SfuInboundRtpPadBuilder {
         this._transportId = value;
         return this;
     }
 
-    withStreamId(value: string): SfuRtpSourceBuilder {
-        this._streamId = value;
+    withRtpStreamId(value: string): SfuInboundRtpPadBuilder {
+        this._rtpStreamId = value;
         return this;
     }
 
-    withSourceId(value: string): SfuRtpSourceBuilder {
-        this._sourceId = value;
+    withPadId(value: string): SfuInboundRtpPadBuilder {
+        this._padId = value;
         return this;
     }
 
-    withSsrc(value?: number): SfuRtpSourceBuilder {
+    withSkipMeasurements(value?: boolean): SfuInboundRtpPadBuilder {
+        this._skipMeasurements = value;
+        return this;
+    }
+
+    withInternal(value?: boolean): SfuInboundRtpPadBuilder {
+        this._internal = value;
+        return this;
+    }
+
+    withOutboundPadId(value: string): SfuInboundRtpPadBuilder {
+        this._outboundPadId = value;
+        return this;
+    }
+
+    withSsrc(value?: number): SfuInboundRtpPadBuilder {
         this._ssrc = value;
         return this;
     }
 
-    withMediaType(value?: string): SfuRtpSourceBuilder {
+    withMediaType(value?: string): SfuInboundRtpPadBuilder {
         this._mediaType = value;
         return this;
     }
 
-    withPayloadType(value?: number): SfuRtpSourceBuilder {
+    withPayloadType(value?: number): SfuInboundRtpPadBuilder {
         this._payloadType = value;
         return this;
     }
 
-    withMimeType(value?: string): SfuRtpSourceBuilder {
+    withMimeType(value?: string): SfuInboundRtpPadBuilder {
         this._mimeType = value;
         return this;
     }
 
-    withClockRate(value?: number): SfuRtpSourceBuilder {
+    withClockRate(value?: number): SfuInboundRtpPadBuilder {
         this._clockRate = value;
         return this;
     }
 
-    withSdpFmtpLine(value?: string): SfuRtpSourceBuilder {
+    withSdpFmtpLine(value?: string): SfuInboundRtpPadBuilder {
         this._sdpFmtpLine = value;
         return this;
     }
 
-    withRid(value?: string): SfuRtpSourceBuilder {
+    withRid(value?: string): SfuInboundRtpPadBuilder {
         this._rid = value;
         return this;
     }
 
-    withRtxSsrc(value?: number): SfuRtpSourceBuilder {
+    withRtxSsrc(value?: number): SfuInboundRtpPadBuilder {
         this._rtxSsrc = value;
         return this;
     }
 
-    withTargetBitrate(value?: number): SfuRtpSourceBuilder {
+    withTargetBitrate(value?: number): SfuInboundRtpPadBuilder {
         this._targetBitrate = value;
         return this;
     }
 
-    withVoiceActivityFlag(value?: boolean): SfuRtpSourceBuilder {
+    withVoiceActivityFlag(value?: boolean): SfuInboundRtpPadBuilder {
         this._voiceActivityFlag = value;
         return this;
     }
 
-    withFirCount(value?: number): SfuRtpSourceBuilder {
+    withFirCount(value?: number): SfuInboundRtpPadBuilder {
         this._firCount = value;
         return this;
     }
 
-    withPliCount(value?: number): SfuRtpSourceBuilder {
+    withPliCount(value?: number): SfuInboundRtpPadBuilder {
         this._pliCount = value;
         return this;
     }
 
-    withNackCount(value?: number): SfuRtpSourceBuilder {
+    withNackCount(value?: number): SfuInboundRtpPadBuilder {
         this._nackCount = value;
         return this;
     }
 
-    withSliCount(value?: number): SfuRtpSourceBuilder {
+    withSliCount(value?: number): SfuInboundRtpPadBuilder {
         this._sliCount = value;
         return this;
     }
 
-    withPacketsLost(value?: number): SfuRtpSourceBuilder {
+    withPacketsLost(value?: number): SfuInboundRtpPadBuilder {
         this._packetsLost = value;
         return this;
     }
 
-    withPacketsReceived(value?: number): SfuRtpSourceBuilder {
+    withPacketsReceived(value?: number): SfuInboundRtpPadBuilder {
         this._packetsReceived = value;
         return this;
     }
 
-    withPacketsDiscarded(value?: number): SfuRtpSourceBuilder {
+    withPacketsDiscarded(value?: number): SfuInboundRtpPadBuilder {
         this._packetsDiscarded = value;
         return this;
     }
 
-    withPacketsRepaired(value?: number): SfuRtpSourceBuilder {
+    withPacketsRepaired(value?: number): SfuInboundRtpPadBuilder {
         this._packetsRepaired = value;
         return this;
     }
 
-    withPacketsFailedDecryption(value?: number): SfuRtpSourceBuilder {
+    withPacketsFailedDecryption(value?: number): SfuInboundRtpPadBuilder {
         this._packetsFailedDecryption = value;
         return this;
     }
 
-    withPacketsDuplicated(value?: number): SfuRtpSourceBuilder {
+    withPacketsDuplicated(value?: number): SfuInboundRtpPadBuilder {
         this._packetsDuplicated = value;
         return this;
     }
 
-    withFecPacketsReceived(value?: number): SfuRtpSourceBuilder {
+    withFecPacketsReceived(value?: number): SfuInboundRtpPadBuilder {
         this._fecPacketsReceived = value;
         return this;
     }
 
-    withFecPacketsDiscarded(value?: number): SfuRtpSourceBuilder {
+    withFecPacketsDiscarded(value?: number): SfuInboundRtpPadBuilder {
         this._fecPacketsDiscarded = value;
         return this;
     }
 
-    withBytesReceived(value?: number): SfuRtpSourceBuilder {
+    withBytesReceived(value?: number): SfuInboundRtpPadBuilder {
         this._bytesReceived = value;
         return this;
     }
 
-    withRtcpSrReceived(value?: number): SfuRtpSourceBuilder {
+    withRtcpSrReceived(value?: number): SfuInboundRtpPadBuilder {
         this._rtcpSrReceived = value;
         return this;
     }
 
-    withRtcpRrSent(value?: number): SfuRtpSourceBuilder {
+    withRtcpRrSent(value?: number): SfuInboundRtpPadBuilder {
         this._rtcpRrSent = value;
         return this;
     }
 
-    withRtxPacketsReceived(value?: number): SfuRtpSourceBuilder {
+    withRtxPacketsReceived(value?: number): SfuInboundRtpPadBuilder {
         this._rtxPacketsReceived = value;
         return this;
     }
 
-    withRtxPacketsDiscarded(value?: number): SfuRtpSourceBuilder {
+    withRtxPacketsDiscarded(value?: number): SfuInboundRtpPadBuilder {
         this._rtxPacketsDiscarded = value;
         return this;
     }
 
-    withFramesReceived(value?: number): SfuRtpSourceBuilder {
+    withFramesReceived(value?: number): SfuInboundRtpPadBuilder {
         this._framesReceived = value;
         return this;
     }
 
-    withFramesDecoded(value?: number): SfuRtpSourceBuilder {
+    withFramesDecoded(value?: number): SfuInboundRtpPadBuilder {
         this._framesDecoded = value;
         return this;
     }
 
-    withKeyFramesDecoded(value?: number): SfuRtpSourceBuilder {
+    withKeyFramesDecoded(value?: number): SfuInboundRtpPadBuilder {
         this._keyFramesDecoded = value;
         return this;
     }
 
-    withFractionLost(value?: number): SfuRtpSourceBuilder {
+    withFractionLost(value?: number): SfuInboundRtpPadBuilder {
         this._fractionLost = value;
         return this;
     }
 
-    withJitter(value?: number): SfuRtpSourceBuilder {
+    withJitter(value?: number): SfuInboundRtpPadBuilder {
         this._jitter = value;
         return this;
     }
 
-    withRoundTripTime(value?: number) : SfuRtpSourceBuilder {
+    withRoundTripTime(value?: number) : SfuInboundRtpPadBuilder {
         this._roundTripTime = value;
         return this;
     }
 
-    withAttachments(value?: string): SfuRtpSourceBuilder {
+    withAttachments(value?: string): SfuInboundRtpPadBuilder {
         this._attachments = value;
         return this;
     }
 
-    build(): SfuRtpSource {
+    build(): SfuInboundRtpPad {
         if (this._transportId === null) {
             throw new Error("TransportId cannot be null");
         }
-        if (this._streamId === null) {
+        if (this._rtpStreamId === null) {
             throw new Error("StreamId cannot be null");
         }
-        if (this._sourceId === null) {
+        if (this._padId === null) {
             throw new Error("SourceId cannot be null");
         }
         return {
             transportId: this._transportId,
-            streamId: this._streamId,
-            sourceId: this._sourceId,
+            rtpStreamId: this._rtpStreamId,
+            padId: this._padId,
+            internal: this._internal,
+            skipMeasurements: this._skipMeasurements,
+            outboundPadId: this._outboundPadId,
             ssrc: this._ssrc,
             mediaType: this._mediaType,
             payloadType: this._payloadType,

@@ -3,6 +3,9 @@ import { SfuSample } from "../SfuSample";
 import { SfuSampleBuilder } from "../SfuSampleBuilder";
 import { SfuSampleProvider as SfuSampleProvider } from "../SfuSampleProvider";
 import { MediasoupVisitor } from "./MediasoupVisitor";
+import { factory } from "../ConfigLog4j";
+
+const logger = factory.getLogger("MediasoupSfuSampleProvider");
 
 interface Builder {
     withSfuName(value: string) : this;
@@ -45,11 +48,24 @@ export class MediasoupSfuSampleProvider implements SfuSampleProvider {
     private _marker: string | null = null;
     private _extensionType: string | null= null;
     private _extensionPayload: string | null = null;
+    private _started: boolean  = false;
 
     private constructor(visitor : MediasoupVisitor, sfuId : string, sfuName: string | null) {
         this._sfuId = sfuId;
         this._sfuName = sfuName;
         this._visitor = visitor;
+    }
+
+    start(): void {
+        this._started = true;
+        this._visitor.enable();
+        logger.info("Started");
+    }
+
+    stop(): void {
+        this._started = false;
+        this._visitor.disable();
+        logger.info("Stopped");
     }
 
     async getSample(): Promise<SfuSample> {
@@ -63,11 +79,11 @@ export class MediasoupSfuSampleProvider implements SfuSampleProvider {
         ];
         const responses = await Promise.all(promises);
         const transports = responses[0];
-        for await (const rtpSource of this._visitor.visitRtpSources()) {
-            builder.addRtpSource(rtpSource);
+        for await (const rtpSource of this._visitor.visitInboundRtpPads()) {
+            builder.addInboundRtpPad(rtpSource);
         }
-        for await (const rtpSink of this._visitor.visitRtpSinks()) {
-            builder.addRtpSink(rtpSink);
+        for await (const rtpSink of this._visitor.visitOutbooundRtpPads()) {
+            builder.addOutboundRtpPad(rtpSink);
         }
         for await (const transportStat of this._visitor.visitTransports()) {
             builder.addTransportStat(transportStat);

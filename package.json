@@ -1,6 +1,6 @@
 {
   "name": "sfu-observer-js",
-  "version": "0.0.23",
+  "version": "0.1.0",
   "description": "ObserveRTC client library to observe SFUs, make samples and send to a server",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
