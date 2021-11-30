@@ -3,7 +3,7 @@ Sfu Observer Js library
 
 Javascript library to create and send [SfuSample](https://github.com/ObserveRTC/schemas-2.0/blob/main/generated-schemas/samples/v2/SfuSample.md)s. 
 
-
+ 
 ## Install
 
 Add the npm package to your SFU project.
@@ -13,6 +13,8 @@ Add the npm package to your SFU project.
 ```
 
 ## Contribute
+
+TBD
 
 ### Develop your integration
 
