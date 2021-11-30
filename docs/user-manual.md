@@ -1,11 +1,6 @@
-Sfu-Observer Javascript SDK
-===
-
 Javascript library to create and send [SfuSample](https://github.com/ObserveRTC/schemas-2.0/blob/main/generated-schemas/samples/v2/SfuSample.md)s. SfuSamples can be processed by an [observer](https://github.com/ObserveRTC/observer). Observer match [samples originated from client applications](https://github.com/ObserveRTC/schemas-2.0/blob/main/generated-schemas/samples/v2/ClientSample.md) and samples originated from SFU. After you setup an observer, you can integrate your SFU and start watching your transports.
 
-## Integrate your SFU
-
-### Install
+## Install
 
 Add the npm package to your SFU project.
 
@@ -13,14 +8,14 @@ Add the npm package to your SFU project.
     npm i sfu-observer-js
 ```
 
-### Build supported SFU-Observer
-
 In order to provide and send [SfuSample]()s from your SFU, you need to 
 provide components for it. Currently the following SFUs are supported by the 
 library:
  * [mediasoup]() integration
 
-#### Mediasoup
+## Integrate SFU
+
+### Mediasoup
 
 Take a look the following example to integrate mediaosup:
 
