@@ -20,7 +20,7 @@ TBD
 
 TBD
 
-## Changelog
+## Release notes and Changelogs
 
 ### 0.1.1
  * Mediasoup integration is added
