@@ -1,47 +1,30 @@
-Sfu Observer
+Sfu Observer Js library
 ===
 
-This client application helps you sampling your SFU. After it is started, it generates [SfuSample](https://github.com/ObserveRTC/schemas-2.0/blob/main/generated-schemas/samples/v2/SfuSample.md)s. SfuSamples can be processed by an [observer](https://github.com/ObserveRTC/observer). Observer match [samples originated from client applications](https://github.com/ObserveRTC/schemas-2.0/blob/main/generated-schemas/samples/v2/ClientSample.md) and samples originated from SFU. After you setup an observer, you can integrate your SFU and start watching your transports.
+Javascript library to create and send [SfuSample](https://github.com/ObserveRTC/schemas-2.0/blob/main/generated-schemas/samples/v2/SfuSample.md)s. 
+
 
 ## Install
 
-Install `sfu-observer-js`
+Add the npm package to your SFU project.
 
 ```shell
     npm i sfu-observer-js
 ```
 
-## Observe your SFU
+## Contribute
 
-### Mediasoup
+### Develop your integration
 
-```javascript
-    const { MediasoupSfuObserver } = require("sfu-observer-js");
-    const mediasoup = require('mediasoup');
-    // ...
-    const POLLING_INTERVAL_IN_MS = 10000;
-    const HOST = "localhost:7080";
-    const SERVICE_ID = "myServiceId";
-    const MEDIAUNIT_ID = "mySFU";
-    const sfuObserver = MediasoupSfuObserver.builder()
-            .withMediasoup(mediasoup)
-            .withPollingInterval(POLLING_INTERVAL_IN_MS)
-            .withEndpoint(`ws://${HOST}/sfusamples/${SERVICE_ID}/${MEDIAUNIT_ID}`)
-            .build();
 
-    // start monitoring when you want the service to start polling
-    sfuObserver.start();
-    
-    // optionally, you can subscribe to the event emitted when a sample is ready
-    sfuObserver
-        .onSample(sample => {
-            console.log("sfu sample", sample);
-        })
-        .onError(error => {
-            console.warn("An error occurred", error);
-        })
-    ;
 
-    // stop monitoring whenever you want no longer to monitor the service
-    sfuObserver.stop();
-```
+## Changelog
+
+### 0.1.1
+ * Mediasoup integration is added
+
+
+### 0.0.1
+
+Initiated the project, contained the basic interfaces
+
