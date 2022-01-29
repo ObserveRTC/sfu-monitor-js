@@ -1,6 +1,8 @@
 Sfu Observer Js library
 ===
 
+UNDER DEVELOPMENT, NO STABLE VERSION AVAILABLE AT THE MOMENT
+
 Javascript library to create and send [SfuSample](https://github.com/ObserveRTC/schemas-2.0/blob/main/generated-schemas/samples/v2/SfuSample.md)s. 
 
  
