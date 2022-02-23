@@ -186,6 +186,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
             const initialInboundRtpPads = Array.from(this._inboundRtpPads.values()).filter(pad => pad.stats?.transportId === transportId);
             const intialSctpChannels = Array.from(this._sctpChannels.values()).filter(pad => pad.stats?.transportId === transportId);
             const newEntry: InnerSfuTransportEntry = entry = {
+                internal: !!stats.internal,
                 id: transportId,
                 stats,
                 created: now,
@@ -217,7 +218,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 },
                 getNumberOfMediaStreams: () => {
                     return newEntry.mediaStreamIds.size;
-                }
+                },
             };
             // need to do it twice because the first hash is hashed without the hash
             newEntry.hashCode = hash(stats);

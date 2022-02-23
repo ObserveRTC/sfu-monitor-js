@@ -406,6 +406,7 @@ export class MediasoupCollector implements Collector {
             if (!polledStats) {
                 this._statsWriter?.updateTransport({
                     transportId,
+                    internal: type === "pipe-transport",
                     noReport: true,
                 });
                 continue;
@@ -470,6 +471,7 @@ export class MediasoupCollector implements Collector {
                     const stats = msStats as MediasoupPipeTransport;
                     const { localIp: localAddress, protocol, localPort, remoteIp: remoteAddress, remotePort } = stats.tuple ?? {};
                     transportStats = {
+                        internal: true,
                         transportId,
                         localAddress,
                         localPort,

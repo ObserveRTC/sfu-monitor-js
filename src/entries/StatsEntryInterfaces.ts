@@ -10,6 +10,7 @@ export interface StatsEntryAbs {
 
 export interface SfuTransportEntry extends StatsEntryAbs {
     stats: SfuTransport;
+    internal: boolean;
     inboundRtpPads(): Generator<SfuInboundRtpPadEntry, void, undefined>;
     outboundRtpPads(): Generator<SfuOutboundRtpPadEntry, void, undefined>;
     sctpChannels(): Generator<SfuSctpChannelEntry, void, undefined>;
