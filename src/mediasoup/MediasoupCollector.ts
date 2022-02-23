@@ -1,7 +1,7 @@
 import { StatsWriter } from "../entries/StatsStorage";
 import { PromiseFetcher, PromiseSupplier } from "../utils/PromiseFetcher";
 import { Collector } from "../Collector";
-import { MediasoupConsumer, MediasoupConsumerPolledStats, MediasoupConsumerStats, MediasoupDataConsumer, MediasoupDataConsumerStats, MediasoupDataProducer, MediasoupDataProducerStats, MediasoupDirectTransport, MediasoupNewConsumerListener, MediasoupNewDataConsumerListener, MediasoupNewDataProducerListener, MediasoupNewProducerListener, MediasoupPipeTransport, MediasoupPlainTransport, MediasoupProducer, MediasoupProducerStats, MediasoupTransport, MediasoupTransportStats, MediasoupTransportType, MediasoupWebRtcTransportStats } from "./MediasoupTypes";
+import { MediasoupConsumer, MediasoupConsumerPolledStats, MediasoupDataConsumer, MediasoupDataConsumerStats, MediasoupDataProducer, MediasoupDataProducerStats, MediasoupDirectTransport, MediasoupNewConsumerListener, MediasoupNewDataConsumerListener, MediasoupNewDataProducerListener, MediasoupNewProducerListener, MediasoupPipeTransport, MediasoupPlainTransport, MediasoupProducer, MediasoupProducerStats, MediasoupTransport, MediasoupTransportStats, MediasoupTransportType, MediasoupWebRtcTransportStats } from "./MediasoupTypes";
 import { SfuInboundRtpPad, SfuOutboundRtpPad, SfuSctpChannel, SfuTransport } from "@observertc/schemas";
 import { v4 as uuidv4 } from "uuid";
 import { createLogger } from "../utils/logger";
@@ -97,7 +97,7 @@ export class MediasoupCollector implements Collector {
     }
 
     public readonly id: string;
-    private _closed: boolean = false;
+    private _closed = false;
     private _config: MediasoupCollectorConfig;
     private _statsWriter?: StatsWriter;
     private _transports: Map<string, TransportStatsSupplier> = new Map();

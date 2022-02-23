@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 type ErrorListener = (err: any, i: number) => void;
 export type PromiseSupplier<T> = () => Promise<T>;
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const EMPTY_ARRAY: any = [];
 type Nullable<T> = T | null;
 
@@ -37,11 +39,11 @@ export class PromiseFetcher<T> {
         };
         return result;
     }
-    private _batchSize: number = 0;
+    private _batchSize = 0;
     private _suppliers: Map<number, PromiseSupplier<T>> = new Map();
     private _errorHandler?: ErrorListener;
     private constructor() {
-
+        // empty block
     }
 
     async fetch(): Promise<Nullable<T>[]> {
@@ -74,7 +76,9 @@ export class PromiseFetcher<T> {
                     values.set(index, item);
                 })
                 .catch((err) => {
-                    errorHandler!(err, index);
+                    if (errorHandler) {
+                        errorHandler(err, index);
+                    }
                 });
             promises.push(promise);
             if (promises.length < batchSize) continue;

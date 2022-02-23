@@ -176,7 +176,7 @@ export class WebsocketTransport implements Transport {
         /*eslint-disable @typescript-eslint/no-explicit-any */
         }).catch(async (err: any) => {
             logger.warn(err);
-            if (tried < this._config.maxRetry!) {
+            if (this._config.maxRetry && tried < this._config.maxRetry) {
                 await this._waitBeforeReconnect(tried + 1);
                 await this._connect(tried + 1);
                 return;

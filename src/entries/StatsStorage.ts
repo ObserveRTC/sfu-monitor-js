@@ -100,16 +100,19 @@ export class StatsStorage implements StatsReader, StatsWriter {
             if (expirationThresholdInMs <= sctpChannel.touched) continue;
             this.removeSctpChannel(sctpChannel.id);
         }
+        logger.debug("trimmed with threshold", expirationThresholdInMs);
     }
 
     public clear() {
         // hup-hup-hup barba trukk
         const expirationThresholdInMs = Date.now() + 1000000;
         this.trim(expirationThresholdInMs);
+        logger.debug("cleared");
     }
 
     public removeTransport(transportId: string): void {
         this._transports.delete(transportId);
+        logger.debug(`Transport ${transportId} is removed`);
     }
     public updateTransport(stats: SfuTransport): void {
         const now = Date.now();
@@ -118,6 +121,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         let entry = transports.get(transportId);
         if (!entry) {
             const inboundRtpPadsMap = this._inboundRtpPads;
+            /* eslint-disable no-inner-declarations */
             function *inboundRtpPads(): Generator<SfuInboundRtpPadEntry, void, undefined> {
                 const transportEntry = transports.get(transportId);
                 if (!transportEntry) return;
@@ -129,6 +133,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 }
             }
             const outboundRtpPadsMap = this._outboundRtpPads;
+            /* eslint-disable no-inner-declarations */
             function *outboundRtpPads(): Generator<SfuOutboundRtpPadEntry, void, undefined> {
                 const transportEntry = transports.get(transportId);
                 if (!transportEntry) return;
@@ -140,6 +145,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 }
             }
             const sctpChannelsMap = this._sctpChannels;
+            /* eslint-disable no-inner-declarations */
             function *sctpChannels(): Generator<SfuSctpChannelEntry, void, undefined> {
                 const transportEntry = transports.get(transportId);
                 if (!transportEntry) return;
@@ -151,6 +157,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 }
             }
             const mediaSinksMap = this._mediaSinks;
+            /* eslint-disable no-inner-declarations */
             function *mediaSinks(): Generator<SfuMediaSinkEntry, void, undefined> {
                 const transportEntry = transports.get(transportId);
                 if (!transportEntry) return;
@@ -162,6 +169,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 }
             }
             const mediaStreamsMap = this._mediaStreams;
+            /* eslint-disable no-inner-declarations */
             function *mediaStreams(): Generator<SfuMediaStreamEntry, void, undefined> {
                 const transportEntry = transports.get(transportId);
                 if (!transportEntry) return;
