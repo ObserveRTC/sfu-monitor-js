@@ -102,6 +102,12 @@ export class StatsStorage implements StatsReader, StatsWriter {
         }
     }
 
+    public clear() {
+        // hup-hup-hup barba trukk
+        const expirationThresholdInMs = Date.now() + 1000000;
+        this.trim(expirationThresholdInMs);
+    }
+
     public removeTransport(transportId: string): void {
         this._transports.delete(transportId);
     }
