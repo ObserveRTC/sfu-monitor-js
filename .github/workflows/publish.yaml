@@ -1,0 +1,27 @@
+name: Publish
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      - name: Install
+        run: yarn
+
+      - name: Build
+        run: yarn build
+
+      - name: Test
+        run: yarn test
+
+      - uses: JS-DevTools/npm-publish@v1
+        with:
+          access: public
+          token: ${{ secrets.NPM_TOKEN }}

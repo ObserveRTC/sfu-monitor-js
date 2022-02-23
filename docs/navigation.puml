@@ -1,0 +1,72 @@
+@startuml
+skinparam handwritten true
+skinparam monochrome true
+skinparam backgroundColor transparent
+
+' hide the spot
+hide circle
+
+entity "SfuTransportEntry" {
+  *stats: SfuTransport
+  *inboundRtpPads(): SfuInboundRtpPadEntry[]
+  *outboundRtpPads(): SfuOutboundRtpPadEntry[]
+  *sctpChannels(): SfuSctpChannelEntry[]
+  *mediaSinks(): RemoteInboundRtpEntry[]
+  *mediaStreams(): RemoteOutboundRtpEntry[]
+  *mediaSources(): MediaSourceEntry[]
+  *getNumberOfInboundRtpPads(): int
+  *getNumberOfOutboundRtpPads(): int
+  *getNumberOfSctpChannels(): int
+  *getNumberOfMediaStreams(): int
+  *getNumberOfMediaSinks(): int
+}
+
+entity "SfuInboundRtpPadEntry" {
+  *stats: SfuInboundRtpPad
+  *getTransport(): SfuTransportEntry
+  *getMediaStream(): SfuMediaStreamEntry
+}
+
+entity "SfuOutboundRtpPadEntry" {
+  *stats: SfuOutboundRtpPad
+  *getTransport(): SfuTransportEntry
+  *getMediaStream(): SfuMediaStreamEntry
+}
+
+entity "SfuMediaStreamEntry" {
+  *id: string
+  *kind: enum
+  *stats: RtcInboundRtpStreamStats
+  *inboundRtpPads(): SfuInboundRtpPadEntry[]
+  *mediaSinks(): SfuMediaSinkEntry[]
+
+  *getTransport(): SfuTransportEntry
+  *getNumberOfOutboundRtpPads(): int
+  *getNumberOfMediaSinks(): int
+}
+
+entity "SfuMediaSinkEntry" {
+  *id: string
+  *kind: enum
+  *stats: RtcInboundRtpStreamStats
+  *outboundRtpPads(): SfuOutboundRtpPadEntry[]
+
+  *getMediaStream(): SfuMediaStreamEntry
+  *getTransport(): SfuTransportEntry
+  *getNumberOfOutboundRtpPads(): int
+}
+
+entity "SfuMediaSinkEntry" {
+  *stats: RtcRemoteInboundRtpStreamStats
+  *getPeerConnection(): PeerConnectionEntry
+  *getTransport(): TransportEntry
+  *getCodec(): CodecEntry
+  *getOutboundRtp(): OutboundRtpEntry
+}
+
+entity "SfuSctpChannelEntry" {
+  *stats: SfuSctpChannel
+  *getTransport(): SfuTransportEntry
+}
+
+@enduml
