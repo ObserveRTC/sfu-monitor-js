@@ -213,7 +213,7 @@ describe("MediasoupCollector", () => {
 
     describe("Given a mediasoup collector a statsStorage, and a watched mediasoup, transport on which only slices of stats are polled", () => {
         type CollectConfig = MediasoupTransportWatchConfig;
-        const collect = async (test: string, config: CollectConfig) => {
+        const collect = async (test: string, config: CollectConfig, numberOfCollecting?: number) => {
             const transport = Generator.createWebRtcTransport();
             const collector = MediasoupCollector.create();
             collector.watchWebRtcTransport(transport, config);
@@ -252,7 +252,13 @@ describe("MediasoupCollector", () => {
             transport.consume();
             transport.produceData();
             transport.consumeData();
-            await collector.collect();
+            if (numberOfCollecting) {
+                for (let i = 0; i < numberOfCollecting; ++i) {
+                    await collector.collect();        
+                }
+            } else {
+                await collector.collect();
+            }
             const result = {
                 inboundRtpPadNoReport,
                 outboundRtpPadNoReport,
@@ -346,6 +352,40 @@ describe("MediasoupCollector", () => {
                 expect(!!outboundRtpPadNoReport).toEqual(true);
                 expect(!!sctpChannelNoReport).toEqual(true);
                 expect(!!transportNoReport).toEqual(false);
+            });
+        });
+        describe("When transport is polled only once", () => {
+            
+            it ("Then at first transport has reports", async () => {
+                const promise = collect("pollTransportStats", {
+                    pollTransportStats: 1
+                });
+                const {
+                    inboundRtpPadNoReport,
+                    outboundRtpPadNoReport,
+                    sctpChannelNoReport,
+                    transportNoReport
+                } = await promise;
+                expect(!!inboundRtpPadNoReport).toEqual(true);
+                expect(!!outboundRtpPadNoReport).toEqual(true);
+                expect(!!sctpChannelNoReport).toEqual(true);
+                expect(!!transportNoReport).toEqual(false);
+            });
+
+            it ("Then at second transport has no reports", async () => {
+                const promise = collect("pollTransportStats", {
+                    pollTransportStats: 1
+                }, 2);
+                const {
+                    inboundRtpPadNoReport,
+                    outboundRtpPadNoReport,
+                    sctpChannelNoReport,
+                    transportNoReport
+                } = await promise;
+                expect(!!inboundRtpPadNoReport).toEqual(true);
+                expect(!!outboundRtpPadNoReport).toEqual(true);
+                expect(!!sctpChannelNoReport).toEqual(true);
+                expect(!!transportNoReport).toEqual(true);
             });
         });
     });

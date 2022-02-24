@@ -224,7 +224,10 @@ export class StatsStorage implements StatsReader, StatsWriter {
             newEntry.hashCode = hash(stats);
             this._transports.set(transportId, newEntry);
         } else {
-            entry.stats = stats;
+            entry.stats = {
+                ...entry.stats,
+                ...stats,
+            };
             const newHashCode = hash(stats);
             if (entry.hashCode !== newHashCode) {
                 entry.updated = now;
@@ -267,7 +270,10 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 streamId: stats.streamId,
             });
         } else {
-            entry.stats = stats;
+            entry.stats = {
+                ...entry.stats,
+                ...stats,
+            };
             const newHashCode = hash(stats);
             if (entry.hashCode !== newHashCode) {
                 entry.updated = now;
@@ -322,7 +328,10 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 outboundRtpPadId,
             });
         } else {
-            entry.stats = stats;
+            entry.stats = {
+                ...entry.stats,
+                ...stats,
+            };
             const newHashCode = hash(stats);
             if (entry.hashCode !== newHashCode) {
                 entry.updated = now;
@@ -373,7 +382,10 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 sctpChannelId,
             });
         } else {
-            entry.stats = stats;
+            entry.stats = {
+                ...entry.stats,
+                ...stats,
+            };
             const newHashCode = hash(stats);
             if (entry.hashCode !== newHashCode) {
                 entry.updated = now;

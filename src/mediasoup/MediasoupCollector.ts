@@ -43,7 +43,7 @@ export type MediasoupTransportWatchConfig = {
      * 
      * DEFAULT: false,
      */
-    pollTransportStats?: boolean;
+    pollTransportStats?: boolean | number;
 
     /**
      * Indicate if we want to poll the producer stats
@@ -74,7 +74,7 @@ export type MediasoupTransportWatchConfig = {
     pollDataConsumerStats?: boolean;
 }
 
-const provideDefaultConfig = () => {
+const provideDefaultWatchConfig = () => {
     const result: MediasoupTransportWatchConfig = {
         pollStats: false,
         pollTransportStats: false,
@@ -227,7 +227,7 @@ export class MediasoupCollector implements Collector {
             logger.warn(`Transport (${transportId}) has already been watched`);
             return;
         }
-        const appliedConfig = Object.assign(provideDefaultConfig(), config);
+        const appliedConfig = Object.assign(provideDefaultWatchConfig(), config);
         const { 
             pollStats,
             pollTransportStats,
@@ -376,9 +376,15 @@ export class MediasoupCollector implements Collector {
             });
         }
         transport.observer.on("newdataconsumer", newDataConsumerListener);
-
+        let numberOfPolling = 0;
         const getStats = async () => {
-            const polledStats = pollStats || pollTransportStats ? await transport.getStats() : undefined;
+            let polling = pollStats || pollTransportStats === true;
+            if (!polling && pollTransportStats && Number.isInteger(pollTransportStats)) {
+                if (numberOfPolling++ < pollTransportStats) {
+                    polling = true;
+                }
+            }
+            const polledStats = polling ? await transport.getStats() : undefined;
             return {
                 id: transportId,
                 transportId,
