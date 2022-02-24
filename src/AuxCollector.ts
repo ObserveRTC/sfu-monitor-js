@@ -20,10 +20,13 @@ export type AuxCollectorConfig = {
      */
     batchSize?: number;
 }
-
-const defaultConfig: AuxCollectorConfig = {
-    id: uuidv4(),
+const supplyDefaultConfig = () => {
+    const result: AuxCollectorConfig = {
+        id: uuidv4(),
+    }
+    return result;
 }
+
 
 export type TransportStatsSupplier = () => Promise<SfuTransport>;
 export type InboundRtpPadStatsSupplier = () => Promise<SfuInboundRtpPad>;
@@ -32,7 +35,7 @@ export type SctpStreamStatsSupplier = () => Promise<SfuSctpChannel>;
 
 export class AuxCollector implements Collector {
     public static create(config?: AuxCollectorConfig): AuxCollector {
-        const appliedConfig: AuxCollectorConfig = Object.assign(defaultConfig, config);
+        const appliedConfig: AuxCollectorConfig = Object.assign(supplyDefaultConfig(), config);
         const collector = new AuxCollector(appliedConfig);
         return collector;
     }

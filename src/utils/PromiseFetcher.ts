@@ -1,3 +1,5 @@
+import { logger } from "./logger";
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type ErrorListener = (err: any, i: number) => void;
 export type PromiseSupplier<T> = () => Promise<T>;
@@ -6,10 +8,16 @@ export type PromiseSupplier<T> = () => Promise<T>;
 const EMPTY_ARRAY: any = [];
 type Nullable<T> = T | null;
 
+type Pace = {
+    minPaceInMs: number,
+    maxPaceInMs: number,
+}
+
 interface Builder<U> {
     withBatchSize(value: number): Builder<U>;
     withPromiseSuppliers(...suppliers: PromiseSupplier<U>[]): Builder<U>;
     onCatchedError(listener: ErrorListener): Builder<U>;
+    withPace(minPaceInMs: number, maxPaceInMs: number): Builder<U>,
     build(): PromiseFetcher<U>;
 }
 
@@ -19,6 +27,16 @@ export class PromiseFetcher<T> {
         const result = {
             withBatchSize: (value: number) => {
                 fetcher._batchSize = value;
+                return result;
+            },
+            withPace: (minPaceInMs: number, maxPaceInMs: number) => {
+                if (maxPaceInMs <= minPaceInMs) {
+                    throw new Error(`minPaceInMs: ${minPaceInMs} is larger than the maxPaceInMs: ${maxPaceInMs}`);
+                }
+                fetcher._pace = {
+                    minPaceInMs,
+                    maxPaceInMs,
+                }
                 return result;
             },
             withPromiseSuppliers: (...suppliers: PromiseSupplier<U>[]) => {
@@ -39,6 +57,7 @@ export class PromiseFetcher<T> {
         };
         return result;
     }
+    private _pace?: Pace;
     private _batchSize = 0;
     private _suppliers: Map<number, PromiseSupplier<T>> = new Map();
     private _errorHandler?: ErrorListener;
@@ -66,6 +85,7 @@ export class PromiseFetcher<T> {
             }
         }
         const batchSize = 0 < this._batchSize ? this._batchSize : this._suppliers.size;
+        let emittedBatch = 0;
         const values = new Map<number, T>();
         let promises: Promise<void>[] = [];
         for (let index = 0; index < this._suppliers.size; ++index) {
@@ -84,18 +104,30 @@ export class PromiseFetcher<T> {
             if (promises.length < batchSize) continue;
             await Promise.all(promises);
             for (let j = 0; j < promises.length; ++j) {
-                const valueIndex = index + 1 - batchSize + j;
+                const valueIndex = emittedBatch * batchSize + j;
                 const value = values.get(valueIndex);
                 if (!value) continue;
                 yield value;
             }
+            ++emittedBatch;
             values.clear();
             promises = [];
+            if (emittedBatch * batchSize < this._suppliers.size &&  this._pace) {
+                const { minPaceInMs, maxPaceInMs } = this._pace;
+                const timeoutInMs = minPaceInMs + Math.random() * (maxPaceInMs - minPaceInMs);
+                if (1 < timeoutInMs) {
+                    await new Promise<void>(resolve => {
+                        setTimeout(() => {
+                            resolve();
+                        }, timeoutInMs);
+                    })
+                }
+            }
         }
         if (promises.length < 1) return;
         await Promise.all(promises);
         for (let j = 0; j < promises.length; ++j) {
-            const valueIndex = this._suppliers.size - batchSize + j;
+            const valueIndex = emittedBatch * batchSize + j;
             const value = values.get(valueIndex);
             if (!value) continue;
             yield value;

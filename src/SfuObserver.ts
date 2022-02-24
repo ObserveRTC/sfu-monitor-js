@@ -1,7 +1,7 @@
 import { ExtensionStat } from "@observertc/schemas"
 import { Collector } from "./Collector";
 import { EventsRegister, EventsRelayer } from "./EventsRelayer";
-import { Sampler, SamplerConfig, defaultConfig as samplerDefaultConfig } from "./Sampler";
+import { Sampler, SamplerConfig, supplyDefaultConfig as supplySamplerDefaultConfig } from "./Sampler";
 import { Sender, SenderConfig } from "./Sender";
 import { Timer } from "./utils/Timer";
 import { StatsReader, StatsStorage } from "./entries/StatsStorage";
@@ -61,10 +61,13 @@ export type SfuObserverConfig = {
 
 type ConstructorConfig = SfuObserverConfig;
 
-const defaultConfig: ConstructorConfig = {
-    // samplingPeriodInMs: 5000,
-    // sendingPeriodInMs: 10000,
-    sampler: samplerDefaultConfig,
+const supplyDefaultConfig = () => {
+    const defaultConfig: ConstructorConfig = {
+        // samplingPeriodInMs: 5000,
+        // sendingPeriodInMs: 10000,
+        sampler: supplySamplerDefaultConfig(),
+    }
+    return defaultConfig;
 }
 
 export interface ISfuObserver {
@@ -105,7 +108,7 @@ export class SfuObserver implements ISfuObserver {
      * @param config the passed config
      */
     public static create(config?: SfuObserverConfig): SfuObserver {
-        const appliedConfig = config ? Object.assign(defaultConfig, config) : defaultConfig;
+        const appliedConfig = config ? Object.assign(supplyDefaultConfig(), config) : supplyDefaultConfig();
         return new SfuObserver(appliedConfig);
     }
 
@@ -147,6 +150,7 @@ export class SfuObserver implements ISfuObserver {
         }
         collector.setStatsWriter(this._statsStorage);
         this._collectors.set(collector.id, collector);
+        logger.info(`Collector ${collector.id} has been added`);
     }
 
     public removeStatsCollector(collectorId: string): void {
@@ -160,6 +164,7 @@ export class SfuObserver implements ISfuObserver {
         }
         collector.setStatsWriter(null);
         this._collectors.delete(collectorId);
+        logger.info(`Collector ${collector.id} has been removed`);
     }
 
     public addExtensionStats(stats: ExtensionStat): void {
@@ -172,6 +177,7 @@ export class SfuObserver implements ISfuObserver {
 
     public async collect(): Promise<void> {
         const collectors = Array.from(this._collectors.values());
+        const started = Date.now();
         for (const collector of collectors) {
             await collector.collect();
         }
@@ -181,6 +187,16 @@ export class SfuObserver implements ISfuObserver {
             const expirationThresholdInMs = Date.now() - this._config.statsExpirationTimeInMs;
             this._statsStorage.trim(expirationThresholdInMs);
         }
+        const elapsedInMs = Date.now() - started;
+        const { collectingPeriodInMs } = this._config;
+        if (collectingPeriodInMs) {
+            if (collectingPeriodInMs < elapsedInMs) {
+                logger.warn(`Collecting from collector took ${elapsedInMs} and Collecting period is ${collectingPeriodInMs}!`);
+            } else if (collectingPeriodInMs / 2 < elapsedInMs) {
+                logger.info(`Collecting from collector took ${elapsedInMs} and Collecting period is ${collectingPeriodInMs}!`);
+            }
+        }
+        logger.debug(`Collecting took `, elapsedInMs);
     }
 
     public async sample(): Promise<void> {

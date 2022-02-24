@@ -13,9 +13,12 @@ type WebsocketTransportConstructorConfig = WebsocketTransportConfig & {
     maxRetry: number,
 }
 
-const defaultConfig: WebsocketTransportConstructorConfig = {
-    url: "cannot be this",
-    maxRetry: 3
+const supplyDefaultConfig = () => {
+    const result: WebsocketTransportConstructorConfig = {
+        url: "cannot be this",
+        maxRetry: 3
+    };
+    return result;
 }
 
 const ON_STATE_CHANGED_EVENT_NAME = "onStateChanged";
@@ -24,7 +27,7 @@ const ON_ERROR_EVENT_NAME = "onError";
 
 export class WebsocketTransport implements Transport {
     public static create(config?: WebsocketTransportConfig): WebsocketTransport {
-        const appliedConfig = Object.assign(defaultConfig, config);
+        const appliedConfig = Object.assign(supplyDefaultConfig(), config);
         return new WebsocketTransport(appliedConfig)
     }
     private _cancelTimer?: () => void;

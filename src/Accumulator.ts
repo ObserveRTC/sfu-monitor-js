@@ -5,15 +5,19 @@ export type AccumulatorConfig = {
     forwardIfEmpty?: boolean;
 }
 
-const defaultConfig: AccumulatorConfig = {
-    forwardIfEmpty: false,
+
+const supplyDefaultConfig = () => {
+    const result: AccumulatorConfig = {
+        forwardIfEmpty: false,
+    };
+    return result;
 }
 
 export type SamplesListener = (samples?: Samples) => void;
 
 export class Accumulator  {
     public static create(config?: AccumulatorConfig) {
-        const appliedConfig = Object.assign(defaultConfig, config);
+        const appliedConfig = Object.assign(supplyDefaultConfig(), config);
         return new Accumulator(appliedConfig);
     }
 

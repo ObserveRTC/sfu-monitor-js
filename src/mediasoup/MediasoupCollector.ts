@@ -22,24 +22,69 @@ export type MediasoupCollectorConfig = {
     batchSize?: number;
 }
 
-const defaultConfig: MediasoupCollectorConfig = {
-    id: uuidv4(),
-    batchSize: 0,
+const supplyDefaultConfig = () => {
+    const result: MediasoupCollectorConfig = {
+        batchSize: 0,
+    }
+    return result;
 }
 
-type WatchConfig = {
+export type MediasoupTransportWatchConfig = {
     /**
      * Flag indicate if the collector poll the getStats endpoint for
      * the transport and all of its producers, consumers.
      * 
-     * DEFAULT: true
+     * DEFAULT: false,
      */
-    pollStats: boolean;
+    pollStats?: boolean;
+
+    /**
+     * Indicate if we want to poll the transport stats
+     * 
+     * DEFAULT: false,
+     */
+    pollTransportStats?: boolean;
+
+    /**
+     * Indicate if we want to poll the producer stats
+     * 
+     * DEFAULT: false,
+     */
+    pollProducerStats?: boolean;
+
+    /**
+     * Indicate if we want to poll the consumer stats
+     * 
+     * DEFAULT: false,
+     */
+    pollConsumerStats?: boolean;
+
+    /**
+     * Indicate if we want to poll the dataProducer stats
+     * 
+     * DEFAULT: false,
+     */
+    pollDataProducerStats?: boolean;
+
+    /**
+     * Indicate if we want to poll the data consumer stats
+     * 
+     * DEFAULT: false,
+     */
+    pollDataConsumerStats?: boolean;
 }
 
-const DEFAULT_WATCH_CONFIG: WatchConfig = {
-    pollStats: true,
-}
+const provideDefaultConfig = () => {
+    const result: MediasoupTransportWatchConfig = {
+        pollStats: false,
+        pollTransportStats: false,
+        pollProducerStats: false,
+        pollConsumerStats: false,
+        pollDataProducerStats: false,
+        pollDataConsumerStats: false,
+    };
+    return result;
+} 
 
 type GetStats<Stats, Types> = {
     // id: string;
@@ -91,7 +136,7 @@ const NO_REPORT_SSRC = 0xDEADBEEF;
 
 export class MediasoupCollector implements Collector {
     public static create(config?: MediasoupCollectorConfig): MediasoupCollector {
-        const appliedConfig = Object.assign(defaultConfig, config);
+        const appliedConfig = Object.assign(supplyDefaultConfig(), config);
         const collector = new MediasoupCollector(appliedConfig);
         return collector;
     }
@@ -148,41 +193,49 @@ export class MediasoupCollector implements Collector {
         }
     }
 
-    public watchWebRtcTransport(transport: MediasoupTransport, config?: WatchConfig) {
+    public watchWebRtcTransport(transport: MediasoupTransport, config?: MediasoupTransportWatchConfig) {
         if (this._closed) {
             throw new Error(`Attempted to watch WebRTC transport on an already closed`);
         }
         this._watchTransport(transport, "webrtc-transport", config);
     }
 
-    public watchPipeTransport(transport: MediasoupTransport, config?: WatchConfig) {
+    public watchPipeTransport(transport: MediasoupTransport, config?: MediasoupTransportWatchConfig) {
         if (this._closed) {
             throw new Error(`Attempted to watch pipe transport on an already closed`);
         }
         this._watchTransport(transport, "pipe-transport", config);
     }
 
-    public watchDirectTransport(transport: MediasoupTransport, config?: WatchConfig) {
+    public watchDirectTransport(transport: MediasoupTransport, config?: MediasoupTransportWatchConfig) {
         if (this._closed) {
             throw new Error(`Attempted to watch direct transport on an already closed`);
         }
         this._watchTransport(transport, "direct-transport", config);
     }
 
-    public watchPlainRtpTransport(transport: MediasoupTransport, config?: WatchConfig) {
+    public watchPlainRtpTransport(transport: MediasoupTransport, config?: MediasoupTransportWatchConfig) {
         if (this._closed) {
             throw new Error(`Attempted to watch direct transport on an already closed`);
         }
         this._watchTransport(transport, "plain-rtp-transport", config);
     }
 
-    private _watchTransport(transport: MediasoupTransport, type: MediasoupTransportType, config?: WatchConfig) {
+    private _watchTransport(transport: MediasoupTransport, type: MediasoupTransportType, config?: MediasoupTransportWatchConfig) {
         const transportId = transport.id;
         if (this._transports.has(transportId)) {
             logger.warn(`Transport (${transportId}) has already been watched`);
             return;
         }
-        const { pollStats } = Object.assign(DEFAULT_WATCH_CONFIG, config);
+        const appliedConfig = Object.assign(provideDefaultConfig(), config);
+        const { 
+            pollStats,
+            pollTransportStats,
+            pollProducerStats,
+            pollConsumerStats,
+            pollDataProducerStats,
+            pollDataConsumerStats,
+         } = appliedConfig;
 
         // Observe Producers
         const activeProducerIds = new Set<string>();
@@ -191,7 +244,7 @@ export class MediasoupCollector implements Collector {
             activeProducerIds.add(producerId);
             const padIds = new Map<number, string>();
             const getStats = async () => {
-                const polledStats = pollStats ? await producer.getStats() : undefined;
+                const polledStats = pollStats || pollProducerStats ? await producer.getStats() : undefined;
                 const result: ProducerGetStats = {
                     producerId,
                     transportId,
@@ -228,7 +281,7 @@ export class MediasoupCollector implements Collector {
             activeConsumerIds.add(consumerId);
             const padIds = new Map<number, string>();
             const getStats = async () => {
-                const polledStats = pollStats ? await consumer.getStats() : undefined;
+                const polledStats = pollStats || pollConsumerStats ? await consumer.getStats() : undefined;
                 const result: ConsumerGetStats = {
                     consumerId,
                     transportId,
@@ -265,7 +318,7 @@ export class MediasoupCollector implements Collector {
             const dataProducerId = dataProducer.id;
             activeDataProducerIds.add(dataProducerId);
             const getStats = async () => {
-                const polledStats = pollStats ? await dataProducer.getStats() : undefined;
+                const polledStats = pollStats || pollDataProducerStats ? await dataProducer.getStats() : undefined;
                 const result: DataProducerGetStats = {
                     dataProducerId,
                     transportId,
@@ -297,7 +350,7 @@ export class MediasoupCollector implements Collector {
             const dataConsumerId = dataConsumer.id;
             activeDataConsumerIds.add(dataConsumerId);
             const getStats = async () => {
-                const polledStats = pollStats ? await dataConsumer.getStats() : undefined;
+                const polledStats = pollStats || pollDataConsumerStats ? await dataConsumer.getStats() : undefined;
                 const result: DataConsumerGetStats = {
                     dataConsumerId,
                     transportId,
@@ -308,7 +361,7 @@ export class MediasoupCollector implements Collector {
                 return result;
             }
             const dispose = () => {
-                this._dataProducers.delete(dataConsumerId);
+                this._dataConsumers.delete(dataConsumerId);
                 activeDataConsumerIds.delete(dataConsumerId);
                 this._statsWriter?.removeSctpChannel(dataConsumerId);
                 logger.debug(`DataConsumer ${dataConsumerId} on transport ${transportId} is removed from the observer`);
@@ -325,7 +378,7 @@ export class MediasoupCollector implements Collector {
         transport.observer.on("newdataconsumer", newDataConsumerListener);
 
         const getStats = async () => {
-            const polledStats = pollStats ? await transport.getStats() : undefined;
+            const polledStats = pollStats || pollTransportStats ? await transport.getStats() : undefined;
             return {
                 id: transportId,
                 transportId,
@@ -389,6 +442,7 @@ export class MediasoupCollector implements Collector {
         const suppliers = Array.from(this._transports.values());
         const fetcher = PromiseFetcher.builder<TransportGetStats>()
             .withBatchSize(batchSize)
+            .withPace(10, 500)
             .withPromiseSuppliers(...suppliers.map(supplier => supplier.getStats))
             .onCatchedError((err, index) => {
                 if (suppliers.length <= index) return;
@@ -418,6 +472,7 @@ export class MediasoupCollector implements Collector {
                     const { localIp: localAddress, protocol, localPort, remoteIp: remoteAddress, remotePort } = stats.iceSelectedTuple ?? {};
                     transportStats = {
                         transportId,
+                        noReport: false,
                         dtlsState: stats.dtlsState,
                         iceState: stats.iceState,
                         sctpState: stats.sctpState,
@@ -448,6 +503,7 @@ export class MediasoupCollector implements Collector {
                     const { localIp: localAddress, protocol, localPort, remoteIp: remoteAddress, remotePort } = stats.tuple ?? {};
                     transportStats = {
                         transportId,
+                        noReport: false,
                         localAddress,
                         localPort,
                         protocol,
@@ -462,6 +518,7 @@ export class MediasoupCollector implements Collector {
                     const stats = msStats as MediasoupDirectTransport;
                     transportStats = {
                         transportId,
+                        noReport: false,
                         rtpBytesReceived: stats.rtpBytesReceived,
                         rtpBytesSent: stats.rtpBytesSent,
                         rtxBytesReceived: stats.rtxBytesReceived,
@@ -472,6 +529,7 @@ export class MediasoupCollector implements Collector {
                     const { localIp: localAddress, protocol, localPort, remoteIp: remoteAddress, remotePort } = stats.tuple ?? {};
                     transportStats = {
                         internal: true,
+                        noReport: false,
                         transportId,
                         localAddress,
                         localPort,
@@ -498,6 +556,7 @@ export class MediasoupCollector implements Collector {
         const fetcher = PromiseFetcher.builder<ProducerGetStats>()
             .withBatchSize(batchSize)
             .withPromiseSuppliers(...suppliers.map(supplier => supplier.getStats))
+            .withPace(10, 500)
             .onCatchedError((err, index) => {
                 if (suppliers.length <= index) return;
                 const supplier = suppliers[index];
@@ -542,6 +601,7 @@ export class MediasoupCollector implements Collector {
                 }
                 const inboundRtpPadStats: SfuInboundRtpPad = {
                     transportId,
+                    noReport: false,
                     streamId: producerId,
                     padId,
                     ssrc,
@@ -586,6 +646,7 @@ export class MediasoupCollector implements Collector {
         const suppliers = Array.from(this._consumers.values());
         const fetcher = PromiseFetcher.builder<ConsumerGetStats>()
             .withBatchSize(batchSize)
+            .withPace(10, 500)
             .withPromiseSuppliers(...suppliers.map(supplier => supplier.getStats))
             .onCatchedError((err, index) => {
                 if (suppliers.length <= index) return;
@@ -632,6 +693,7 @@ export class MediasoupCollector implements Collector {
                 }
                 const outboundRtpPadStats: SfuOutboundRtpPad = {
                     transportId,
+                    noReport: false,
                     streamId: producerId,
                     sinkId: consumerId,
                     padId,
@@ -677,6 +739,7 @@ export class MediasoupCollector implements Collector {
         const suppliers = Array.from(this._dataProducers.values());
         const fetcher = PromiseFetcher.builder<DataProducerGetStats>()
             .withBatchSize(batchSize)
+            .withPace(10, 500)
             .withPromiseSuppliers(...suppliers.map(supplier => supplier.getStats))
             .onCatchedError((err, index) => {
                 if (suppliers.length <= index) return;
@@ -704,6 +767,7 @@ export class MediasoupCollector implements Collector {
             for (const stats of polledStats) {
                 const sctpChannel: SfuSctpChannel = {
                     transportId,
+                    noReport: false,
                     streamId: dataProducerId,
                     channelId: dataProducerId,
                     label: stats.label,
@@ -729,6 +793,7 @@ export class MediasoupCollector implements Collector {
         const suppliers = Array.from(this._dataConsumers.values());
         const fetcher = PromiseFetcher.builder<DataConsumerGetStats>()
             .withBatchSize(batchSize)
+            .withPace(10, 500)
             .withPromiseSuppliers(...suppliers.map(supplier => supplier.getStats))
             .onCatchedError((err, index) => {
                 if (suppliers.length <= index) return;
@@ -756,6 +821,7 @@ export class MediasoupCollector implements Collector {
             for (const stats of polledStats) {
                 const sctpChannel: SfuSctpChannel = {
                     transportId,
+                    noReport: false,
                     streamId: dataProducerId,
                     channelId: dataConsumerId,
                     label: stats.label,

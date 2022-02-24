@@ -1,7 +1,7 @@
 import { SfuInboundRtpPad, SfuOutboundRtpPad, SfuSctpChannel, SfuTransport } from "@observertc/schemas";
 import EventEmitter from "events";
 import { StatsWriter } from "../../src/entries/StatsStorage";
-import { MediasoupCollector } from "../../src/mediasoup/MediasoupCollector";
+import { MediasoupCollector, MediasoupTransportWatchConfig } from "../../src/mediasoup/MediasoupCollector";
 import * as Generator from "../helpers/MediasoupTypesGenerator";
 
 function makeStatsWriter({
@@ -24,7 +24,9 @@ function makeStatsWriter({
     updateSctpChannel?: (stats: SfuSctpChannel) => void,
 }) {
     const errorHandler = (methodName: string) => {
-        throw new Error(`${methodName} is called and handler has not been provided`);
+        return () => {
+            throw new Error(`${methodName} is called and handler has not been provided`);
+        };
     }
     const result: StatsWriter = {
         removeTransport: removeTransport ?? errorHandler("removeTransport"),
@@ -87,7 +89,9 @@ describe("MediasoupCollector", () => {
         const collector = MediasoupCollector.create();
         const transport = Generator.createWebRtcTransport();
         const emitter = makeStatsEventer(collector);
-        collector.watchWebRtcTransport(transport);
+        collector.watchWebRtcTransport(transport, {
+            pollStats: true,
+        });
 
         describe("When transport create a new producer", () => {
             const producer = transport.produce();
@@ -149,7 +153,7 @@ describe("MediasoupCollector", () => {
                 expect(actual.channelId).toEqual(dataConsumer.id);
                 expect(actual.streamId).toEqual(dataConsumer.dataProducerId);
                 expect(actual.transportId).toEqual(transport.id);
-                expect(actual.noReport).toEqual(undefined);
+                expect(actual.noReport).toEqual(false);
                 emitter.once(REMOVE_SCTP_CHANNEL_EVENT, (removedChannelId: string) => {
                     expect(removedChannelId).toBe(actual.channelId);
                     done();
@@ -204,6 +208,145 @@ describe("MediasoupCollector", () => {
                 done();
             });
             collector.collect();
+        });
+    });
+
+    describe("Given a mediasoup collector a statsStorage, and a watched mediasoup, transport on which only slices of stats are polled", () => {
+        type CollectConfig = MediasoupTransportWatchConfig;
+        const collect = async (test: string, config: CollectConfig) => {
+            const transport = Generator.createWebRtcTransport();
+            const collector = MediasoupCollector.create();
+            collector.watchWebRtcTransport(transport, config);
+            let inboundRtpPadNoReport: boolean | undefined;
+            let outboundRtpPadNoReport: boolean | undefined;
+            let sctpChannelNoReport: boolean | undefined = true;
+            let transportNoReport: boolean | undefined;
+            const statsWriter = makeStatsWriter({
+                updateInboundRtpPad: (inboundRtpPad) => {
+                    inboundRtpPadNoReport = inboundRtpPad.noReport;
+                },
+                removeInboundRtpPad: () => {
+
+                },
+                updateOutboundRtpPad: (outboundRtpPad) => {
+                    outboundRtpPadNoReport = outboundRtpPad.noReport;
+                },
+                removeOutboundRtpPad: () => {
+
+                },
+                updateSctpChannel: (sctpChannel) => {
+                    sctpChannelNoReport = sctpChannelNoReport && sctpChannel.noReport;
+                },
+                removeSctpChannel: () => {
+
+                },
+                updateTransport: (transport) => {
+                    transportNoReport = transport.noReport;
+                },
+                removeTransport: () => {
+
+                },
+            });
+            collector.setStatsWriter(statsWriter);
+            transport.produce();
+            transport.consume();
+            transport.produceData();
+            transport.consumeData();
+            await collector.collect();
+            const result = {
+                inboundRtpPadNoReport,
+                outboundRtpPadNoReport,
+                sctpChannelNoReport,
+                transportNoReport
+            };
+            transport.close();
+            collector.close();
+            return result;
+        }
+        describe("When only Producer stats are polled", () => {
+            const promise = collect("Producer", {
+                pollProducerStats: true
+            });
+            it ("Then only inbound Rtp pad has reports", async () => {
+                const {
+                    inboundRtpPadNoReport,
+                    outboundRtpPadNoReport,
+                    sctpChannelNoReport,
+                    transportNoReport
+                } = await promise;
+                expect(!!inboundRtpPadNoReport).toEqual(false);
+                expect(!!outboundRtpPadNoReport).toEqual(true);
+                expect(!!sctpChannelNoReport).toEqual(true);
+                expect(!!transportNoReport).toEqual(true);
+            });
+        });
+        describe("When only Consumer stats are polled", () => {
+            const promise = collect("Consumer", {
+                pollConsumerStats: true
+            });
+            it ("Then only outbound Rtp pad has reports", async () => {
+                const {
+                    inboundRtpPadNoReport,
+                    outboundRtpPadNoReport,
+                    sctpChannelNoReport,
+                    transportNoReport
+                } = await promise;
+                expect(!!inboundRtpPadNoReport).toEqual(true);
+                expect(!!outboundRtpPadNoReport).toEqual(false);
+                expect(!!sctpChannelNoReport).toEqual(true);
+                expect(!!transportNoReport).toEqual(true);
+            });
+        });
+        describe("When only DataConsumer stats are polled", () => {
+            const promise = collect("DataConsumer", {
+                pollDataConsumerStats: true
+            });
+            it ("Then only SctpChannel has reports", async () => {
+                const {
+                    inboundRtpPadNoReport,
+                    outboundRtpPadNoReport,
+                    sctpChannelNoReport,
+                    transportNoReport
+                } = await promise;
+                expect(!!inboundRtpPadNoReport).toEqual(true);
+                expect(!!outboundRtpPadNoReport).toEqual(true);
+                expect(!!sctpChannelNoReport).toEqual(false);
+                expect(!!transportNoReport).toEqual(true);
+            });
+        });
+        describe("When only DataProducer are polled", () => {
+            const promise = collect("DataProducer", {
+                pollDataProducerStats: true
+            });
+            it ("Then only SctpChannel has reports", async () => {
+                const {
+                    inboundRtpPadNoReport,
+                    outboundRtpPadNoReport,
+                    sctpChannelNoReport,
+                    transportNoReport
+                } = await promise;
+                expect(!!inboundRtpPadNoReport).toEqual(true);
+                expect(!!outboundRtpPadNoReport).toEqual(true);
+                expect(!!sctpChannelNoReport).toEqual(false);
+                expect(!!transportNoReport).toEqual(true);
+            });
+        });
+        describe("When only transport is polled", () => {
+            const promise = collect("pollTransportStats", {
+                pollTransportStats: true
+            });
+            it ("Then only transport has reports", async () => {
+                const {
+                    inboundRtpPadNoReport,
+                    outboundRtpPadNoReport,
+                    sctpChannelNoReport,
+                    transportNoReport
+                } = await promise;
+                expect(!!inboundRtpPadNoReport).toEqual(true);
+                expect(!!outboundRtpPadNoReport).toEqual(true);
+                expect(!!sctpChannelNoReport).toEqual(true);
+                expect(!!transportNoReport).toEqual(false);
+            });
         });
     });
 });
