@@ -44,6 +44,7 @@ export function createProducer(stats?: any): ProvidedProducer {
     const producerStats = createProducerStats(stats);
     const result: ProvidedProducer = {
         kind,
+        paused: false,
         id: DEFAULT_PRODUCER_ID,
         getStats: async () => {
             return [producerStats];
@@ -79,6 +80,7 @@ export function createConsumer(stats?: any): ProvidedConsumer {
     const result: ProvidedConsumer = {
         kind,
         id: DEFAULT_CONSUMER_ID,
+        paused: false,
         producerId: DEFAULT_PRODUCER_ID,
         getStats: async () => {
             return [producerStats, consumerStats];

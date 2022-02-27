@@ -37,6 +37,7 @@ interface MediasoupCommonObserver {
 export interface MediasoupProducer {
     readonly id: string;
     kind: "audio" | "video";
+    paused: boolean;
     getStats(): Promise<MediasoupProducerStats[]>;
     observer: MediasoupCommonObserver;
 }
@@ -45,6 +46,7 @@ export type MediasoupConsumerPolledStats = MediasoupConsumerStats | MediasoupPro
 export interface MediasoupConsumer {
     readonly id: string;
     readonly producerId: string;
+    paused: boolean;
     kind: "audio" | "video";
     getStats(): Promise<MediasoupConsumerPolledStats[]>;
     observer: MediasoupCommonObserver;

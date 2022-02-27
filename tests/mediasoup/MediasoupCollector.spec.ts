@@ -389,4 +389,76 @@ describe("MediasoupCollector", () => {
             });
         });
     });
+
+    describe("Given a mediasoup collector a statsStorage, and a watched mediasoup transport, producer and consumer is only polled when they are not paused", () => {
+        type CollectConfig = MediasoupTransportWatchConfig;
+        const collect = async (test: string, config: CollectConfig, pausedProducer?: boolean, pausedConsumer?: boolean) => {
+            const transport = Generator.createWebRtcTransport();
+            const collector = MediasoupCollector.create();
+            collector.watchWebRtcTransport(transport, config);
+            let inboundRtpPadNoReport: boolean | undefined;
+            let outboundRtpPadNoReport: boolean | undefined;
+            const statsWriter = makeStatsWriter({
+                updateInboundRtpPad: (inboundRtpPad) => {
+                    inboundRtpPadNoReport = inboundRtpPad.noReport;
+                },
+                removeInboundRtpPad: () => {
+
+                },
+                updateOutboundRtpPad: (outboundRtpPad) => {
+                    outboundRtpPadNoReport = outboundRtpPad.noReport;
+                },
+                removeOutboundRtpPad: () => {
+
+                },
+                updateTransport: () => {
+                    
+                },
+                removeTransport: () => {
+
+                },
+            });
+            collector.setStatsWriter(statsWriter);
+            const producer = transport.produce();
+            const consumer = transport.consume();
+            producer.paused = pausedProducer === true;
+            consumer.paused = pausedConsumer === true;
+            await collector.collect();        
+            const result = {
+                inboundRtpPadNoReport,
+                outboundRtpPadNoReport,
+            };
+            transport.close();
+            collector.close();
+            return result;
+        }
+        describe("When Producer is paused", () => {
+            const promise = collect("Producer", {
+                    pollProducerStats: true
+                }, 
+                true, // pausedProducer
+                false, // pausedConsumer
+            );
+            it ("Then it does not reports", async () => {
+                const {
+                    inboundRtpPadNoReport,
+                } = await promise;
+                expect(!!inboundRtpPadNoReport).toEqual(true);
+            });
+        });
+        describe("When Consumer is paused", () => {
+            const promise = collect("Producer", {
+                    pollProducerStats: true
+                }, 
+                false, // pausedProducer
+                true, // pausedConsumer
+            );
+            it ("Then it does not reports", async () => {
+                const {
+                    outboundRtpPadNoReport,
+                } = await promise;
+                expect(!!outboundRtpPadNoReport).toEqual(true);
+            });
+        });
+    });
 });

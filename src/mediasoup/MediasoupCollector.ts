@@ -244,7 +244,8 @@ export class MediasoupCollector implements Collector {
             activeProducerIds.add(producerId);
             const padIds = new Map<number, string>();
             const getStats = async () => {
-                const polledStats = pollStats || pollProducerStats ? await producer.getStats() : undefined;
+                const poll = !producer?.paused && (pollStats || pollProducerStats);
+                const polledStats = poll ? await producer.getStats() : undefined;
                 const result: ProducerGetStats = {
                     producerId,
                     transportId,
@@ -281,7 +282,8 @@ export class MediasoupCollector implements Collector {
             activeConsumerIds.add(consumerId);
             const padIds = new Map<number, string>();
             const getStats = async () => {
-                const polledStats = pollStats || pollConsumerStats ? await consumer.getStats() : undefined;
+                const poll = !consumer?.paused && (pollStats || pollConsumerStats);
+                const polledStats = poll ? await consumer.getStats() : undefined;
                 const result: ConsumerGetStats = {
                     consumerId,
                     transportId,

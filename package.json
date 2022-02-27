@@ -1,6 +1,6 @@
 {
   "name": "@observertc/sfu-observer-js",
-  "version": "1.0.0-beta.4",
+  "version": "1.0.0-beta.5",
   "description": "ObserveRTC SFU Integration Core Library",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
