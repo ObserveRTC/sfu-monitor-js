@@ -96,12 +96,13 @@ export class Sampler {
         this._marker = marker;
     }
 
-    public async close(): Promise<void> {
+    public close(): void {
         if (this._closed) {
             logger.warn(`Attempted to close the Sampler twice`);
-            return Promise.resolve();
+            return; 
         }
         this._closed = true;
+        this._extensionStats = [];
     }
 
     public make(): SfuSample {
