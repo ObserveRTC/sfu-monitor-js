@@ -5,6 +5,20 @@ ObserveRTC Client Integration Core Library
 
 @observertc/sfu-observer-js is an SFU side library for observertc integration.
 
+Table of Contents:
+ * [API docs](#api-docs)
+ * [Quick Start](#quick-start)
+   - [Collect stats from mediasoup](#collect-stats-from-mediasoup)
+   - [Collect stats from other SFUs](#collect-stats-from-other-sfus)
+   - [Sample and Send](#sample-and-send)
+ * [Use collected stats](#use-collected-stats)
+ * [Configurations](#configurations)
+ * [Contributions](#contributions)
+ * [License](#license)
+
+
+## API docs
+
 ## Qucik Start
 
 ```
@@ -30,7 +44,7 @@ const transport = router.createWebRtcTransport(options);
 collector.watchWebRtcTransport(transport);
 ```
 
-## Custom Stats Collecting
+### Collect stats from other SFUs
 
 You can write a stats collector by using `AuxCollector`.
 ```javascript
@@ -124,13 +138,12 @@ Additionally the observer groups the collected stats into the following entities
  * **MediaSink** A group of OutboundRtpPad sinks out media stream traffic to (typically) a client endpoint or to another SFU.
  
 
-### Sample & Send
+### Sample and Send
 
 UNDER DEVELOPMENT
 
 ## Configurations
 
-### Observer Configuration
 ```javascript
 const config = {
     /**
@@ -176,3 +189,10 @@ const config = {
 };
 ```
 
+## Contributions
+
+Open a PR
+
+## License
+
+Apache-2.0
