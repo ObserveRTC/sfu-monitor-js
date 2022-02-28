@@ -7,6 +7,7 @@ ObserveRTC Client Integration Core Library
 
 Table of Contents:
  * [API docs](#api-docs)
+ * [NPM package](#npm-package)
  * [Quick Start](#quick-start)
    - [Collect stats from mediasoup](#collect-stats-from-mediasoup)
    - [Collect stats from other SFUs](#collect-stats-from-other-sfus)
@@ -18,6 +19,12 @@ Table of Contents:
 
 
 ## API docs
+
+https://observertc.github.io/sfu-observer-js/interfaces/SfuObserver.html
+
+## NPM package
+
+https://www.npmjs.com/package/@observertc/sfu-observer-js
 
 ## Qucik Start
 
@@ -188,6 +195,9 @@ const config = {
     },
 };
 ```
+## Schema
+
+https://github.com/observertc/schemas
 
 ## Contributions
 
