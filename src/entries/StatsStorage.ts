@@ -5,32 +5,108 @@ import { createLogger } from "../utils/logger";
 
 const logger = createLogger(`StatsStorage`);
 
+/**
+ * Collection of methods to read the collected and organized stats
+ */
 export interface StatsReader {
+    /**
+     * Iterable iterator to list all collected transports
+     */
     transports(): Generator<SfuTransportEntry, void, undefined>;
+
+    /**
+     * Iterable iterator to list all collected inbound rtp pads
+     */
     inboundRtpPads(): Generator<SfuInboundRtpPadEntry, void, undefined>;
+
+    /**
+     * Iterable iterator to list all collected outbound rtp pads
+     */
     outboundRtpPads(): Generator<SfuOutboundRtpPadEntry, void, undefined>;
+
+    /**
+     * Iterable iterator to list all collected sctp channels
+     */
     sctpChannels(): Generator<SfuSctpChannelEntry, void, undefined>;
-    
+
+    /**
+     * Iterable iterator to list all collected and groupped media streams
+     */
     mediaStreams(): Generator<SfuMediaStreamEntry, void, undefined>;
+
+    /**
+     * Iterable iterator to list all collected and groupped audio streams
+     */
     audioStreams(): Generator<SfuMediaStreamEntry, void, undefined>;
+
+    /**
+     * Iterable iterator to list all collected and groupped video streams
+     */
     videoStreams(): Generator<SfuMediaStreamEntry, void, undefined>;
 
+    /**
+     * Iterable iterator to list all collected and groupped media sinks
+     */
     mediaSinks(): Generator<SfuMediaSinkEntry, void, undefined>;
+
+    /**
+     * Iterable iterator to list all collected and groupped audio sinks
+     */
     audioSinks(): Generator<SfuMediaSinkEntry, void, undefined>;
+
+    /**
+     * Iterable iterator to list all collected and groupped video sinks
+     */
     videoSinks(): Generator<SfuMediaSinkEntry, void, undefined>;
     
-
+    /**
+     * Gets the number of tracked transports
+     */
     getNumberOfTransports(): number;
-    getNumberOfInboundRtpPads(): number;
-    getNumberOfOutboundRtpPads(): number;
-    getNumberOfSctpChannels(): number;
 
+    /**
+     * Gets the number of tracked inbound rtp pads
+     */
+    getNumberOfInboundRtpPads(): number;
+
+    /**
+     * Gets the number of tracked outbound rtp pads
+     */
+    getNumberOfOutboundRtpPads(): number;
+
+    /**
+     * Gets the number of tracked sctp channel
+     */
+    getNumberOfSctpChannels(): number;
+    
+    /**
+     * Gets the number of tracked media streams
+     */
     getNumberOfMediaStreams(): number;
+
+    /**
+     * Gets the number of tracked audio streams
+     */
     getNumberOfAudioStreams(): number;
+
+    /**
+     * Gets the number of tracked video streams
+     */
     getNumberOfVideoStreams(): number;
 
+    /**
+     * Gets the number of tracked media sinks
+     */
     getNumberOfMediaSinks(): number;
+
+    /**
+     * Gets the number of tracked audio sinks
+     */
     getNumberOfAudioSinks(): number;
+
+    /**
+     * Gets the number of tracked video sinks
+     */
     getNumberOfVideoSinks(): number;
 }
 

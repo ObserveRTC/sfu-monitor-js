@@ -8,6 +8,10 @@ export interface StatsEntryAbs {
     hashCode: string;
 }
 
+/**
+ * Wrap properties of SfuTransport from the schema and provide
+ * methods to navigate.
+ */
 export interface SfuTransportEntry extends StatsEntryAbs {
     stats: SfuTransport;
     internal: boolean;
@@ -26,12 +30,20 @@ export interface SfuTransportEntry extends StatsEntryAbs {
     getNumberOfMediaSinks(): number;
 }
 
+/**
+ * Wrap properties of SfuInboundRtpPad from the schema and provide
+ * methods to navigate.
+ */
 export interface SfuInboundRtpPadEntry extends StatsEntryAbs {
     stats: SfuInboundRtpPad;
     getTransport(): SfuTransportEntry | undefined;
     getMediaStream(): SfuMediaStreamEntry | undefined;
 }
 
+/**
+ * Wrap properties of SfuOutboundRtpPadEntry from the schema and provide
+ * methods to navigate.
+ */
 export interface SfuOutboundRtpPadEntry extends StatsEntryAbs {
     stats: SfuOutboundRtpPad;
     getTransport(): SfuTransportEntry | undefined;
@@ -40,6 +52,9 @@ export interface SfuOutboundRtpPadEntry extends StatsEntryAbs {
 
 export type SfuMediaStreamKind = "audio" | "video" | undefined;
 
+/**
+ * Group a media source and provide methods to navigate
+ */
 export interface SfuMediaStreamEntry {
     id: string;
     kind: SfuMediaStreamKind;
@@ -51,6 +66,9 @@ export interface SfuMediaStreamEntry {
     getNumberOfMediaSinks(): number;
 }
 
+/**
+ * Group a media sink and provide methods to navigate
+ */
 export interface SfuMediaSinkEntry {
     id: string;
     kind: SfuMediaStreamKind;
@@ -62,6 +80,10 @@ export interface SfuMediaSinkEntry {
     getNumberOfOutboundRtpPads(): number;
 }
 
+/**
+ * Wrap properties of SfuSctpChannelEntry from the schema and provide
+ * methods to navigate.
+ */
 export interface SfuSctpChannelEntry extends StatsEntryAbs {
     stats: SfuSctpChannel;
     getTransport(): SfuTransportEntry | undefined;

@@ -109,7 +109,7 @@ for (const mediaSinkEntry of observer.stats.videoSinks()) {
 
 With `observer.stats` you accessing so called Entries. The interface for the entries visualized in the picture below:
 
-![Entry Navigations](docs/navigation.png)
+![Entry Navigations](puml/navigation.png)
 
 
 The collected stats from any integration is stored and updated in the 

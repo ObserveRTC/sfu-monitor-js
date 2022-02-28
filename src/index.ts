@@ -1,12 +1,21 @@
-export { SfuObserver } from "./SfuObserver";
-import { SfuObserverConfig as SfuObserverConfigImport } from "./SfuObserver";
-export type SfuObserverConfig = SfuObserverConfigImport;
+export { setLogLevel } from "./SfuObserver";
+export type { SfuObserver, SfuObserverConfig } from "./SfuObserver";
 
 export { AuxCollector } from "./AuxCollector";
-import { AuxCollectorConfig as AuxCollectorConfigImport } from "./AuxCollector";
-export type AuxCollectorConfig = AuxCollectorConfigImport;
+export type { AuxCollectorConfig } from "./AuxCollector";
 
 export { MediasoupCollector } from "./mediasoup/MediasoupCollector";
-import { MediasoupCollectorConfig as MediasoupCollectorConfigImport } from "./mediasoup/MediasoupCollector";
-export type MediasoupCollectorConfig = MediasoupCollectorConfigImport;
+export type { MediasoupCollectorConfig } from "./mediasoup/MediasoupCollector";
 
+export { create } from "./SfuObserverImpl";
+export type { StatsReader } from "./entries/StatsStorage"
+export type { 
+    SfuTransportEntry,
+    SfuInboundRtpPadEntry,
+    SfuOutboundRtpPadEntry,
+    SfuMediaStreamEntry,
+    SfuMediaSinkEntry,
+    SfuSctpChannelEntry
+} from "./entries/StatsEntryInterfaces";
+
+export type { ExtensionStat } from "@observertc/schemas";
