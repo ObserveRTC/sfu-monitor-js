@@ -1,6 +1,6 @@
 import { SfuInboundRtpPad, SfuOutboundRtpPad, SfuSctpChannel, SfuTransport } from "@observertc/schemas";
 import EventEmitter from "events";
-import { StatsWriter } from "../../src/entries/StatsStorage";
+import { StatsStorage, StatsWriter } from "../../src/entries/StatsStorage";
 import { MediasoupCollector, MediasoupTransportWatchConfig } from "../../src/mediasoup/MediasoupCollector";
 import * as Generator from "../helpers/MediasoupTypesGenerator";
 
@@ -116,7 +116,7 @@ describe("MediasoupCollector", () => {
             const consumer = transport.consume();
             it ("Then collector collect stats from it", done => {
                 emitter.once(UPDATE_OUTBOUND_RTP_PAD_EVENT, async (actual: SfuOutboundRtpPad) => {
-                    const consumerStats = (await consumer.getStats())[0];
+                    const consumerStats = (await consumer.getStats()).filter(stats => stats.type === "outbound-rtp")[0];
                     expect(actual.ssrc).toEqual(consumerStats.ssrc);
                     expect(actual.sinkId).toEqual(consumer.id);
                     expect(actual.streamId).toEqual(consumer.producerId);
@@ -460,5 +460,67 @@ describe("MediasoupCollector", () => {
                 expect(!!outboundRtpPadNoReport).toEqual(true);
             });
         });
+    });
+    describe("Given a mediasoup collector", () => {
+        const makeTransport = () => {
+            const transport = Generator.createWebRtcTransport();
+            const collector = MediasoupCollector.create();
+            collector.watchWebRtcTransport(transport, {
+                pollStats: true,
+            });
+            const statsStorage = new StatsStorage();
+            collector.setStatsWriter(statsStorage);
+            return { transport, collector, statsStorage };
+        }
+        const { transport, collector, statsStorage } = makeTransport();
+        const producerPromise = new Promise<Generator.ProvidedProducer>(resolve => {
+            it ("When Transport add a producer Then the number of inbound rtp is 1", async () => {
+                const result = transport.produce();
+                await collector.collect();
+                expect(statsStorage.getNumberOfInboundRtpPads()).toBe(1);
+                resolve(result);
+            });
+        });
+        const consumerPromise = new Promise<Generator.ProvidedConsumer>(resolve => {
+            it ("When producer is closed and consumer is requested Then the number of inbound rtp pad is 0 and the number of outbound rtp pad is 1", async () => {
+                const producer = await producerPromise;
+                const consumer = transport.consume();
+                producer.close();
+                expect(statsStorage.getNumberOfInboundRtpPads()).toBe(0);
+                await collector.collect();
+                expect(statsStorage.getNumberOfOutboundRtpPads()).toBe(1);
+                resolve(consumer);
+            });
+        });
+        const dataConsumerPromise = new Promise<Generator.ProvidedDataConsumer>(resolve => {
+            it ("When consumer is closed and dataconsumer is requested Then the number of outbound rtp pad is 0 and the number of sctp channel is 1", async () => {
+                const consumer = await consumerPromise;
+                const dataConsumer = transport.consumeData();
+                consumer.close();
+                expect(statsStorage.getNumberOfOutboundRtpPads()).toBe(0);
+                await collector.collect();
+                expect(statsStorage.getNumberOfSctpChannels()).toBe(1);
+                resolve(dataConsumer);
+            });
+        });
+        const dataProducerPromise = new Promise<Generator.ProvidedDataProducer>(resolve => {
+            it ("When data consumer is requested Then the number of sctp channel is 0", async () => {
+                const dataConsumer = await dataConsumerPromise;
+                dataConsumer.close();
+                expect(statsStorage.getNumberOfSctpChannels()).toBe(0);
+                await collector.collect();
+                const dataProducer = transport.produceData();
+                resolve(dataProducer);
+            });
+        });
+        it ("When data producer is requested Then the number of inbound rtp pad is 1 and when its closed the number is 0", async () => {
+            const dataProducer = await dataProducerPromise;
+            await collector.collect();
+            expect(statsStorage.getNumberOfSctpChannels()).toBe(1);
+            dataProducer.close();
+            await collector.collect();
+            expect(statsStorage.getNumberOfSctpChannels()).toBe(0);
+        });
+        
     });
 });

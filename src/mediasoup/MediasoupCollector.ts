@@ -428,6 +428,7 @@ export class MediasoupCollector implements Collector {
                 dataConsumer.dispose();
             }
             this._transports.delete(transportId);
+            this._statsWriter?.removeTransport(transportId);
             logger.debug(`Transport ${transportId} is removed from the observer`);
         }
         this._transports.set(transportId, {
@@ -693,7 +694,7 @@ export class MediasoupCollector implements Collector {
             }
             for (const stats of polledStats) {
                 const ssrc = stats.ssrc;
-                // if (type === msStats.type) continue;
+                if ("outbound-rtp" !== stats.type) continue;
                 let padId = padIds.get(ssrc);
                 if (!padId) {
                     padId = uuidv4();

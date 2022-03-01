@@ -7,6 +7,8 @@ const DEFAULT_PRODUCER_ID = uuidv4();
 const DEFAULT_CONSUMER_ID = uuidv4();
 const DEFAULT_DATA_PRODUCER_ID = uuidv4();
 const DEFAULT_DATA_CONSUMER_ID = uuidv4();
+const DEFAULT_PRODUCER_SSRC = generateIntegerBetween(11111111, 9999999999);
+const DEFAULT_CONSUMER_SSRC = generateIntegerBetween(11111111, 9999999999);
 
 export function generateFloat(min = 0.0, max = 100.0): number {
     const result = Math.random() * (max - min + 1) + min;
@@ -27,9 +29,10 @@ export function generateFrom<T>(...params: T[]): T{
     return result;
 }
 
+
 export function createProducerStats(stats?: any): Types.MediasoupProducerStats {
     const result: Types.MediasoupProducerStats = {
-        ssrc: generateIntegerBetween(11111111, 9999999999),
+        ssrc: DEFAULT_PRODUCER_SSRC,
         type: "inbound-rtp",
         ...(stats || {}),
     }
@@ -63,7 +66,7 @@ export function createProducer(stats?: any): ProvidedProducer {
 
 export function createConsumerStats(stats?: any): Types.MediasoupConsumerStats {
     const result: Types.MediasoupConsumerStats = {
-        ssrc: generateIntegerBetween(11111111, 9999999999),
+        ssrc: DEFAULT_CONSUMER_SSRC,
         type: "outbound-rtp",
         ...(stats || {}),
     }

@@ -2,7 +2,6 @@ import { Sampler, SamplerConfig } from "../src/Sampler";
 import { StatsReader, StatsStorage } from "../src/entries/StatsStorage";
 import { v4 as uuidv4 } from "uuid";
 import * as Generator from "./helpers/StatsGenerator";
-import { W3CStats } from "@observertc/schemas";
 
 const SFU_ID =  uuidv4();
 const makeStorage = () => {
