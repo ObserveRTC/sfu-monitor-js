@@ -1,4 +1,4 @@
-ObserveRTC Client Integration Core Library
+ObserveRTC Integration for Selective Forwarding Units (SFU)
 ---
 
 # !!! UNDER DEVELOPMENT, NO STABLE VERSION IS AVAILABLE AT THE MOMENT! !!!

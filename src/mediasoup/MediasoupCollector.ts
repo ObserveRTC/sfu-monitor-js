@@ -5,6 +5,7 @@ import { MediasoupConsumer, MediasoupConsumerPolledStats, MediasoupDataConsumer,
 import { SfuInboundRtpPad, SfuOutboundRtpPad, SfuSctpChannel, SfuTransport } from "@observertc/schemas";
 import { v4 as uuidv4 } from "uuid";
 import { createLogger } from "../utils/logger";
+import { AppData } from "../entries/StatsEntryInterfaces";
 
 const logger = createLogger(`MediasoupCollector`);
 
@@ -72,6 +73,30 @@ export type MediasoupTransportWatchConfig = {
      * DEFAULT: false,
      */
     pollDataConsumerStats?: boolean;
+
+    /**
+     * Add custom arbitrary data to the transport entries
+     * in the StatsStorage can be accessed via StatsReader
+     */
+    customTransportData?: AppData;
+
+     /**
+     * Add custom arbitrary data to the inbound rtp pad entries
+     * in the StatsStorage can be accessed via StatsReader
+     */
+    customInboundRtpData?: AppData;
+
+    /**
+     * Add custom arbitrary data to the outbound rtp pad entries
+     * in the StatsStorage can be accessed via StatsReader
+     */
+    customOutboundRtpData?: AppData;
+
+    /**
+     * Add custom arbitrary data to the sctp channel entries
+     * in the StatsStorage can be accessed via StatsReader
+     */
+    customSctpChannelData?: AppData;
 }
 
 const provideDefaultWatchConfig = () => {
@@ -94,6 +119,7 @@ type GetStats<Stats, Types> = {
     // mediaType?: "audio" | "video";
     type: Types;
     polledStats?: Stats[];
+    customData?: AppData;
 }
 
 type StatsSupplier<GetStats> = {
@@ -120,6 +146,7 @@ type ConsumerGetStats = GetStats<MediasoupConsumerPolledStats, "inbound-rtp" | "
     consumerId: string,
     padIds: Map<number, string>,
     mediaType?: "audio" | "video",
+    customData?: AppData,
 };
 type ConsumerStatsSupplier = StatsSupplier<ConsumerGetStats>;
 type DataProducerGetStats = GetStats<MediasoupDataProducerStats, "data-producer"> & {
@@ -235,6 +262,10 @@ export class MediasoupCollector implements Collector {
             pollConsumerStats,
             pollDataProducerStats,
             pollDataConsumerStats,
+            customInboundRtpData,
+            customOutboundRtpData,
+            customSctpChannelData,
+            customTransportData,
          } = appliedConfig;
 
         // Observe Producers
@@ -253,6 +284,7 @@ export class MediasoupCollector implements Collector {
                     mediaType: producer.kind,
                     type: "inbound-rtp",
                     polledStats,
+                    customData: customTransportData,
                 }
                 return result;
             }
@@ -292,6 +324,7 @@ export class MediasoupCollector implements Collector {
                     mediaType: consumer.kind,
                     type: "outbound-rtp",
                     polledStats,
+                    customData: customOutboundRtpData,
                 };
                 return result;
             }
@@ -326,6 +359,7 @@ export class MediasoupCollector implements Collector {
                     transportId,
                     type: "data-producer",
                     polledStats,
+                    customData: customSctpChannelData,
                 };
                 return result;
             }
@@ -359,6 +393,7 @@ export class MediasoupCollector implements Collector {
                     dataProducerId: dataConsumer.dataProducerId,
                     type: "data-consumer",
                     polledStats,
+                    customData: customSctpChannelData,
                 };
                 return result;
             }
@@ -392,6 +427,7 @@ export class MediasoupCollector implements Collector {
                 transportId,
                 type,
                 polledStats,
+                customData: customTransportData,
             }
         }
         let listenersRemoved = false;
@@ -463,7 +499,7 @@ export class MediasoupCollector implements Collector {
             .build();
         for await (const msGetStatsResult of fetcher.values()) {
             if (!msGetStatsResult) continue;
-            const { transportId, type, polledStats } = msGetStatsResult;
+            const { transportId, type, polledStats, customData } = msGetStatsResult;
             // if transport has been removed meanwhile stats was polled, then we do not forward it
             if (!this._transports.has(transportId)) continue;
             if (!polledStats) {
@@ -471,7 +507,7 @@ export class MediasoupCollector implements Collector {
                     transportId,
                     internal: type === "pipe-transport",
                     noReport: true,
-                });
+                }, customData);
                 continue;
             }
             for (const msStats of polledStats) {
@@ -552,7 +588,7 @@ export class MediasoupCollector implements Collector {
                     }
                 } 
                 if (transportStats) {
-                    this._statsWriter?.updateTransport(transportStats);
+                    this._statsWriter?.updateTransport(transportStats, customData);
                 }
             }
         }
@@ -576,7 +612,7 @@ export class MediasoupCollector implements Collector {
             .build();
         for await (const msGetStatsResult of fetcher.values()) {
             if (!msGetStatsResult) continue;
-            const { producerId, padIds, mediaType, transportId, polledStats } = msGetStatsResult;
+            const { producerId, padIds, mediaType, transportId, polledStats, customData } = msGetStatsResult;
             // if producer has been removed meanwhile stats was polled, then we do not forward it
             const producer = this._producers.get(producerId);
             if (!producer) continue;
@@ -597,7 +633,7 @@ export class MediasoupCollector implements Collector {
                     mediaType,
                     transportId,
                     noReport: true,
-                });
+                }, customData);
                 continue;
             }
             for (const stats of polledStats) {
@@ -644,7 +680,7 @@ export class MediasoupCollector implements Collector {
                     jitter: stats.jitter,
                     roundTripTime: stats.roundTripTime,
                 }
-                this._statsWriter?.updateInboundRtpPad(inboundRtpPadStats);
+                this._statsWriter?.updateInboundRtpPad(inboundRtpPadStats, customData);
             }
         }
     }
@@ -667,7 +703,7 @@ export class MediasoupCollector implements Collector {
             .build();
         for await (const msGetStatsResult of fetcher.values()) {
             if (!msGetStatsResult) continue;
-            const { consumerId, producerId, padIds, mediaType, transportId, polledStats } = msGetStatsResult;
+            const { consumerId, producerId, padIds, mediaType, transportId, polledStats, customData } = msGetStatsResult;
             // if producer has been removed meanwhile stats was polled, then we do not forward it
             const consumer = this._consumers.get(consumerId);
             if (!consumer) continue;
@@ -689,7 +725,7 @@ export class MediasoupCollector implements Collector {
                     mediaType,
                     transportId,
                     noReport: true,
-                });
+                }, customData);
                 continue;
             }
             for (const stats of polledStats) {
@@ -737,7 +773,7 @@ export class MediasoupCollector implements Collector {
                     // framesEncoded: stats.framesEncoded,
                     // keyFramesEncoded: stats.keyFramesEncoded,
                 }
-                this._statsWriter?.updateOutboundRtpPad(outboundRtpPadStats);
+                this._statsWriter?.updateOutboundRtpPad(outboundRtpPadStats, customData);
             }
         }
     }
@@ -760,7 +796,7 @@ export class MediasoupCollector implements Collector {
             .build();
         for await (const msGetStatsResult of fetcher.values()) {
             if (!msGetStatsResult) continue;
-            const { dataProducerId, transportId, polledStats } = msGetStatsResult;
+            const { dataProducerId, transportId, polledStats, customData } = msGetStatsResult;
             // if producer has been removed meanwhile stats was polled, then we do not forward it
             const dataProducer = this._dataProducers.get(dataProducerId);
             if (!dataProducer) continue;
@@ -770,7 +806,7 @@ export class MediasoupCollector implements Collector {
                     streamId: dataProducerId,
                     channelId: dataProducerId,
                     noReport: true,
-                });
+                }, customData);
                 continue;
             }
             for (const stats of polledStats) {
@@ -791,7 +827,7 @@ export class MediasoupCollector implements Collector {
                     bytesReceived: stats.bytesReceived,
                     // bytesSent: stats.bytesSent,
                 };
-                this._statsWriter?.updateSctpChannel(sctpChannel);
+                this._statsWriter?.updateSctpChannel(sctpChannel, customData);
             }
         }
     }
@@ -814,7 +850,7 @@ export class MediasoupCollector implements Collector {
             .build();
         for await (const msGetStatsResult of fetcher.values()) {
             if (!msGetStatsResult) continue;
-            const { dataProducerId, dataConsumerId, transportId, polledStats } = msGetStatsResult;
+            const { dataProducerId, dataConsumerId, transportId, polledStats, customData } = msGetStatsResult;
             // if producer has been removed meanwhile stats was polled, then we do not forward it
             const dataConsumer = this._dataConsumers.get(dataConsumerId);
             if (!dataConsumer) continue;
@@ -824,7 +860,7 @@ export class MediasoupCollector implements Collector {
                     streamId: dataProducerId,
                     channelId: dataConsumerId,
                     noReport: true,
-                });
+                }, customData);
                 continue;
             }
             for (const stats of polledStats) {
@@ -845,7 +881,7 @@ export class MediasoupCollector implements Collector {
                     // bytesReceived: stats.bytesReceived,
                     bytesSent: stats.bytesSent,
                 };
-                this._statsWriter?.updateSctpChannel(sctpChannel);
+                this._statsWriter?.updateSctpChannel(sctpChannel, customData);
             }
         }
     }

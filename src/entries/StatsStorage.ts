@@ -1,5 +1,5 @@
 import { SfuSctpChannel, SfuInboundRtpPad, SfuOutboundRtpPad, SfuTransport } from "@observertc/schemas";
-import { SfuInboundRtpPadEntry, SfuOutboundRtpPadEntry, SfuSctpChannelEntry, SfuTransportEntry, SfuMediaStreamEntry, SfuMediaStreamKind, SfuMediaSinkEntry } from "./StatsEntryInterfaces";
+import { SfuInboundRtpPadEntry, SfuOutboundRtpPadEntry, SfuSctpChannelEntry, SfuTransportEntry, SfuMediaStreamEntry, SfuMediaStreamKind, SfuMediaSinkEntry, AppData } from "./StatsEntryInterfaces";
 import { hash } from "../utils/hash";
 import { createLogger } from "../utils/logger";
 
@@ -112,16 +112,16 @@ export interface StatsReader {
 
 export interface StatsWriter {
     removeTransport(transportId: string): void;
-    updateTransport(stats: SfuTransport): void;
+    updateTransport(stats: SfuTransport, appData?: AppData): void;
     
     removeInboundRtpPad(rtpPadId: string): void;
-    updateInboundRtpPad(stats: SfuInboundRtpPad): void;
+    updateInboundRtpPad(stats: SfuInboundRtpPad, appData?: AppData): void;
 
     removeOutboundRtpPad(rtpPadId: string): void;
-    updateOutboundRtpPad(stats: SfuOutboundRtpPad): void;
+    updateOutboundRtpPad(stats: SfuOutboundRtpPad, appData?: AppData): void;
 
     removeSctpChannel(sctpStreamId: string): void;
-    updateSctpChannel(stats: SfuSctpChannel): void;
+    updateSctpChannel(stats: SfuSctpChannel, appData?: AppData): void;
 }
 
 interface InnerSfuTransportEntry extends SfuTransportEntry {
@@ -190,7 +190,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         this._transports.delete(transportId);
         logger.debug(`Transport ${transportId} is removed`);
     }
-    public updateTransport(stats: SfuTransport): void {
+    public updateTransport(stats: SfuTransport, appData?: AppData): void {
         const now = Date.now();
         const transportId = stats.transportId;
         const transports = this._transports;
@@ -262,6 +262,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
             const initialInboundRtpPads = Array.from(this._inboundRtpPads.values()).filter(pad => pad.stats?.transportId === transportId);
             const intialSctpChannels = Array.from(this._sctpChannels.values()).filter(pad => pad.stats?.transportId === transportId);
             const newEntry: InnerSfuTransportEntry = entry = {
+                appData,
                 internal: !!stats.internal,
                 id: transportId,
                 stats,
@@ -314,7 +315,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         
     }
 
-    public updateInboundRtpPad(stats: SfuInboundRtpPad): void {
+    public updateInboundRtpPad(stats: SfuInboundRtpPad, appData?: AppData): void {
         const now = Date.now();
         const inboundRtpPadId = stats.padId;
         const inboundRtpPads = this._inboundRtpPads;
@@ -322,6 +323,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         if (!entry) {
             const transportId = stats.transportId;
             const newEntry: SfuInboundRtpPadEntry = entry = {
+                appData,
                 id: inboundRtpPadId,
                 stats,
                 created: now,
@@ -372,7 +374,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         this._inboundRtpPads.delete(inboundRtpPadId);
     }
 
-    public updateOutboundRtpPad(stats: SfuOutboundRtpPad): void {
+    public updateOutboundRtpPad(stats: SfuOutboundRtpPad, appData?: AppData): void {
         const now = Date.now();
         const outboundRtpPadId = stats.padId;
         const outboundRtpPads = this._outboundRtpPads;
@@ -380,6 +382,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         if (!entry) {
             const transportId = stats.transportId;
             const newEntry: SfuOutboundRtpPadEntry = entry = {
+                appData,
                 id: outboundRtpPadId,
                 stats,
                 created: now,
@@ -431,7 +434,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         this._outboundRtpPads.delete(outboundRtpPadId);
     }
 
-    public updateSctpChannel(stats: SfuSctpChannel): void {
+    public updateSctpChannel(stats: SfuSctpChannel, appData?: AppData): void {
         const now = Date.now();
         const { channelId: sctpChannelId } = stats;
         const sctpChannels = this._sctpChannels;
@@ -439,6 +442,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         if (!entry) {
             const transportId = stats.transportId;
             const newEntry: SfuSctpChannelEntry = entry = {
+                appData,
                 id: sctpChannelId,
                 stats,
                 created: now,
