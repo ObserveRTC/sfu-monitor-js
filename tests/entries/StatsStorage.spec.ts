@@ -355,4 +355,70 @@ describe("StatsStorage", () => {
             expect(storage.getNumberOfVideoSinks()).toEqual(expected);
         });
     });
+
+    describe("Given an updated StatsStorage to which elements are added and then removed all except transport", () => {
+        const storage = new StatsStorage();
+        const inboundRtpPadStats = Generator.createSfuInboundRtpPad();
+        const outboundRtpPadStats = Generator.createSfuOutboundRtpPad({ mediaType: inboundRtpPadStats.mediaType });
+        const sctpChannelStats = Generator.createSfuSctpChannel();
+        const transportStats = Generator.createSfuTransport();
+        storage.updateInboundRtpPad(inboundRtpPadStats);
+        storage.updateOutboundRtpPad(outboundRtpPadStats);
+        storage.updateSctpChannel(sctpChannelStats);
+        storage.updateTransport(transportStats);
+        it("When inboundRtpPads are iterated Then the length is 0", () => {
+            storage.removeInboundRtpPad(inboundRtpPadStats.padId);
+            const inboundRtpPads = Array.from(storage.inboundRtpPads());
+            expect(inboundRtpPads.length).toEqual(0);
+        });
+        it("When outboundRtpPads are iterated Then the length is 0", () => {
+            storage.removeOutboundRtpPad(outboundRtpPadStats.padId);
+            const outboundRtpPads = Array.from(storage.outboundRtpPads());
+            expect(outboundRtpPads.length).toEqual(0);
+        });
+        it("When sctpChannels are iterated Then the length is 0", () => {
+            storage.removeSctpChannel(sctpChannelStats.channelId);
+            const sctpChannels = Array.from(storage.sctpChannels());
+            expect(sctpChannels.length).toEqual(0);
+        });
+
+        describe("When transports are iterated", () => {
+            const transport = Array.from(storage.transports())[0];
+            it("Then transport.inboundRtpPads().length is 0", () => {
+                const inboundRtpPads = Array.from(transport.inboundRtpPads());
+                expect(inboundRtpPads.length).toEqual(0);
+            });
+            it("Then transport.outboundRtpPads().length is 0", () => {
+                const outboundRtpPads = Array.from(transport.outboundRtpPads());
+                expect(outboundRtpPads.length).toEqual(0);
+            });
+            it("Then transport.sctpChannels().length is 0", () => {
+                const sctpChannels = Array.from(transport.sctpChannels());
+                expect(sctpChannels.length).toEqual(0);
+            });
+            it("Then transport.mediaSinks().length is 0", () => {
+                const mediaSinks = Array.from(transport.mediaSinks());
+                expect(mediaSinks.length).toEqual(0);
+            });
+            it("Then transport.mediaStreams().length is 0", () => {
+                const mediaStreams = Array.from(transport.mediaStreams());
+                expect(mediaStreams.length).toEqual(0);
+            });
+            it("Then transport.getNumberOfInboundRtpPads() is 0", () => {
+                expect(transport.getNumberOfInboundRtpPads()).toEqual(0);
+            });
+            it("Then transport.getNumberOfOutboundRtpPads() is 0", () => {
+                expect(transport.getNumberOfOutboundRtpPads()).toEqual(0);
+            });
+            it("Then transport.getNumberOfSctpChannels() is 0", () => {
+                expect(transport.getNumberOfSctpChannels()).toEqual(0);
+            });
+            it("Then transport.getNumberOfMediaStreams() is 0", () => {
+                expect(transport.getNumberOfMediaStreams()).toEqual(0);
+            });
+            it("Then transport.getNumberOfMediaSinks() is 0", () => {
+                expect(transport.getNumberOfMediaSinks()).toEqual(0);
+            });
+        });
+    });
 })

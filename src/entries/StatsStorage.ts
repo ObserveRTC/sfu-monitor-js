@@ -644,6 +644,12 @@ export class StatsStorage implements StatsReader, StatsWriter {
             if (sctpChannelId) {
                 transport.sctpChannelIds.add(sctpChannelId);
             }
+            if (streamId) {
+                transport.mediaStreamIds.add(streamId);
+            }
+            if (sinkId) {
+                transport.mediaSinkIds.add(sinkId);
+            }
         }
         if (streamId) {
             const mediaStream = this._getOrCreateMediaStream({
@@ -713,6 +719,12 @@ export class StatsStorage implements StatsReader, StatsWriter {
             }
             if (sctpChannelId) {
                 transport.sctpChannelIds.delete(sctpChannelId);
+            }
+            if (streamId) {
+                transport.mediaStreamIds.delete(streamId);
+            }
+            if (sinkId) {
+                transport.mediaSinkIds.delete(sinkId);
             }
         }
         let mediaStream: InnerSfuMediaStreamEntry | undefined;
