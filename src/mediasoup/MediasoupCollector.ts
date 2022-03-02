@@ -772,6 +772,9 @@ export class MediasoupCollector implements Collector {
                     // framesSent: stats.framesSent,
                     // framesEncoded: stats.framesEncoded,
                     // keyFramesEncoded: stats.keyFramesEncoded,
+                    fractionLost: stats.fractionLost,
+                    // jitter: stats.jitter,
+                    roundTripTime: stats.roundTripTime,
                 }
                 this._statsWriter?.updateOutboundRtpPad(outboundRtpPadStats, customData);
             }
