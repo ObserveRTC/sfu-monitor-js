@@ -187,6 +187,10 @@ export class StatsStorage implements StatsReader, StatsWriter {
     }
 
     public removeTransport(transportId: string): void {
+        // unbind entry
+        this._unbind({
+            transportId,
+        });
         this._transports.delete(transportId);
         logger.debug(`Transport ${transportId} is removed`);
     }
@@ -740,12 +744,20 @@ export class StatsStorage implements StatsReader, StatsWriter {
             if (inboundRtpPadId) {
                 mediaStream.inboundRtpPadIds.delete(inboundRtpPadId);
             }
+            const transport = mediaStream.transportId ? this._transports.get(mediaStream.transportId) : undefined;
             if (sinkId) {
                 mediaStream.mediaSinkIds.delete(sinkId);
+                if (transport) {
+                    transport.mediaSinkIds.delete(sinkId);
+                }
             }
+            
             const references = mediaStream.getNumberOfInboundRtpPads() +
                 mediaStream.getNumberOfMediaSinks();
             if (references < 1) {
+                if (transport) {
+                    transport.mediaStreamIds.delete(mediaStream.id);
+                }
                 this._mediaStreams.delete(mediaStream.id);
             }
         }
@@ -762,8 +774,12 @@ export class StatsStorage implements StatsReader, StatsWriter {
             if (outboundRtpPadId) {
                 mediaSink.outboundRtpPadIds.delete(outboundRtpPadId);
             }
+            const transport = mediaSink.transportId ? this._transports.get(mediaSink.transportId) : undefined;
             const references = mediaSink.getNumberOfOutboundRtpPads();
             if (references < 1) {
+                if (transport) {
+                    transport.mediaSinkIds.delete(mediaSink.id);
+                }
                 this._mediaSinks.delete(mediaSink.id);
             }
         }
