@@ -18,7 +18,7 @@ const initLogger = (prefix: string): Logger.Logger => {
         // eslint-disable-next-line @typescript-eslint/explicit-function-return-type,func-names
         return function (...params) {
             rawMethod(
-                `${prefix} ${new Date().toUTCString()}`,
+                `\n\n${prefix} ${new Date().toUTCString()}\n\n`,
                 ...params
             )
         }
@@ -26,14 +26,24 @@ const initLogger = (prefix: string): Logger.Logger => {
     return _logger
 };
 
+let actualLevel: Logger.LogLevelDesc = "info";
+
+const loggers = new Map();
 const createLogger = (moduleName: string) => {
-    return initLogger(`ObserveRTC::${moduleName}`);
+    const logger = initLogger(`ObserveRTC::${moduleName}`);
+    logger.setLevel(actualLevel);
+    loggers.set(moduleName, logger);
+    return logger;
 }
 
-const logger = initLogger(
-        'ObserverRTC',
-    )
+
+const setLevel = (level: Logger.LogLevelDesc) => {
+    for (const logger of loggers.values()) {
+        logger.setLevel(level);
+    }
+};
+
 export {
-    logger,
     createLogger,
+    setLevel,
 }

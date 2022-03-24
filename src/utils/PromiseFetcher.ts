@@ -1,4 +1,6 @@
-import { logger } from "./logger";
+import { createLogger } from "./logger";
+
+const logger = createLogger(`PromiseFetcher`)
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type ErrorListener = (err: any, i: number) => void;

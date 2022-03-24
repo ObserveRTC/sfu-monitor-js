@@ -1,7 +1,9 @@
 import { Transport, TransportState } from "./Transport";
 import { ClientOptions, WebSocket }  from 'ws';
 import { EventEmitter } from "events";
-import { logger } from "../utils/logger";
+import { createLogger } from "../utils/logger";
+
+const logger = createLogger(`WebsocketTransport`)
 
 export type WebsocketTransportConfig = {
     url: string;

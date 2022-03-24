@@ -108,6 +108,12 @@ export interface StatsReader {
      * Gets the number of tracked video sinks
      */
     getNumberOfVideoSinks(): number;
+
+    /**
+     * Dump the content of the storage
+     * @param withStats flag indicating if the stats of the entries should be included or not
+     */
+    dump(withStats: boolean): String;
 }
 
 export interface StatsWriter {
@@ -136,12 +142,13 @@ interface InnerSfuTransportEntry extends SfuTransportEntry {
 interface InnerSfuMediaStreamEntry extends SfuMediaStreamEntry {
     inboundRtpPadIds: Set<string>;
     mediaSinkIds: Set<string>;
-    transportId?: string;
+    transportId: string;
 }
 
 interface InnerSfuMediaSinkEntry extends SfuMediaSinkEntry {
     outboundRtpPadIds: Set<string>;
-    transportId?: string;
+    transportId: string;
+    mediaStreamId: string,
 }
 
 
@@ -188,9 +195,6 @@ export class StatsStorage implements StatsReader, StatsWriter {
 
     public removeTransport(transportId: string): void {
         // unbind entry
-        this._unbind({
-            transportId,
-        });
         this._transports.delete(transportId);
         logger.debug(`Transport ${transportId} is removed`);
     }
@@ -301,7 +305,6 @@ export class StatsStorage implements StatsReader, StatsWriter {
                     return newEntry.mediaStreamIds.size;
                 },
             };
-            // need to do it twice because the first hash is hashed without the hash
             newEntry.hashCode = hash(stats);
             this._transports.set(transportId, newEntry);
         } else {
@@ -343,14 +346,26 @@ export class StatsStorage implements StatsReader, StatsWriter {
             }
             entry.hashCode = hash(stats);
             inboundRtpPads.set(newEntry.id, newEntry);
+            const { streamId, mediaType: kind } = stats;
 
             // bind entry
-            this._bind({
-                transportId,
-                kind: stats.mediaType,
-                inboundRtpPadId,
-                streamId: stats.streamId,
-            });
+            const transport = this._transports.get(transportId);
+            if (transport) {
+                transport.inboundRtpPadIds.add(inboundRtpPadId);
+            }
+            if (streamId) {
+                const mediaStream = this._getOrCreateMediaStream({
+                    transportId,
+                    streamId,
+                    kind,
+                });
+                if (transport) {
+                    transport.mediaStreamIds.add(streamId);
+                }
+                if (kind === "audio") this._audioStreamIds.add(streamId);
+                else if (kind === "video") this._videoStreamIds.add(streamId);
+                mediaStream.inboundRtpPadIds.add(inboundRtpPadId);
+            }
         } else {
             entry.stats = {
                 ...entry.stats,
@@ -369,12 +384,23 @@ export class StatsStorage implements StatsReader, StatsWriter {
         if (!inboundRtpPad) return;
 
         // unbind entry
-        this._unbind({
-            transportId: inboundRtpPad.stats.transportId,
-            kind: inboundRtpPad.stats.mediaType,
-            streamId: inboundRtpPad.stats.streamId,
-            inboundRtpPadId,
-        });
+        const { transportId, mediaType: kind, streamId } = inboundRtpPad.stats;
+        const transport = this._transports.get(transportId);
+        if (transport) {
+            transport.inboundRtpPadIds.delete(inboundRtpPadId);
+        }
+        const mediaStream = this._mediaStreams.get(streamId);
+        if (mediaStream) {
+            mediaStream.inboundRtpPadIds.delete(inboundRtpPadId);
+        }
+        if (mediaStream && mediaStream.getNumberOfInboundRtpPads() < 1) {
+            if (transport) {
+                transport.mediaStreamIds.delete(streamId);
+            }
+            if (kind === "audio") this._audioStreamIds.delete(streamId);
+            else if (kind === "video") this._videoStreamIds.delete(streamId);
+            this._mediaStreams.delete(streamId);
+        }
         this._inboundRtpPads.delete(inboundRtpPadId);
     }
 
@@ -398,18 +424,38 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 },
                 getMediaStream: () => {
                     return this._mediaStreams.get(newEntry.stats.streamId);
+                },
+                getMediaSink: () => {
+                    return this._mediaSinks.get(newEntry.stats.sinkId);
                 }
             }
             entry.hashCode = hash(stats);
             outboundRtpPads.set(newEntry.id, newEntry);
             const { streamId, sinkId, mediaType: kind } = stats;
-            this._bind({
-                transportId,
-                kind,
-                streamId,
-                sinkId,
-                outboundRtpPadId,
-            });
+
+            // bind
+            const transport = this._transports.get(transportId);
+            if (transport) {
+                transport.outboundRtpPadIds.add(outboundRtpPadId);
+            }
+            if (streamId && sinkId) {
+                const mediaStream = this._mediaStreams.get(streamId);
+                if (mediaStream) {
+                    mediaStream.mediaSinkIds.add(sinkId);
+                }
+                const mediaSink = this._getOrCreateMediaSink({
+                    transportId,
+                    streamId,
+                    sinkId,
+                    kind,
+                });
+                if (transport) {
+                    transport.mediaSinkIds.add(sinkId);
+                }
+                if (kind === "audio") this._audioSinkIds.add(sinkId);
+                else if (kind === "video") this._videoSinkIds.add(sinkId);
+                mediaSink.outboundRtpPadIds.add(outboundRtpPadId);
+            }
         } else {
             entry.stats = {
                 ...entry.stats,
@@ -426,15 +472,29 @@ export class StatsStorage implements StatsReader, StatsWriter {
     public removeOutboundRtpPad(outboundRtpPadId: string): void {
         const outboundRtpPad = this._outboundRtpPads.get(outboundRtpPadId);
         if (!outboundRtpPad) return;
+
         // unbind entry
         const { transportId, mediaType: kind, sinkId, streamId } = outboundRtpPad.stats;
-        this._unbind({
-            transportId,
-            kind,
-            outboundRtpPadId,
-            streamId,
-            sinkId,
-        });
+        const transport = this._transports.get(transportId);
+        if (transport) {
+            transport.outboundRtpPadIds.delete(outboundRtpPadId);
+        }
+        const mediaSink = this._mediaSinks.get(sinkId);
+        if (mediaSink) {
+            mediaSink.outboundRtpPadIds.delete(outboundRtpPadId);
+        }
+        if (mediaSink && mediaSink.getNumberOfOutboundRtpPads() < 1) {
+            const mediaStream = this._mediaStreams.get(streamId);
+            if (mediaStream) {
+                mediaStream.mediaSinkIds.delete(sinkId);
+            }
+            if (transport) {
+                transport.mediaSinkIds.delete(sinkId);
+            }
+            if (kind === "audio") this._audioSinkIds.delete(sinkId);
+            else if (kind === "video") this._videoSinkIds.delete(sinkId);
+            this._mediaSinks.delete(sinkId);
+        }
         this._outboundRtpPads.delete(outboundRtpPadId);
     }
 
@@ -461,10 +521,10 @@ export class StatsStorage implements StatsReader, StatsWriter {
             this._sctpChannels.set(newEntry.id, newEntry);
 
             // bind entry
-            this._bind({
-                transportId,
-                sctpChannelId,
-            });
+            const transport = this._transports.get(transportId);
+            if (transport) {
+                transport.sctpChannelIds.add(sctpChannelId);
+            }
         } else {
             entry.stats = {
                 ...entry.stats,
@@ -482,10 +542,11 @@ export class StatsStorage implements StatsReader, StatsWriter {
         const sctpChannel = this._sctpChannels.get(sctpChannelId);
         if (!sctpChannel) return;
         // unbind entry
-        this._unbind({
-            transportId: sctpChannel.stats.transportId,
-            sctpChannelId,
-        });
+        const { transportId } = sctpChannel.stats;
+        const transport = this._transports.get(transportId);
+        if (transport) {
+            transport.sctpChannelIds.delete(sctpChannelId);
+        }
         this._sctpChannels.delete(sctpChannelId);
     }
 
@@ -620,175 +681,12 @@ export class StatsStorage implements StatsReader, StatsWriter {
         return this._sctpChannels.size;
     }
 
-    private _bind({ 
-        transportId,
-        inboundRtpPadId,
-        outboundRtpPadId,
-        sctpChannelId,
-        kind,
-        streamId,
-        sinkId,
-    }: {
-        transportId: string,
-        kind?: SfuMediaStreamKind,
-        streamId?: string,
-        sinkId?: string,
-        inboundRtpPadId?: string,
-        outboundRtpPadId?: string,
-        sctpChannelId?: string,
-    }) {
-        const transport = this._transports.get(transportId);
-        if (transport) {
-            if (inboundRtpPadId) {
-                transport.inboundRtpPadIds.add(inboundRtpPadId);
-            }
-            if (outboundRtpPadId) {
-                transport.outboundRtpPadIds.add(outboundRtpPadId);
-            }
-            if (sctpChannelId) {
-                transport.sctpChannelIds.add(sctpChannelId);
-            }
-            if (streamId) {
-                transport.mediaStreamIds.add(streamId);
-            }
-            if (sinkId) {
-                transport.mediaSinkIds.add(sinkId);
-            }
-        }
-        if (streamId) {
-            const mediaStream = this._getOrCreateMediaStream({
-                streamId,
-                kind
-            });
-            if (transportId && !mediaStream.transportId) {
-                mediaStream.transportId = transportId;
-            }
-            if (inboundRtpPadId) {
-                mediaStream.inboundRtpPadIds.add(inboundRtpPadId);
-            }
-            if (sinkId) {
-                mediaStream.mediaSinkIds.add(sinkId);
-            }
-            if (kind === "audio") {
-                this._audioStreamIds.add(streamId);
-            } else if (kind === "video") {
-                this._videoStreamIds.add(streamId);
-            }
-        }
-        
-        if (sinkId && streamId) {
-            const mediaSink = this._getOrCreateMediaSink({
-                sinkId,
-                streamId,
-                kind
-            });
-            if (transportId && !mediaSink.transportId) {
-                mediaSink.transportId = transportId;
-            }
-            if (outboundRtpPadId) {
-                mediaSink.outboundRtpPadIds.add(outboundRtpPadId);
-            }
-            if (kind === "audio") {
-                this._audioSinkIds.add(sinkId);
-            } else if (kind === "video") {
-                this._videoSinkIds.add(sinkId);
-            }
-        }
-        
-    }
-    private _unbind({ 
-        transportId,
-        inboundRtpPadId,
-        outboundRtpPadId,
-        sctpChannelId,
-        kind,
-        streamId,
-        sinkId,
-    }: {
-        transportId: string,
-        kind?: SfuMediaStreamKind,
-        streamId?: string,
-        sinkId?: string,
-        inboundRtpPadId?: string,
-        outboundRtpPadId?: string,
-        sctpChannelId?: string,
-    }) {
-        const transport = this._transports.get(transportId);
-        if (transport) {
-            if (inboundRtpPadId) {
-                transport.inboundRtpPadIds.delete(inboundRtpPadId);
-            }
-            if (outboundRtpPadId) {
-                transport.outboundRtpPadIds.delete(outboundRtpPadId);
-            }
-            if (sctpChannelId) {
-                transport.sctpChannelIds.delete(sctpChannelId);
-            }
-            if (streamId) {
-                transport.mediaStreamIds.delete(streamId);
-            }
-            if (sinkId) {
-                transport.mediaSinkIds.delete(sinkId);
-            }
-        }
-        let mediaStream: InnerSfuMediaStreamEntry | undefined;
-        if (streamId) {
-            mediaStream = this._mediaStreams.get(streamId);
-            if (kind === "audio") {
-                this._audioStreamIds.delete(streamId);
-            } else if (kind === "video") {
-                this._videoStreamIds.delete(streamId);
-            }
-        }
-        if (mediaStream) {
-            if (inboundRtpPadId) {
-                mediaStream.inboundRtpPadIds.delete(inboundRtpPadId);
-            }
-            const transport = mediaStream.transportId ? this._transports.get(mediaStream.transportId) : undefined;
-            if (sinkId) {
-                mediaStream.mediaSinkIds.delete(sinkId);
-                if (transport) {
-                    transport.mediaSinkIds.delete(sinkId);
-                }
-            }
-            
-            const references = mediaStream.getNumberOfInboundRtpPads() +
-                mediaStream.getNumberOfMediaSinks();
-            if (references < 1) {
-                if (transport) {
-                    transport.mediaStreamIds.delete(mediaStream.id);
-                }
-                this._mediaStreams.delete(mediaStream.id);
-            }
-        }
-        let mediaSink: InnerSfuMediaSinkEntry | undefined;
-        if (sinkId) {
-            mediaSink = this._mediaSinks.get(sinkId);
-            if (kind === "audio") {
-                this._audioSinkIds.delete(sinkId);
-            } else if (kind === "video") {
-                this._videoSinkIds.delete(sinkId);
-            }
-        }
-        if (mediaSink) {
-            if (outboundRtpPadId) {
-                mediaSink.outboundRtpPadIds.delete(outboundRtpPadId);
-            }
-            const transport = mediaSink.transportId ? this._transports.get(mediaSink.transportId) : undefined;
-            const references = mediaSink.getNumberOfOutboundRtpPads();
-            if (references < 1) {
-                if (transport) {
-                    transport.mediaSinkIds.delete(mediaSink.id);
-                }
-                this._mediaSinks.delete(mediaSink.id);
-            }
-        }
-    }
-
     private _getOrCreateMediaStream({
+        transportId,
         streamId,
         kind    
     }: {
+        transportId: string,
         streamId: string,
         kind: SfuMediaStreamKind
     }): InnerSfuMediaStreamEntry 
@@ -818,10 +716,11 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 yield mediaSink;
             }
         }
-        const inboundRtpPadIds = Array.from(this._inboundRtpPads.values()).filter(pad => pad.stats.streamId === streamId).map(pad => pad.id);
-        const mediaSinkIds = Array.from(this._mediaSinks.values()).filter(mediaSink => mediaSink.getMediaStream()?.id === streamId).map(sink => sink.id);
+        const inboundRtpPadIds = Array.from(this._inboundRtpPads.values()).filter(pad => pad.stats?.streamId === streamId).map(pad => pad.id);
+        const mediaSinkIds = Array.from(this._mediaSinks.values()).filter(mediaSink => mediaSink.mediaStreamId === streamId).map(sink => sink.id);
         const mediaStream: InnerSfuMediaStreamEntry = result = {
             id: streamId,
+            transportId,
             kind,
             inboundRtpPadIds: new Set<string>(inboundRtpPadIds),
             mediaSinkIds: new Set<string>(mediaSinkIds),
@@ -843,10 +742,12 @@ export class StatsStorage implements StatsReader, StatsWriter {
     }
 
     private _getOrCreateMediaSink({
+        transportId,
         streamId,
         sinkId,
         kind,
     }: {
+        transportId: string,
         streamId: string,
         sinkId: string,
         kind: SfuMediaStreamKind
@@ -865,9 +766,11 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 yield outboundRtpPad;
             }
         }
-        const outboundRtpPadIds = Array.from(this._outboundRtpPads.values()).filter(pad => pad.stats.sinkId === sinkId).map(pad => pad.id);
+        const outboundRtpPadIds = Array.from(this._outboundRtpPads.values()).filter(pad => pad.stats?.sinkId === sinkId).map(pad => pad.id);
         const mediaSink: InnerSfuMediaSinkEntry = result = {
             id: sinkId,
+            mediaStreamId: streamId,
+            transportId,
             kind,
             outboundRtpPadIds: new Set<string>(outboundRtpPadIds),
             outboundRtpPads,
@@ -884,5 +787,128 @@ export class StatsStorage implements StatsReader, StatsWriter {
         }
         mediaSinks.set(sinkId, mediaSink);
         return result;
+    }
+
+    public dump(withStats: boolean = false) {
+        const dumpObj = (obj: { [s: string]: unknown; } | ArrayLike<unknown> | undefined) => obj ? Array.from(Object.entries(obj)).map(([key, value]) => `${key}: ${value}`) : ["undefined"];
+        const transportLogs: String[] = [];
+        for (const [transportId, transport] of this._transports.entries()) {
+            const transportLog: String[] = [
+                `TransportId: ${transportId}`,
+                `inboundRtpPadIds: ${Array.from(transport.inboundRtpPadIds).join(", ")}`,
+                `outboundRtpPadIds: ${Array.from(transport.outboundRtpPadIds).join(", ")}`,
+                `mediaSinkIds: ${Array.from(transport.mediaSinkIds).join(", ")}`,
+                `mediaStreamIds: ${Array.from(transport.mediaStreamIds).join(", ")}`,
+                `sctpChannelIds: ${Array.from(transport.sctpChannelIds).join(", ")}`,
+            ];
+            if (withStats) {
+                transportLog.push(
+                    `updated: ${transport.updated}`,
+                    `touched: ${transport.touched}`,
+                    `appData:`,
+                    ...dumpObj(transport.appData).map(line => `\t${line}`),
+                    `stats:`,
+                    ...dumpObj(transport.stats).map(line => `\t${line}`),
+                )
+            }
+            transportLogs.push(...transportLog.map(line => `\t${line}`), `\n`);
+        }
+
+        const inboundRtpPadLogs: String[] = [];
+        for (const [inboundRtpPadId, inboundRtpPad] of this._inboundRtpPads.entries()) {
+            const inboundRtpPadLog: String[] = [
+                `padId: ${inboundRtpPadId}`,
+                `transportId: ${inboundRtpPad.getTransport()?.id}`,
+                `streamId: ${inboundRtpPad.getMediaStream()?.id}`
+            ];
+            if (withStats) {
+                inboundRtpPadLog.push(
+                    `updated: ${inboundRtpPad.updated}`,
+                    `touched: ${inboundRtpPad.touched}`,
+                    `appData:`,
+                    ...dumpObj(inboundRtpPad.appData).map(line => `\t${line}`),
+                    `stats:`,
+                    ...dumpObj(inboundRtpPad.stats).map(line => `\t${line}`),
+                )
+            }
+            inboundRtpPadLogs.push(...inboundRtpPadLog.map(line => `\t${line}`), `\n`);
+        }
+
+        const outboundRtpPadLogs: String[] = [];
+        for (const [outboundRtpPadId, outboundRtpPad] of this._outboundRtpPads.entries()) {
+            const inboundRtpPadLog: String[] = [
+                `padId: ${outboundRtpPadId}`,
+                `transportId: ${outboundRtpPad.getTransport()?.id}`,
+                `streamId: ${outboundRtpPad.getMediaStream()?.id}`,
+                `sinkId: ${outboundRtpPad.getMediaSink()?.id}`,
+            ];
+            if (withStats) {
+                inboundRtpPadLog.push(
+                    `updated: ${outboundRtpPad.updated}`,
+                    `touched: ${outboundRtpPad.touched}`,
+                    `appData:`,
+                    ...dumpObj(outboundRtpPad.appData).map(line => `\t${line}`),
+                    `stats:`,
+                    ...dumpObj(outboundRtpPad.stats).map(line => `\t${line}`),
+                )
+            }
+            outboundRtpPadLogs.push(...inboundRtpPadLog.map(line => `\t${line}`), `\n`);
+        }
+
+        const sctpChannelLogs: String[] = [];
+        for (const [channelId, sctpChannel] of this._sctpChannels.entries()) {
+            const sctpChannelLog: String[] = [
+                `channelId: ${channelId}`,
+            ];
+            if (withStats) {
+                sctpChannelLog.push(
+                    `updated: ${sctpChannel.updated}`,
+                    `touched: ${sctpChannel.touched}`,
+                    `appData:`,
+                    ...dumpObj(sctpChannel.appData).map(line => `\t${line}`),
+                    `stats:`,
+                    ...dumpObj(sctpChannel.stats).map(line => `\t${line}`),
+                )
+            }
+            sctpChannelLogs.push(...sctpChannelLog.map(line => `\t${line}`), `\n`);
+        }
+
+        const mediaStreamLogs: String[] = [];
+        for (const [streamId, mediaStream] of this._mediaStreams.entries()) {
+            const mediaStreamLog: String[] = [
+                `streamId: ${streamId}`,
+                `transportId: ${mediaStream.transportId}`,
+                `inboundRtpPadIds: ${Array.from(mediaStream.inboundRtpPadIds).join(", ")}`,
+                `mediaSinkIds: ${Array.from(mediaStream.mediaSinkIds).join(", ")}`,
+            ];
+            mediaStreamLogs.push(...mediaStreamLog.map(line => `\t${line}`), `\n`);
+        }
+
+        const mediaSinkLogs: String[] = [];
+        for (const [sinkId, mediaSink] of this._mediaSinks.entries()) {
+            const mediaSinkLog: String[] = [
+                `sinkId: ${sinkId}`,
+                `streamId: ${mediaSink.getMediaStream()?.id}`,
+                `transportId: ${mediaSink.transportId}`,
+                `outboundRtpPadIds: ${Array.from(mediaSink.outboundRtpPadIds).join(", ")}`,
+            ];
+            mediaSinkLogs.push(...mediaSinkLog.map(line => `\t${line}`), `\n`);
+        }
+        const entries: String[] = [
+            `Transports\n`,
+            ...transportLogs.map(line => `\t${line}`),
+            `InboundRtpPads\n`,
+            ...inboundRtpPadLogs.map(line => `\t${line}`),
+            `OutboundRtpPads\n`,
+            ...outboundRtpPadLogs.map(line => `\t${line}`),
+            `SctpChannels\n`,
+            ...sctpChannelLogs.map(line => `\t${line}`),
+            `MediaStreams\n`,
+            ...mediaStreamLogs.map(line => `\t${line}`),
+            `MediaSinks\n`,
+            ...mediaSinkLogs.map(line => `\t${line}`),
+
+        ];
+        return entries.join('\n');
     }
 }

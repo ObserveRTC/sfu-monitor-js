@@ -4,10 +4,8 @@ import {  SamplerConfig, supplyDefaultConfig as supplySamplerDefaultConfig } fro
 import { SenderConfig } from "./Sender";
 import { StatsReader } from "./entries/StatsStorage";
 import { AccumulatorConfig } from "./Accumulator";
-import { createLogger } from "./utils/logger";
+import { setLevel as setLoggersLevel } from "./utils/logger";
 import { LogLevelDesc } from "loglevel";
-
-const logger = createLogger(`SfuObserver`);
 
 export type SfuObserverConfig = {
     /**
@@ -112,5 +110,5 @@ export interface SfuObserver {
  * @param level the level of logging
  */
 export function setLogLevel(level: LogLevelDesc) {
-    logger.setLevel(level);
+    setLoggersLevel(level);
 }

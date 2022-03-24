@@ -53,6 +53,7 @@ export interface SfuOutboundRtpPadEntry extends StatsEntryAbs {
     stats: SfuOutboundRtpPad;
     getTransport(): SfuTransportEntry | undefined;
     getMediaStream(): SfuMediaStreamEntry | undefined;
+    getMediaSink(): SfuMediaSinkEntry | undefined;
 }
 
 export type SfuMediaStreamKind = "audio" | "video" | undefined;
