@@ -284,7 +284,7 @@ export class MediasoupCollector implements Collector {
                     mediaType: producer.kind,
                     type: "inbound-rtp",
                     polledStats,
-                    customData: customTransportData,
+                    customData: customInboundRtpData,
                 }
                 return result;
             }
