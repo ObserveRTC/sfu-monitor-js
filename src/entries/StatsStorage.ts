@@ -113,7 +113,7 @@ export interface StatsReader {
      * Dump the content of the storage
      * @param withStats flag indicating if the stats of the entries should be included or not
      */
-    dump(withStats: boolean): String;
+    dump(withStats: boolean): string;
 }
 
 export interface StatsWriter {
@@ -789,11 +789,11 @@ export class StatsStorage implements StatsReader, StatsWriter {
         return result;
     }
 
-    public dump(withStats: boolean = false) {
+    public dump(withStats = false) {
         const dumpObj = (obj: { [s: string]: unknown; } | ArrayLike<unknown> | undefined) => obj ? Array.from(Object.entries(obj)).map(([key, value]) => `${key}: ${value}`) : ["undefined"];
-        const transportLogs: String[] = [];
+        const transportLogs: string[] = [];
         for (const [transportId, transport] of this._transports.entries()) {
-            const transportLog: String[] = [
+            const transportLog: string[] = [
                 `TransportId: ${transportId}`,
                 `inboundRtpPadIds: ${Array.from(transport.inboundRtpPadIds).join(", ")}`,
                 `outboundRtpPadIds: ${Array.from(transport.outboundRtpPadIds).join(", ")}`,
@@ -814,9 +814,9 @@ export class StatsStorage implements StatsReader, StatsWriter {
             transportLogs.push(...transportLog.map(line => `\t${line}`), `\n`);
         }
 
-        const inboundRtpPadLogs: String[] = [];
+        const inboundRtpPadLogs: string[] = [];
         for (const [inboundRtpPadId, inboundRtpPad] of this._inboundRtpPads.entries()) {
-            const inboundRtpPadLog: String[] = [
+            const inboundRtpPadLog: string[] = [
                 `padId: ${inboundRtpPadId}`,
                 `transportId: ${inboundRtpPad.getTransport()?.id}`,
                 `streamId: ${inboundRtpPad.getMediaStream()?.id}`
@@ -834,9 +834,9 @@ export class StatsStorage implements StatsReader, StatsWriter {
             inboundRtpPadLogs.push(...inboundRtpPadLog.map(line => `\t${line}`), `\n`);
         }
 
-        const outboundRtpPadLogs: String[] = [];
+        const outboundRtpPadLogs: string[] = [];
         for (const [outboundRtpPadId, outboundRtpPad] of this._outboundRtpPads.entries()) {
-            const inboundRtpPadLog: String[] = [
+            const inboundRtpPadLog: string[] = [
                 `padId: ${outboundRtpPadId}`,
                 `transportId: ${outboundRtpPad.getTransport()?.id}`,
                 `streamId: ${outboundRtpPad.getMediaStream()?.id}`,
@@ -855,9 +855,9 @@ export class StatsStorage implements StatsReader, StatsWriter {
             outboundRtpPadLogs.push(...inboundRtpPadLog.map(line => `\t${line}`), `\n`);
         }
 
-        const sctpChannelLogs: String[] = [];
+        const sctpChannelLogs: string[] = [];
         for (const [channelId, sctpChannel] of this._sctpChannels.entries()) {
-            const sctpChannelLog: String[] = [
+            const sctpChannelLog: string[] = [
                 `channelId: ${channelId}`,
             ];
             if (withStats) {
@@ -873,9 +873,9 @@ export class StatsStorage implements StatsReader, StatsWriter {
             sctpChannelLogs.push(...sctpChannelLog.map(line => `\t${line}`), `\n`);
         }
 
-        const mediaStreamLogs: String[] = [];
+        const mediaStreamLogs: string[] = [];
         for (const [streamId, mediaStream] of this._mediaStreams.entries()) {
-            const mediaStreamLog: String[] = [
+            const mediaStreamLog: string[] = [
                 `streamId: ${streamId}`,
                 `transportId: ${mediaStream.transportId}`,
                 `inboundRtpPadIds: ${Array.from(mediaStream.inboundRtpPadIds).join(", ")}`,
@@ -884,9 +884,9 @@ export class StatsStorage implements StatsReader, StatsWriter {
             mediaStreamLogs.push(...mediaStreamLog.map(line => `\t${line}`), `\n`);
         }
 
-        const mediaSinkLogs: String[] = [];
+        const mediaSinkLogs: string[] = [];
         for (const [sinkId, mediaSink] of this._mediaSinks.entries()) {
-            const mediaSinkLog: String[] = [
+            const mediaSinkLog: string[] = [
                 `sinkId: ${sinkId}`,
                 `streamId: ${mediaSink.getMediaStream()?.id}`,
                 `transportId: ${mediaSink.transportId}`,
@@ -894,7 +894,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
             ];
             mediaSinkLogs.push(...mediaSinkLog.map(line => `\t${line}`), `\n`);
         }
-        const entries: String[] = [
+        const entries: string[] = [
             `Transports\n`,
             ...transportLogs.map(line => `\t${line}`),
             `InboundRtpPads\n`,
