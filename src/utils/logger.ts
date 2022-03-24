@@ -18,7 +18,7 @@ const initLogger = (prefix: string): Logger.Logger => {
         // eslint-disable-next-line @typescript-eslint/explicit-function-return-type,func-names
         return function (...params) {
             rawMethod(
-                `\n\n${prefix} ${new Date().toUTCString()}\n\n`,
+                `${prefix} ${new Date().toUTCString()}`,
                 ...params
             )
         }
