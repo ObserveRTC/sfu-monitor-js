@@ -1,4 +1,5 @@
-import { WebsocketTransport, WebsocketTransportConfig } from "./WebsocketTransport";
+import { RestTransportConfig } from "./RestTransport";
+import { WebsocketTransportConfig } from "./WebsocketTransport";
 
 export enum TransportState {
     Created = "CREATED",
@@ -13,8 +14,8 @@ type ErrorListener = (err: any) => void;
 type StateChangedListener = (newState: TransportState) => void;
 
 export type TransportConfig = {
-    
     websocket?: WebsocketTransportConfig;
+    rest?: RestTransportConfig;
 }
 
 export interface Transport {
@@ -33,13 +34,4 @@ export interface Transport {
     connect(): Promise<void>;
     readonly closed: boolean;
     close(): void;
-}
-
-export function createTransport(config: TransportConfig): Transport {
-    let result: Transport | undefined;
-    if (config.websocket) {
-        result = WebsocketTransport.create(config.websocket);
-    }
-    if (!result) throw new Error(`No transport is manifested for config ${config}`);
-    return result;
 }

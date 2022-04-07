@@ -1,30 +1,23 @@
 ObserveRTC Integration for Selective Forwarding Units (SFU)
 ---
 
-# !!! UNDER DEVELOPMENT, NO STABLE VERSION IS AVAILABLE AT THE MOMENT! !!!
-
-@observertc/sfu-observer-js is an SFU side library for observertc integration.
+`@observertc/sfu-observer-js` is an SFU side library to monitor your SFU and integrate with observertc components.
 
 Table of Contents:
- * [API docs](#api-docs)
- * [NPM package](#npm-package)
  * [Quick Start](#quick-start)
    - [Collect stats from mediasoup](#collect-stats-from-mediasoup)
    - [Collect stats from other SFUs](#collect-stats-from-other-sfus)
    - [Sample and Send](#sample-and-send)
  * [Use collected stats](#use-collected-stats)
+ * [Examples](#mediasoup-examples)
+    - [Number of RTP sessions](#number-of-rtp-sessions)
+    - [Media streams and sinks](#media-streams-and-sinks)
+    - [Receiver and sender bitrates](#receiver-and-sender-bitrates)
  * [Configurations](#configurations)
+ * [API docs](#api-docs)
+ * [NPM package](#npm-package)
  * [Contributions](#contributions)
  * [License](#license)
-
-
-## API docs
-
-https://observertc.github.io/sfu-observer-js/interfaces/SfuObserver.html
-
-## NPM package
-
-https://www.npmjs.com/package/@observertc/sfu-observer-js
 
 ## Qucik Start
 
@@ -83,46 +76,71 @@ collector.addSctpStreamStatsSupplier("channelId", ...);
 collector.removeSctpStreamSupplier("channelId");
 ```
 
+### Sample and Send
+
+Sampling means the sfu-observer creates a so-called SfuSample. SfuSample is a compound object contains a snapshot from the polled stats. SfuSample is created by a Sampler component.
+A created SfuSample is added to Samples object. Samples can be sent to the server by a Sender component.
+
+The above shown examples can be extended to sample and send by adding the following configurations:
+
+```javascript
+import { ClientObserver } from "@observertc/client-observer-js";
+// see full config in Configuration section
+const config = {
+    collectingPeriodInMs: 5000,
+    samplingPeriodInMs: 10000,
+    sendingPeriodInMs: 10000,
+    sender: {
+        websocket: {
+            urls: ["ws://localhost:7080/samples/myServiceId/myMediaUnitId"]
+        }
+    }
+};
+const observer = SfuObserver.create(config);
+//... the rest of your code
+```
+
 ## Use collected stats
 
 ```javascript
-for (const sfuTransportEntry of observer.stats.transports()) {
+const storage = observer.stats;
+for (const sfuTransportEntry of storage.transports()) {
     // use SfuTransportEntry
 }
 
-for (const sfuInboundRtpPadEntry of observer.stats.inboundRtpPads()) {
+for (const sfuInboundRtpPadEntry of storage.inboundRtpPads()) {
     // use SfuInboundRtpPadEntry
 }
 
-for (const sfuOutboundRtpPadEntry of observer.stats.outboundRtpPads()) {
+for (const sfuOutboundRtpPadEntry of storage.outboundRtpPads()) {
     // use SfuInboundRtpPadEntry
 }
 
-for (const sctpChannelEntry of observer.stats.sctpChannels()) {
+for (const sctpChannelEntry of storage.sctpChannels()) {
     // use SctpChannelEntry
 }
 
-for (const mediaStreamEntry of observer.stats.mediaStreams()) {
+for (const mediaStreamEntry of storage.mediaStreams()) {
     // use MediaStreamEntry
 }
 
-for (const mediaStreamEntry of observer.stats.audioStreams()) {
+for (const mediaStreamEntry of storage.audioStreams()) {
     // use MediaStreamEntry
 }
 
-for (const mediaStreamEntry of observer.stats.videoStreams()) {
+for (const mediaStreamEntry of storage.videoStreams()) {
     // use MediaStreamEntry
 }
 
-for (const mediaSinkEntry of observer.stats.mediaSinks()) {
+for (const mediaSinkEntry of storage.mediaSinks()) {
     // use MediaSinkEntry
 }
 
-for (const mediaSinkEntry of observer.stats.audioSinks()) {
+for (const mediaSinkEntry of storage.audioSinks()) {
     // use MediaSinkEntry
 }
 
-for (const mediaSinkEntry of observer.stats.videoSinks()) {
+for (const mediaSinkEntry of storage.videoSinks()) {
     // use MediaSinkEntry
 }
 ```
@@ -145,9 +163,85 @@ Additionally the observer groups the collected stats into the following entities
  * **MediaSink** A group of OutboundRtpPad sinks out media stream traffic to (typically) a client endpoint or to another SFU.
  
 
-### Sample and Send
+## Examples
 
-UNDER DEVELOPMENT
+### Number of RTP Sessions
+
+```javascript
+const storage = observer.stats;
+// The total number of RTP session going through the SFU
+const totalNumberOfRtpSessions = storage.getNumberOfInboundRtpPads() + storage.getNumberOfOutboundRtpPads();
+
+// The average number of rtp session in one transport (peer connection) between the SFU and its peers.
+const avgNumberOfRtpSessionsPerTransport = totalNumberOfRtpSessions / storage.getNumberOfTransports();
+const rtpPadsNum = [];
+for (const sfuTransportEntry of stats.transports()) {
+    const nrOfRtpSessions = sfuTransportEntry.getNumberOfOutboundRtpPads() + sfuTransportEntry.getNumberOfOutboundRtpPads();
+    rtpPadsNum.push(nrOfRtpSessions);
+}
+// define the getMedian like: https://www.w3resource.com/javascript-exercises/fundamental/javascript-fundamental-exercise-88.php
+const medianNumberOfRtpSessionsPerTransports = getMedian(rtpPadsNum);
+
+```
+
+### Media streams and sinks
+
+Media streams and sinks, as mentioned above are group of in-, and outbound rtp pads respectively.
+For example in simulcast usually 2-3 or even more RTP sessions are used belonging to one media stream.
+Media streams are composed by inbound RTP Pads. When a Media Stream is forwarded to a peer, a Media Sink
+is created compound outbound RTP sessions, consequently outbound RTP pads.
+
+The following example is created for mediasoup integration, but any other integration respectively provided
+`streamId` for inboundRtpPads, and `sinkId` for outbound RTP pads behave similarly.
+
+```javascript
+const storage = observer.stats;
+
+const nrOfProducers = storage.getNumberOfMediaStreams();
+const nrOfAudioProducers = storage.getNumberOfAudioStreams();
+const nrOfVideoProducers = storage.getNumberOfVideoStreams();
+
+const nrOfConsumers = storage.getNumberOfMediaSinks();
+const nrOfAudioConsumers = storage.getNumberOfAudioSinks();
+const nrOfVideoConsumers = storage.getNumberOfVideoSinks();
+
+const avgNrOfProducersPerTransport = storage.getNumberOfMediaStreams() / storage.getNumberOfTransports();
+```
+
+### Receiver and sender bitrates
+
+```javascript
+const storage = observer.stats;
+
+const traces = new Map();
+let lastCheck = Date.now();
+observer.events.onStatsCollected(() => {
+    let totalReceivedBytes = 0;
+    for (const sfuInboundRtpPadEntry of storage.inboundRtpPads()) {
+        const { bytesReceived } = sfuInboundRtpPadEntry.stats;
+        const prevBytesReceived = traces.get(sfuInboundRtpPadEntry.id) || 0;
+        totalReceivedBytes += bytesReceived - prevBytesReceived;
+    }
+
+    let totalSentBytes = 0;
+    for (const sfuOutboundRtpPadEntry of storage.outboundRtpPads()) {
+        const { bytesSent } = sfuOutboundRtpPadEntry.stats;
+        const prevBytesSent = traces.get(sfuOutboundRtpPadEntry.id) || 0;
+        totalSentBytes += bytesSent - prevBytesSent;
+    }
+
+    const now = Date.now();
+    const elapsedTimeInS = (now - lastCheck) / 1000;
+    const receivingBitrate = (totalReceivedBytes * 8) / elapsedTimeInS;
+    const sendingBitrate = (totalSentBytes * 8) / elapsedTimeInS;
+    console.log("Received bytes since last check: ", totalReceivedBytes);
+    console.log("Receiving bitrate: ", receivingBitrate);
+    console.log("Sent bytes since last check: ", totalSentBytes);
+    console.log("Sending bitrate: ", sendingBitrate);
+    lastCheck = now;
+});
+```
+
 
 ## Configurations
 
@@ -193,8 +287,66 @@ const config = {
          */
         incrementalSampling: true,
     },
+    sender: {
+        /**
+         * Configure the codec used to transport samples or receieve 
+         * feedback from the server.
+         * 
+         * Possible values: json, protobuf
+         * 
+         * DEFAULT: json
+         * 
+         */
+        format: "json",
+        /**
+         * Websocket configuration to transport the samples
+         */
+        websocket: {
+            /**
+             * The target url the websocket is opened for 
+             */
+            url: "ws://localhost:7080/samples/myServiceId/myMediaUnitId",
+            /**
+             * The maximum number of try to connect to the server
+             * 
+             * DEFAULT: 3
+             */
+            maxRetry: 1,
+            /**
+             * An optional field for additional socket option from ws package
+             */
+            socketOptions: {
+
+            },
+        },
+        /**
+         * Configuration to setup a REST api transport method for the samples.
+         */
+        rest: {
+            /**
+             * The target url the websocket is opened for 
+             */
+            url: string;
+            /**
+             * The maximum number of try to connect to the server
+             * 
+             * DEFAULT: 3
+             */
+            maxRetry: 1,
+        },
+    }
 };
 ```
+
+
+## API docs
+
+https://observertc.github.io/sfu-observer-js/interfaces/SfuObserver.html
+
+## NPM package
+
+https://www.npmjs.com/package/@observertc/sfu-observer-js
+
 ## Schema
 
 https://github.com/observertc/schemas

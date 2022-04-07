@@ -1,6 +1,6 @@
 import { ExtensionStat } from "@observertc/schemas"
 import { EventsRegister } from "./EventsRelayer";
-import {  SamplerConfig, supplyDefaultConfig as supplySamplerDefaultConfig } from "./Sampler";
+import { SamplerConfig } from "./Sampler";
 import { SenderConfig } from "./Sender";
 import { StatsReader } from "./entries/StatsStorage";
 import { AccumulatorConfig } from "./Accumulator";
@@ -104,10 +104,10 @@ export interface SfuObserver {
     close(): void;
 }
 
-/**
+ /**
  * Sets the level of logging of the module
  * 
- * @param level the level of logging
+ * possible values are: "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "SILENT"
  */
 export function setLogLevel(level: LogLevelDesc) {
     setLoggersLevel(level);
