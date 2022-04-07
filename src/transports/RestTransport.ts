@@ -47,7 +47,7 @@ export class RestTransport implements Transport {
     }
     private _config: RestTransportConfig;
     private _state: TransportState = TransportState.Created;
-    private _requests: Map<Number, Request> = new Map();
+    private _requests: Map<number, Request> = new Map();
     private _emitter: EventEmitter = new EventEmitter();
     private constructor(config: RestTransportConstructorConfig) {
         this._config = config;
