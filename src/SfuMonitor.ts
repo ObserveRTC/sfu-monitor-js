@@ -7,7 +7,7 @@ import { AccumulatorConfig } from "./Accumulator";
 import { setLevel as setLoggersLevel } from "./utils/logger";
 import { LogLevelDesc } from "loglevel";
 
-export type SfuObserverConfig = {
+export type SfuMonitorConfig = {
     /**
      * By setting it, the observer calls the added statsCollectors periodically
      * and pulls the stats.
@@ -55,7 +55,7 @@ export type SfuObserverConfig = {
     accumulator?: AccumulatorConfig,
 };
 
-export interface SfuObserver {
+export interface SfuMonitor {
     /**
      * Access to the collected stats
      */

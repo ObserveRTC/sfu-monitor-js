@@ -1,5 +1,5 @@
-export { setLogLevel } from "./SfuObserver";
-export type { SfuObserver, SfuObserverConfig } from "./SfuObserver";
+export { setLogLevel } from "./SfuMonitor";
+export type { SfuMonitor, SfuMonitorConfig } from "./SfuMonitor";
 
 export { AuxCollector } from "./AuxCollector";
 export type { AuxCollectorConfig } from "./AuxCollector";
@@ -7,7 +7,7 @@ export type { AuxCollectorConfig } from "./AuxCollector";
 export { MediasoupCollector } from "./mediasoup/MediasoupCollector";
 export type { MediasoupCollectorConfig } from "./mediasoup/MediasoupCollector";
 
-export { create } from "./SfuObserverImpl";
+export { create } from "./SfuMonitorImpl";
 export type { StatsReader } from "./entries/StatsStorage"
 export type { 
     SfuTransportEntry,

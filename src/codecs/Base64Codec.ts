@@ -8,7 +8,7 @@ export type Base64CodecConfig = {
 const defaultConfig: Base64CodecConfig = {
 }
 
-export class Base64Codec implements Codec<string, string> {
+export class Base64Codec implements Codec<Uint8Array, string> {
     public static create(config?: Base64CodecConfig): Base64Codec {
         const appliedConfig = Object.assign(defaultConfig, config);
         return new Base64Codec(appliedConfig);
@@ -19,11 +19,11 @@ export class Base64Codec implements Codec<string, string> {
         this._config = config;
     }
 
-    encode(data: string): string {
-        return Base64.encode(data, this._config.urlSafe)
+    encode(data: Uint8Array): string {
+        return Base64.fromUint8Array(data)
     }
 
     decode(data: string) {
-        return Base64.decode(data);
+        return Base64.toUint8Array(data);
     }
 }

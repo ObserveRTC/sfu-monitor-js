@@ -56,10 +56,10 @@ describe("EventsRelayer", () => {
 
     it('Relay SampleSent if subscribed', done => {
         const events = EventsRelayer.create();
-        events.onSampleSent(() => {
+        events.onSamplesSent(() => {
             done();
         });
-        events.emitSampleSent();
+        events.emitSamplesSent();
     });
 
     it('Not Relay SampleSent if unsubscribed', done => {
@@ -70,9 +70,31 @@ describe("EventsRelayer", () => {
         const doneListener = () => {
             done();
         }
-        events.onSampleSent(listener);
-        events.onSampleSent(doneListener);
-        events.offSampleSent(listener);
-        events.emitSampleSent();
+        events.onSamplesSent(listener);
+        events.onSamplesSent(doneListener);
+        events.offSamplesSent(listener);
+        events.emitSamplesSent();
+    });
+
+    it('Relay SenderDisconnected if subscribed', done => {
+        const events = EventsRelayer.create();
+        events.onSenderDisconnected(() => {
+            done();
+        });
+        events.emitSenderDisconnected();
+    });
+
+    it('Not Relay SenderDisconnected if unsubscribed', done => {
+        const events = EventsRelayer.create();
+        const listener = () => {
+            throw new Error(`Should not be called`)
+        };
+        const doneListener = () => {
+            done();
+        }
+        events.onSenderDisconnected(listener);
+        events.onSenderDisconnected(doneListener);
+        events.offSenderDisconnected(listener);
+        events.emitSenderDisconnected();
     });
 });

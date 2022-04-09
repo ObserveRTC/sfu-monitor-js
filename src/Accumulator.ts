@@ -49,6 +49,7 @@ export class Accumulator  {
         const buffer = this._buffer;
         this._buffer = [];
         buffer.forEach(samples => {
+            // samples.clientSamples = [];
             consumer(samples);
         });
     }

@@ -1,7 +1,7 @@
 ObserveRTC Integration for Selective Forwarding Units (SFU)
 ---
 
-`@observertc/sfu-observer-js` is an SFU side library to monitor your SFU and integrate with observertc components.
+`@observertc/sfu-monitor-js` is an SFU side library to monitor your SFU and integrate with observertc components.
 
 Table of Contents:
  * [Quick Start](#quick-start)
@@ -22,7 +22,7 @@ Table of Contents:
 ## Qucik Start
 
 ```
-npm i @observertc/sfu-observer-js
+npm i @observertc/sfu-monitor-js
 ```
 
 ### Collect stats from mediasoup
@@ -30,14 +30,14 @@ npm i @observertc/sfu-observer-js
 If you use [mediasoup:3.x.y]() you can use the built-in integration.
 
 ```javascript
-import { SfuObserver, MediasoupCollector } from "@observertc/sfu-observer-js";
+import { SfuMonitor, MediasoupCollector } from "@observertc/sfu-monitor-js";
 // see full config in Configuration section
 const config = {
     collectingPeriodInMs: 5000,
 };
-const observer = SfuObserver.create(config);
+const monitor = SfuMonitor.create(config);
 const collector = MediasoupCollector.create();
-observer.addStatsCollector(collector);
+monitor.addStatsCollector(collector);
 
 // ... somewhere in your code
 const transport = router.createWebRtcTransport(options);
@@ -48,14 +48,14 @@ collector.watchWebRtcTransport(transport);
 
 You can write a stats collector by using `AuxCollector`.
 ```javascript
-import { SfuObserver, AuxCollector } from "@observertc/sfu-observer-js";
+import { SfuMonitor, AuxCollector } from "@observertc/sfu-monitor-js";
 // see full config in Configuration section
 const config = {
     collectingPeriodInMs: 5000,
 };
-const observer = SfuObserver.create(config);
+const monitor = SfuMonitor.create(config);
 const collector = AuxCollector.create();
-observer.addStatsCollector(collector);
+monitor.addStatsCollector(collector);
 
 collector.addTransportStatsSupplier("transportId", async () => {
     const stats: SfuTransport = {
@@ -78,13 +78,13 @@ collector.removeSctpStreamSupplier("channelId");
 
 ### Sample and Send
 
-Sampling means the sfu-observer creates a so-called SfuSample. SfuSample is a compound object contains a snapshot from the polled stats. SfuSample is created by a Sampler component.
+Sampling means the sfu-monitor creates a so-called SfuSample. SfuSample is a compound object contains a snapshot from the polled stats. SfuSample is created by a Sampler component.
 A created SfuSample is added to Samples object. Samples can be sent to the server by a Sender component.
 
 The above shown examples can be extended to sample and send by adding the following configurations:
 
 ```javascript
-import { ClientObserver } from "@observertc/client-observer-js";
+import { SfuMonitor } from "@observertc/sfu-monitor-js";
 // see full config in Configuration section
 const config = {
     collectingPeriodInMs: 5000,
@@ -96,14 +96,14 @@ const config = {
         }
     }
 };
-const observer = SfuObserver.create(config);
+const monitor = SfuMonitor.create(config);
 //... the rest of your code
 ```
 
 ## Use collected stats
 
 ```javascript
-const storage = observer.stats;
+const storage = monitor.storage;
 for (const sfuTransportEntry of storage.transports()) {
     // use SfuTransportEntry
 }
@@ -168,14 +168,14 @@ Additionally the observer groups the collected stats into the following entities
 ### Number of RTP Sessions
 
 ```javascript
-const storage = observer.stats;
+const storage = monitor.storage;
 // The total number of RTP session going through the SFU
 const totalNumberOfRtpSessions = storage.getNumberOfInboundRtpPads() + storage.getNumberOfOutboundRtpPads();
 
 // The average number of rtp session in one transport (peer connection) between the SFU and its peers.
 const avgNumberOfRtpSessionsPerTransport = totalNumberOfRtpSessions / storage.getNumberOfTransports();
 const rtpPadsNum = [];
-for (const sfuTransportEntry of stats.transports()) {
+for (const sfuTransportEntry of storage.transports()) {
     const nrOfRtpSessions = sfuTransportEntry.getNumberOfOutboundRtpPads() + sfuTransportEntry.getNumberOfOutboundRtpPads();
     rtpPadsNum.push(nrOfRtpSessions);
 }
@@ -195,7 +195,7 @@ The following example is created for mediasoup integration, but any other integr
 `streamId` for inboundRtpPads, and `sinkId` for outbound RTP pads behave similarly.
 
 ```javascript
-const storage = observer.stats;
+const storage = monitor.storage;
 
 const nrOfProducers = storage.getNumberOfMediaStreams();
 const nrOfAudioProducers = storage.getNumberOfAudioStreams();
@@ -211,11 +211,11 @@ const avgNrOfProducersPerTransport = storage.getNumberOfMediaStreams() / storage
 ### Receiver and sender bitrates
 
 ```javascript
-const storage = observer.stats;
+const storage = monitor.stats;
 
 const traces = new Map();
 let lastCheck = Date.now();
-observer.events.onStatsCollected(() => {
+monitor.events.onStatsCollected(() => {
     let totalReceivedBytes = 0;
     for (const sfuInboundRtpPadEntry of storage.inboundRtpPads()) {
         const { bytesReceived } = sfuInboundRtpPadEntry.stats;
@@ -248,14 +248,14 @@ observer.events.onStatsCollected(() => {
 ```javascript
 const config = {
     /**
-     * By setting it, the observer calls the added statsCollectors periodically
+     * By setting it, the monitor calls the added statsCollectors periodically
      * and pulls the stats.
      * 
      * DEFAULT: undefined
      */
     collectingPeriodInMs: 5000,
     /**
-     * By setting it, the observer make samples periodically.
+     * By setting it, the monitor make samples periodically.
      * 
      * DEFAULT: undefined
      */
@@ -341,11 +341,11 @@ const config = {
 
 ## API docs
 
-https://observertc.github.io/sfu-observer-js/interfaces/SfuObserver.html
+https://observertc.github.io/sfu-monitor-js/interfaces/SfuMonitor.html
 
 ## NPM package
 
-https://www.npmjs.com/package/@observertc/sfu-observer-js
+https://www.npmjs.com/package/@observertc/sfu-monitor-js
 
 ## Schema
 

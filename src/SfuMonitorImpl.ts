@@ -1,17 +1,17 @@
-import { ExtensionStat } from "@observertc/schemas"
+import { ExtensionStat, Samples } from "@observertc/schemas"
 import { Collector } from "./Collector";
 import { EventsRegister, EventsRelayer } from "./EventsRelayer";
 import { Sampler, supplyDefaultConfig as supplySamplerDefaultConfig } from "./Sampler";
-import { Sender } from "./Sender";
+import { Sender, SenderConfig } from "./Sender";
 import { Timer } from "./utils/Timer";
 import { StatsReader, StatsStorage } from "./entries/StatsStorage";
 import { Accumulator } from "./Accumulator";
 import { createLogger } from "./utils/logger";
-import { SfuObserver, SfuObserverConfig } from "./SfuObserver";
+import { SfuMonitor, SfuMonitorConfig } from "./SfuMonitor";
 
-const logger = createLogger(`SfuObserver`);
+const logger = createLogger(`SfuMonitor`);
 
-type ConstructorConfig = SfuObserverConfig;
+type ConstructorConfig = SfuMonitorConfig;
 
 const supplyDefaultConfig = () => {
     const defaultConfig: ConstructorConfig = {
@@ -22,22 +22,25 @@ const supplyDefaultConfig = () => {
     return defaultConfig;
 }
 
+const NO_SENDER_FOR_SENDING_FLAG = "noSenderForSending";
+
 /**
- * Create an SfuObserver
- * @param config config for the observer
+ * Create an SfuMonitor
+ * @param config config for the monitor
  */
-export function create(config?: SfuObserverConfig): SfuObserver {
+export function create(config?: SfuMonitorConfig): SfuMonitor {
     const appliedConfig = config ? Object.assign(supplyDefaultConfig(), config) : supplyDefaultConfig();
-    return new SfuObserverImpl(appliedConfig);
+    return new SfuMonitorImpl(appliedConfig);
 }
 
-class SfuObserverImpl implements SfuObserver {
+class SfuMonitorImpl implements SfuMonitor {
     private _closed = false;
     private _config: ConstructorConfig;
     private _collectors: Map<string, Collector> = new Map();
     private _sampler: Sampler;
     private _sender?: Sender;
     private _timer?: Timer;
+    private _flags: Set<string> = new Set();
     private _eventer: EventsRelayer;
     private _statsStorage: StatsStorage;
     private _accumulator: Accumulator;
@@ -47,8 +50,8 @@ class SfuObserverImpl implements SfuObserver {
         this._accumulator = Accumulator.create(config.accumulator);
         this._eventer = EventsRelayer.create();
         this._sampler = this._makeSampler();
-        this._sender = this._makeSender();
-        this._timer = this._makeTimer();
+        this._createSender();
+        this._createTimer();
     }
     
     public get sfuId() : string {
@@ -62,6 +65,10 @@ class SfuObserverImpl implements SfuObserver {
 
     public get stats(): StatsReader {
         return this._statsStorage;
+    }
+
+    public get connected(): boolean {
+        return this._sender?.closed == false;
     }
 
     public addStatsCollector(collector: Collector): void {
@@ -93,6 +100,15 @@ class SfuObserverImpl implements SfuObserver {
 
     public setMarker(marker: string): void {
         this._sampler.setMarker(marker);
+    }
+
+    public connectTo(config: SenderConfig) {
+        if (this._sender) {
+            logger.info(`A sender has already been configured, it will be forcefully closed`);
+            this._sender.close();
+        }
+        this._config.sender = config;
+        this._createSender();
     }
 
     public async collect(): Promise<void> {
@@ -129,24 +145,21 @@ class SfuObserverImpl implements SfuObserver {
 
     public async send(): Promise<void> {
         if (!this._sender) {
-            throw new Error(`Cannot send samples, because no Sender has been configured`);
+            if (this._flags.has(NO_SENDER_FOR_SENDING_FLAG)) {
+                return;
+            }
+            this._flags.add(NO_SENDER_FOR_SENDING_FLAG);
+            logger.warn(`Cannot send samples, because no Sender is available`);
+            return;
         }
-        const promises: Promise<void>[] = [];
+        const queue: Samples[] = [];
         this._accumulator.drainTo(samples => {
             if (!samples) return;
-            /* eslint-disable @typescript-eslint/no-non-null-assertion */
-            const promise = this._sender!.send(samples);
-            promises.push(promise);
+            queue.push(samples);
         });
-        await Promise.all(promises).catch(async err => {
-            logger.warn(err);
-            if (!this._sender) return;
-            if (!this._sender.closed) {
-                await this._sender.close();
-            }
-            this._sender = undefined;
-        });
-        this._eventer.emitSampleSent();
+        for (const samples of queue) {
+            this._sender.send(samples);
+        }
     }
 
     public get closed() {
@@ -177,23 +190,35 @@ class SfuObserverImpl implements SfuObserver {
         return result;
     }
 
-    private _makeSender(): Sender | undefined {
-        const senderConfig = this._config.sender;
+    private _createSender(): void {
+        const { sender: senderConfig } = this._config;
         if (!senderConfig) {
-            return undefined;
+            return;
         }
-        const result = Sender.create(senderConfig);
-        return result;
+        this._sender = Sender.create(senderConfig)
+            .onError(err => {
+                logger.warn(`Sender component is closed due to error`, err);
+                this._sender = undefined;
+                this._eventer.emitSenderDisconnected();
+            })
+            .onClosed(() => {
+                this._sender = undefined;
+            });
+        this._flags.delete(NO_SENDER_FOR_SENDING_FLAG);
     }
 
-    private _makeTimer(): Timer | undefined {
+    private _createTimer(): void {
         const {
             collectingPeriodInMs,
             samplingPeriodInMs,
             sendingPeriodInMs,
         } = this._config;
+        if (this._timer) {
+            logger.warn(`Attempted to recreate timer.`)
+            return;
+        }
         if (!collectingPeriodInMs && !samplingPeriodInMs && !sendingPeriodInMs) {
-            return undefined;
+            return;
         }
         const result = new Timer();
         if (collectingPeriodInMs && 0 < collectingPeriodInMs) {
@@ -220,6 +245,6 @@ class SfuObserverImpl implements SfuObserver {
                 context: "Sending Samples"
             });
         }
-        return result;
+        this._timer = result;
     }
 }

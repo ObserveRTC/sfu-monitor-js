@@ -1,7 +1,10 @@
-import { Transport, TransportState } from "./Transport";
+import { Transport } from "./Transport";
+import { ClientOptions, WebSocket }  from 'ws';
 import { EventEmitter } from "events";
 import { createLogger } from "../utils/logger";
-import axios, { AxiosRequestConfig } from 'axios';
+import { Queue } from "../utils/Queue";
+import * as http from "http";
+import * as https from "https";
 
 const logger = createLogger(`RestTransport`)
 
@@ -10,154 +13,147 @@ export type RestTransportConfig = {
      * The target url the websocket is opened for 
      */
     url: string;
-     /**
-     * The maximum number of try to connect to the server
-     * 
-     * DEFAULT: 3
-     */
-    maxRetry?: number;
     /**
-     * An optional field for additional socket option from ws package
+     * Protocol to connect to a REST API server
+     * 
+     * possible values: "http", "https"
+     * 
+     * DEFAULT: https
+     */    
+    protocol?: "http" | "https";
+
+    /**
+     * In case of https protocol, this is the key
+     * 
+     * DEFAULT: undefined
      */
-    restConfig?: AxiosRequestConfig;
+    key?: string;
+    /**
+     * In case of https protocol, this is the cert
+     * 
+     * DEFAULT: undefined
+     */
+    cert?: string;
 }
 
 type RestTransportConstructorConfig = RestTransportConfig & {
-    maxRetry: number,
 }
-
-type Request = () => Promise<void>;
 
 const supplyDefaultConfig = () => {
     const result: RestTransportConstructorConfig = {
         url: "cannot be this",
-        maxRetry: 3,
+        protocol: "http",
+        
     };
     return result;
 }
 
-const ON_STATE_CHANGED_EVENT_NAME = "onStateChanged";
 const ON_RECEIVED_EVENT_NAME = "onReceived";
-const ON_ERROR_EVENT_NAME = "onError";
+
 
 export class RestTransport implements Transport {
     public static create(config?: RestTransportConfig): RestTransport {
         const appliedConfig = Object.assign(supplyDefaultConfig(), config);
-        return new RestTransport(appliedConfig)
+        const result = new RestTransport(appliedConfig);
+        logger.info(`${RestTransport.name} is created`);
+        return result;
     }
     private _config: RestTransportConfig;
-    private _state: TransportState = TransportState.Created;
-    private _requests: Map<number, Request> = new Map();
     private _emitter: EventEmitter = new EventEmitter();
+    private _buffer: Queue<Uint8Array> = new Queue();
+    private _closed: boolean = false;
     private constructor(config: RestTransportConstructorConfig) {
         this._config = config;
     }
     public get closed(): boolean {
-        return this._state === TransportState.Closed;
+        return this._closed;
     }
 
-    public connect(): Promise<void> {
-        if (this._state === TransportState.Closed) {
-            return Promise.reject(`The transport is already closed`);
-        }
-        if (this._state === TransportState.Connected) {
-            return Promise.resolve();
-        }
-        this._setState(TransportState.Connected);
-        return Promise.resolve();
-    }
-
-    public get state(): TransportState {
-        return this._state;
-    }
 
     public async send(message: Uint8Array): Promise<void> {
-        if (this._state !== TransportState.Connected) {
-            throw new Error(`Transport must be Connected state to send any data`);
+        if (this._closed) {
+            throw new Error(`Cannot send data on a closed transport`);
         }
-        const { url, restConfig } = this._config;
-        const index = this._requests.size;
-        this._requests.set(index, () => {
-            return axios.post(url, message, restConfig)
-                .then(response => {
-                    this._requests.delete(index);
-                    const nextRequest = this._requests.get(index + 1);
-                    if (!nextRequest) return;
-                    nextRequest();
-                })
-                .catch(err => {
-                    this._requests.delete(index);
-                    logger.warn(`Error while sending message`, err);
-                });
-        });
+        if (0 < this._buffer.size) {
+            this._buffer.push(message);
+            return;
+        }
+        this._buffer.push(message);
+        while (!this._buffer.isEmpty) {
+            const queuedMessage = this._buffer.pop();
+            if (!queuedMessage) continue;
+            const length = queuedMessage.length;
+            const request = this._createRequest(length);
+            if (!request) continue;
+            
+            request.write(queuedMessage);
+            request.end();
+        }
     }
 
     onReceived(listener: (data: string) => void): Transport {
-        if (this._state === TransportState.Closed) {
-            throw new Error(`Cannot subscribe / unsubscribe events of a closed Transport`);
+        if (this._closed) {
+            throw new Error(`Cannot receive messages on a closed transport`);
         }
         this._emitter.on(ON_RECEIVED_EVENT_NAME, listener);
         return this;        
     }
 
     offReceived(listener: (data: string) => void): Transport {
-        if (this._state === TransportState.Closed) {
-            throw new Error(`Cannot subscribe / unsubscribe events of a closed Transport`);
+        if (this._closed) {
+            return this;
         }
         this._emitter.off(ON_RECEIVED_EVENT_NAME, listener);
         return this;
     }
 
-    onStateChanged(listener: (newState: TransportState) => void): Transport {
-        if (this._state === TransportState.Closed) {
-            throw new Error(`Cannot subscribe / unsubscribe events of a closed Transport`);
+    public close(): void {
+        if (this._closed) {
+            return;
         }
-        this._emitter.on(ON_STATE_CHANGED_EVENT_NAME, listener);
-        return this;
+        try {
+            this._buffer.clear();
+        } finally {
+            this._closed = true;
+        }
+        [ON_RECEIVED_EVENT_NAME].forEach(eventType => this._emitter.removeAllListeners(eventType));
     }
 
-    offStateChanged(listener: (newState: TransportState) => void): Transport {
-        if (this._state === TransportState.Closed) {
-            throw new Error(`Cannot subscribe / unsubscribe events of a closed Transport`);
+    private _createRequest(length: number): http.ClientRequest | undefined {
+        const { url, protocol } = this._config;
+        const options: http.RequestOptions | https.RequestOptions = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/octet-stream',
+                'Content-Length': length,
+            }
         }
-        this._emitter.off(ON_STATE_CHANGED_EVENT_NAME, listener);
-        return this;
-    }
-
-    /*eslint-disable @typescript-eslint/no-explicit-any */
-    onError(listener: (err: any) => void): Transport {
-        if (this._state === TransportState.Closed) {
-            throw new Error(`Cannot subscribe / unsubscribe events of a closed Transport`);
+        const responseHandler = (res: http.IncomingMessage) => {
+            logger.debug(`STATUS: ${res.statusCode}`);
+            logger.debug(`HEADERS: ${JSON.stringify(res.headers)}`);
+            res.setEncoding('utf8');
+            res.on('data', (chunk) => {
+                logger.debug(`BODY: ${chunk}`);
+            });
+            res.on('end', () => {
+                logger.debug('No more data in response.');
+            });
+        };
+        if (protocol === "http") {
+            return http.request(url, options, responseHandler);
+        } 
+        if (protocol === "https") {
+            const { key, cert } = this._config;
+            if (!key || !cert) {
+                logger.error(`without key or cert https is not possible`);
+                return;
+            }
+            Object.assign(options, {
+                key,
+                cert
+            })
+            return https.request(url, options, responseHandler);
         }
-        this._emitter.on(ON_ERROR_EVENT_NAME, listener);
-        return this;
-    }
-
-    /*eslint-disable @typescript-eslint/no-explicit-any */
-    offError(listener: (err: any) => void): Transport {
-        if (this._state === TransportState.Closed) {
-            throw new Error(`Cannot subscribe / unsubscribe events of a closed Transport`);
-        }
-        this._emitter.off(ON_ERROR_EVENT_NAME, listener);
-        return this;
-    }
-
-    public async close(): Promise<void> {
-        if (this._state === TransportState.Closed) {
-            return Promise.resolve();
-        }
-        [ON_ERROR_EVENT_NAME, ON_RECEIVED_EVENT_NAME].forEach(eventType => this._emitter.removeAllListeners(eventType));
-        this._setState(TransportState.Closed);
-        this._emitter.removeAllListeners(ON_STATE_CHANGED_EVENT_NAME);
-    }
-
-    private _setState(state: TransportState): void {
-        if (this._state === state) return;
-        const prevState = this._state;
-        this._state = state;
-        this._emitter.emit(ON_STATE_CHANGED_EVENT_NAME, {
-            prevState,
-            state,
-        });
+        logger.warn(`Unrecognized protocol ${protocol}`);
     }
 }

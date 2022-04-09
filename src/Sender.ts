@@ -1,11 +1,15 @@
 import { Samples } from "@observertc/schemas"
 import { Codec, CodecConfig, createCodec } from "./codecs/Codec";
 import { RestTransport, RestTransportConfig } from "./transports/RestTransport";
-import { Transport, TransportConfig, TransportState } from "./transports/Transport"
+import { Transport, TransportConfig } from "./transports/Transport";
+import { EventEmitter } from "events";
 import { WebsocketTransport, WebsocketTransportConfig } from "./transports/WebsocketTransport";
 import { createLogger } from "./utils/logger";
 
 const logger = createLogger(`Sender`);
+
+const ON_ERROR_EVENT_NAME = "onError";
+const ON_CLOSED_EVENT_NAME = "onClosed";
 
 export type SenderConfig = {
     /**
@@ -53,11 +57,13 @@ function createTransport(config: TransportConfig): Transport {
 export class Sender {
     public static create(config?: SenderConfig) {
         const appliedConfig = Object.assign(supplyDefaultConfig(), config);
-        return new Sender(appliedConfig);
+        const result = new Sender(appliedConfig);
+        return result;
     }
     private _closed = false;
     private _config: SenderConstructConfig;
-    private _codec: Codec<Samples, ArrayBuffer>;
+    private _codec: Codec<Samples, Uint8Array>;
+    private _emitter: EventEmitter = new EventEmitter();
     private _transport: Transport
     private constructor(config: SenderConstructConfig) {
         this._config = config;
@@ -67,40 +73,92 @@ export class Sender {
             rest: config.rest,
         });
     }
-    
-    public close(): void {
-        if (this._closed) {
-            logger.warn(`Attempted to close the Sender twice`);
-            return;
-        }
-        this._closed = true;
-        if (!this._transport.closed) {
-            this._transport.close();
-        }
-    }
 
     public get closed() {
         return this._closed;
     }
 
-    public async send(samples: Samples): Promise<void> {
+    public send(samples: Samples): void {
         if (this._closed) {
             throw new Error(`Cannot use an already closed Sender`);
         }
         const message = this._codec.encode(samples);
-        switch (this._transport.state) {
-            case TransportState.Created:
-                await this._transport.connect();
-                break;
-            case TransportState.Closed:
-                logger.error(`Transport is closed, sending is not possible`);
-                this.close();
-                return;
-            case TransportState.Connecting:
-                break;
-            case TransportState.Connected:
-                break;
+        
+        // --- for observer decoding tests ---
+        // const messageInBase64 = require("js-base64").Base64.fromUint8Array(message);
+        // logger.info({
+        //     original: JSON.stringify(samples),
+        //     messageInBase64
+        // });
+        this._transport.send(message).catch(err => {
+            if (!this._closed) {
+                this._close(err);
+            }
+        });
+    }
+
+    /*eslint-disable @typescript-eslint/no-explicit-any */
+    onError(listener: (err: any) => void): Sender {
+        if (this._closed) {
+            throw new Error(`Cannot subscribe / unsubscribe events of a closed Transport`);
         }
-        await this._transport.send(message);
+        this._emitter.once(ON_ERROR_EVENT_NAME, listener);
+        return this;
+    }
+
+    /*eslint-disable @typescript-eslint/no-explicit-any */
+    offError(listener: (err: any) => void): Sender {
+        if (this._closed) {
+            return this;
+        }
+        this._emitter.off(ON_ERROR_EVENT_NAME, listener);
+        return this;
+    }
+
+    onClosed(listener: () => void): Sender {
+        if (this._closed) {
+            throw new Error(`Cannot subscribe / unsubscribe events of a closed Transport`);
+        }
+        this._emitter.once(ON_CLOSED_EVENT_NAME, listener);
+        return this;
+    }
+
+    offClosed(listener: () => void): Sender {
+        if (this._closed) {
+            return this;
+        }
+        this._emitter.off(ON_CLOSED_EVENT_NAME, listener);
+        return this;
+    }
+
+    public close(): void {
+        if (this._closed) {
+            return;
+        }
+        this._close();
+    }
+
+    public _close(err: any = undefined): void {
+        if (this._closed) {
+            logger.warn(`Attempted to close the Sender twice`);
+            return;
+        }
+        try {
+            if (!this._transport.closed) {
+                this._transport.close();
+            }
+        } finally {
+            this._closed = true;
+        }
+        
+        if (err) {
+            this._emitter.emit(ON_ERROR_EVENT_NAME, err);
+        } else {
+            this._emitter.emit(ON_CLOSED_EVENT_NAME);
+        }
+        [
+            ON_CLOSED_EVENT_NAME,
+            ON_ERROR_EVENT_NAME
+        ].forEach(eventType => this._emitter.removeAllListeners(eventType));
     }
 }

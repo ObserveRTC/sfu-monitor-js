@@ -12,20 +12,24 @@ export interface EventsRegister {
     onSampleCreated(listener: SampleCreatedListener): EventsRegister;
     offSampleCreated(listener: SampleCreatedListener): EventsRegister;
 
-    onSampleSent(listener: SampleSentListener): EventsRegister;
-    offSampleSent(listener: SampleSentListener): EventsRegister;
+    onSamplesSent(listener: SampleSentListener): EventsRegister;
+    offSamplesSent(listener: SampleSentListener): EventsRegister;
+
+    onSenderDisconnected(listener: SampleSentListener): EventsRegister;
+    offSenderDisconnected(listener: SampleSentListener): EventsRegister;
 }
 
 export interface EventsEmitter {
     emitStatsCollected(peerConnectionId: string): void;
     emitSampleCreated(sfuSample: SfuSample): void;
-    emitSampleSent(): void;
-
+    emitSamplesSent(): void;
+    emitSenderDisconnected(): void;
 }
 
 const ON_STATS_COLLECTED_EVENT_NAME = "onStatsCollected";
 const ON_SAMPLE_CREATED_EVENT_NAME = "onSampleCreated";
 const ON_SAMPLES_SENT_EVENT_NAME = "onSamplesSent";
+const ON_SENDER_DISCONNECTED_EVENT_NAME = "onSenderDisconnected";
 
 export class EventsRelayer implements EventsRegister, EventsEmitter {
     public static create(): EventsRelayer {
@@ -64,17 +68,31 @@ export class EventsRelayer implements EventsRegister, EventsEmitter {
         return this;
     }
 
-    onSampleSent(listener: SampleSentListener): EventsRegister {
+    onSamplesSent(listener: SampleSentListener): EventsRegister {
         this._emitter.on(ON_SAMPLES_SENT_EVENT_NAME, listener);
         return this;
     }
     
-    emitSampleSent(): void {
+    emitSamplesSent(): void {
         this._emitter.emit(ON_SAMPLES_SENT_EVENT_NAME);
     }
 
-    offSampleSent(listener: SampleSentListener): EventsRegister {
+    offSamplesSent(listener: SampleSentListener): EventsRegister {
         this._emitter.off(ON_SAMPLES_SENT_EVENT_NAME, listener);
+        return this;
+    }
+
+    onSenderDisconnected(listener: SampleSentListener): EventsRegister {
+        this._emitter.on(ON_SENDER_DISCONNECTED_EVENT_NAME, listener);
+        return this;
+    }
+    
+    emitSenderDisconnected(): void {
+        this._emitter.emit(ON_SENDER_DISCONNECTED_EVENT_NAME);
+    }
+
+    offSenderDisconnected(listener: SampleSentListener): EventsRegister {
+        this._emitter.off(ON_SENDER_DISCONNECTED_EVENT_NAME, listener);
         return this;
     }
 

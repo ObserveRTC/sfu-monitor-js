@@ -67,7 +67,6 @@ export class Sampler {
     private _statsReader?: StatsReader;
     // private _peerConnections: Map<string, PeerConnectionEntry> = new Map();
     private _sampled?: number;
-    private _sampleSeq = 0;
     private _marker?: string;
     private _timezoneOffset: number = new Date().getTimezoneOffset();
     private _config: SamplerConstructorConfig;
@@ -102,7 +101,6 @@ export class Sampler {
             return; 
         }
         this._closed = true;
-        this._extensionStats = [];
     }
 
     public make(): SfuSample {
@@ -111,14 +109,18 @@ export class Sampler {
         }
         const sfuSample: SfuSample = {
             sfuId: this.sfuId,
-            timeZoneOffsetInHours: this._timezoneOffset,
-            marker: this._marker,
             timestamp: Date.now(),
-            
-            extensionStats: this._extensionStats,
         };
-        ++this._sampleSeq;
-        this._extensionStats = undefined;
+        if (this._timezoneOffset) {
+            sfuSample.timeZoneOffsetInHours = this._timezoneOffset;
+        }
+        if (this._marker) {
+            sfuSample.marker = this._marker;
+        }
+        if (this._extensionStats) {
+            sfuSample.extensionStats = this._extensionStats;
+            this._extensionStats = undefined;
+        }
         if (!this._statsReader) {
             logger.warn(`No StatsProvider has been assigned to Sampler`);
             this._sampled = sfuSample.timestamp;
@@ -126,7 +128,7 @@ export class Sampler {
         }
         const { incrementalSampling } = this._config;
         for (const transportEntry of this._statsReader.transports()) {
-            if (incrementalSampling && this._sampled && transportEntry.updated <= this._sampled) {
+            if (incrementalSampling && this._sampled && transportEntry.touched <= this._sampled) {
                 continue;
             }
             if (!sfuSample.transports) sfuSample.transports = [];
@@ -134,7 +136,7 @@ export class Sampler {
             sfuSample.transports.push(stats);
         }
         for (const inboundRtpPadEntry of this._statsReader.inboundRtpPads()) {
-            if (incrementalSampling && this._sampled && inboundRtpPadEntry.updated <= this._sampled) {
+            if (incrementalSampling && this._sampled && inboundRtpPadEntry.touched <= this._sampled) {
                 continue;
             }
             if (!sfuSample.inboundRtpPads) sfuSample.inboundRtpPads = [];
@@ -142,7 +144,7 @@ export class Sampler {
             sfuSample.inboundRtpPads.push(stats);
         }
         for (const outboundRtpPadEntry of this._statsReader.outboundRtpPads()) {
-            if (incrementalSampling && this._sampled && outboundRtpPadEntry.updated <= this._sampled) {
+            if (incrementalSampling && this._sampled && outboundRtpPadEntry.touched <= this._sampled) {
                 continue;
             }
             if (!sfuSample.outboundRtpPads) sfuSample.outboundRtpPads = [];
@@ -150,7 +152,7 @@ export class Sampler {
             sfuSample.outboundRtpPads.push(stats);
         }
         for (const sctpChannelEntry of this._statsReader.sctpChannels()) {
-            if (incrementalSampling && this._sampled && sctpChannelEntry.updated <= this._sampled) {
+            if (incrementalSampling && this._sampled && sctpChannelEntry.touched <= this._sampled) {
                 continue;
             }
             if (!sfuSample.sctpChannels) sfuSample.sctpChannels = [];
