@@ -1,8 +1,8 @@
 
 export class Queue<T = any> {
     private _items: any = {};
-    private _head: number = 0;
-    private _tail: number = 0;
+    private _head = 0;
+    private _tail = 0;
 
     public get size() {
         return this._tail - this._head;

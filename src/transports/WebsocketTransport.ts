@@ -49,7 +49,7 @@ export class WebsocketTransport implements Transport {
     private _config: WebsocketTransportConfig;
     private _emitter: EventEmitter = new EventEmitter();
     private _buffer: Queue<Uint8Array> = new Queue();
-    private _closed: boolean = false;
+    private _closed = false;
     private _ws?: WebSocket;
     private constructor(config: WebsocketTransportConstructorConfig) {
         this._config = config;

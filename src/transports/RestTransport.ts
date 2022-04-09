@@ -1,5 +1,4 @@
 import { Transport } from "./Transport";
-import { ClientOptions, WebSocket }  from 'ws';
 import { EventEmitter } from "events";
 import { createLogger } from "../utils/logger";
 import { Queue } from "../utils/Queue";
@@ -36,11 +35,8 @@ export type RestTransportConfig = {
     cert?: string;
 }
 
-type RestTransportConstructorConfig = RestTransportConfig & {
-}
-
 const supplyDefaultConfig = () => {
-    const result: RestTransportConstructorConfig = {
+    const result: RestTransportConfig = {
         url: "cannot be this",
         protocol: "http",
         
@@ -61,8 +57,8 @@ export class RestTransport implements Transport {
     private _config: RestTransportConfig;
     private _emitter: EventEmitter = new EventEmitter();
     private _buffer: Queue<Uint8Array> = new Queue();
-    private _closed: boolean = false;
-    private constructor(config: RestTransportConstructorConfig) {
+    private _closed = false;
+    private constructor(config: RestTransportConfig) {
         this._config = config;
     }
     public get closed(): boolean {
