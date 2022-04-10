@@ -255,4 +255,6 @@ export type MediasoupDirectTransport = {
 export type MediasoupTransportStats = MediasoupWebRtcTransportStats |
     MediasoupPlainTransport |
     MediasoupPipeTransport |
-    MediasoupDirectTransport;
+    MediasoupDirectTransport | {
+        type: string,
+    };
