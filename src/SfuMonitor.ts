@@ -44,7 +44,7 @@ export type SfuMonitorConfig = {
      * Sampling Component Related configurations
      * 
      */
-    sampler: SamplerConfig;
+    sampler?: SamplerConfig;
 
     /**
      * Sending Component Related congurations
