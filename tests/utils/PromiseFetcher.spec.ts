@@ -78,7 +78,7 @@ describe("PromiseFetcher", () => {
             .build();
         const started = Date.now();
         await fetcher.fetch();
-        expect(900 <= Date.now() - started).toBe(true);
+        expect(800 <= Date.now() - started).toBe(true);
     });
 
     it ("Fetch sequentially when it is batched", async () => {
