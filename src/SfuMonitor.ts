@@ -64,7 +64,7 @@ export interface SfuMonitor {
     /**
      * Access to the collected stats
      */
-    readonly stats: StatsReader;
+    readonly storage: StatsReader;
 
     /**
      * Acces to subscribe or unsubscribe to events

@@ -62,7 +62,7 @@ export class SfuMonitorImpl implements SfuMonitor {
         return this._eventer;
     }
 
-    public get stats(): StatsReader {
+    public get storage(): StatsReader {
         return this._statsStorage;
     }
 
