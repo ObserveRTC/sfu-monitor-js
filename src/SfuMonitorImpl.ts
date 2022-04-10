@@ -8,6 +8,7 @@ import { StatsReader, StatsStorage } from "./entries/StatsStorage";
 import { Accumulator } from "./Accumulator";
 import { createLogger } from "./utils/logger";
 import { SfuMonitor, SfuMonitorConfig } from "./SfuMonitor";
+import EventEmitter from "events";
 
 const logger = createLogger(`SfuMonitor`);
 
@@ -24,16 +25,14 @@ const supplyDefaultConfig = () => {
 
 const NO_SENDER_FOR_SENDING_FLAG = "noSenderForSending";
 
-/**
- * Create an SfuMonitor
- * @param config config for the monitor
- */
-export function create(config?: SfuMonitorConfig): SfuMonitor {
-    const appliedConfig = config ? Object.assign(supplyDefaultConfig(), config) : supplyDefaultConfig();
-    return new SfuMonitorImpl(appliedConfig);
-}
-
-class SfuMonitorImpl implements SfuMonitor {
+export class SfuMonitorImpl implements SfuMonitor {
+    public static create(config?: SfuMonitorConfig): SfuMonitor {
+        if (config?.maxListeners !== undefined) {
+            EventEmitter.setMaxListeners(config.maxListeners);
+        }
+        const appliedConfig = config ? Object.assign(supplyDefaultConfig(), config) : supplyDefaultConfig();
+        return new SfuMonitorImpl(appliedConfig);
+    }
     private _closed = false;
     private _config: ConstructorConfig;
     private _collectors: Map<string, Collector> = new Map();
@@ -44,7 +43,7 @@ class SfuMonitorImpl implements SfuMonitor {
     private _eventer: EventsRelayer;
     private _statsStorage: StatsStorage;
     private _accumulator: Accumulator;
-    public constructor(config: ConstructorConfig) {
+    private constructor(config: ConstructorConfig) {
         this._config = config;
         this._statsStorage = new StatsStorage();
         this._accumulator = Accumulator.create(config.accumulator);

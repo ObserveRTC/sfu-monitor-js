@@ -6,8 +6,13 @@ import { StatsReader } from "./entries/StatsStorage";
 import { AccumulatorConfig } from "./Accumulator";
 import { setLevel as setLoggersLevel } from "./utils/logger";
 import { LogLevelDesc } from "loglevel";
+import { SfuMonitorImpl } from "./SfuMonitorImpl";
 
 export type SfuMonitorConfig = {
+    /**
+     * Sets the maximum number of listeners for event emitters
+     */
+    maxListeners?: number;
     /**
      * By setting it, the observer calls the added statsCollectors periodically
      * and pulls the stats.
@@ -111,4 +116,12 @@ export interface SfuMonitor {
  */
 export function setLogLevel(level: LogLevelDesc) {
     setLoggersLevel(level);
+}
+
+/**
+ * Create an SfuMonitor
+ * @param config config for the monitor
+ */
+export function create(config?: SfuMonitorConfig): SfuMonitor {
+    return SfuMonitorImpl.create(config);
 }
