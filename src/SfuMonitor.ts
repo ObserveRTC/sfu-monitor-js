@@ -7,6 +7,7 @@ import { AccumulatorConfig } from "./Accumulator";
 import { setLevel as setLoggersLevel } from "./utils/logger";
 import { LogLevelDesc } from "loglevel";
 import { SfuMonitorImpl } from "./SfuMonitorImpl";
+import { Collector } from "./Collector";
 
 export type SfuMonitorConfig = {
     /**
@@ -76,6 +77,20 @@ export interface SfuMonitor {
      * @param stats 
      */
     addExtensionStats(stats: ExtensionStat): void;
+
+    /**
+     * Add a stats collector to the monitor
+     * 
+     * @param collector 
+     */
+    addStatsCollector(collector: Collector): void;
+
+    /**
+     * Remove a stats collector from the monitor
+     * 
+     * @param collectorId 
+     */
+    removeStatsCollector(collectorId: string): void;
 
     /**
      * Mark all of the created samples with a given string
