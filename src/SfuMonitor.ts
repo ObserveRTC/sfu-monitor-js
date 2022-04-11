@@ -73,6 +73,10 @@ export interface SfuMonitor {
     readonly events: EventsRegister;
 
     /**
+     * Indicate if the monitor is connected to an observer or not
+     */
+    readonly connected: boolean;
+    /**
      * Adds an arbitrary stats object will be sent to the backend observer
      * @param stats 
      */
@@ -91,6 +95,13 @@ export interface SfuMonitor {
      * @param collectorId 
      */
     removeStatsCollector(collectorId: string): void;
+
+    /**
+     * Connects the Monitor to an observer
+     * 
+     * @param config 
+     */
+    connect(config: SenderConfig): void;
 
     /**
      * Mark all of the created samples with a given string

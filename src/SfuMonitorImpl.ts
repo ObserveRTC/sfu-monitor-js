@@ -101,7 +101,7 @@ export class SfuMonitorImpl implements SfuMonitor {
         this._sampler.setMarker(marker);
     }
 
-    public connectTo(config: SenderConfig) {
+    public connect(config: SenderConfig) {
         if (this._sender) {
             logger.info(`A sender has already been configured, it will be forcefully closed`);
             this._sender.close();
