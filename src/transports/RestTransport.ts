@@ -9,6 +9,14 @@ const logger = createLogger(`RestTransport`)
 
 export type RestTransportConfig = {
     /**
+     * Flag indicating if the Transport should be closed if request sending is failed
+     */
+    closeIfFailed?: boolean
+    /**
+     * The maximum number of retrying to send one message
+     */
+    maxRetries?: number;
+    /**
      * The target url the websocket is opened for 
      */
     url: string;
@@ -56,7 +64,8 @@ export class RestTransport implements Transport {
     }
     private _config: RestTransportConfig;
     private _emitter: EventEmitter = new EventEmitter();
-    private _buffer: Queue<Uint8Array> = new Queue();
+    private _sendingCounter = 0;
+    private _sent?: Promise<void>;
     private _closed = false;
     private constructor(config: RestTransportConfig) {
         this._config = config;
@@ -70,21 +79,19 @@ export class RestTransport implements Transport {
         if (this._closed) {
             throw new Error(`Cannot send data on a closed transport`);
         }
-        if (0 < this._buffer.size) {
-            this._buffer.push(message);
-            return;
-        }
-        this._buffer.push(message);
-        while (!this._buffer.isEmpty) {
-            const queuedMessage = this._buffer.pop();
-            if (!queuedMessage) continue;
-            const length = queuedMessage.length;
-            const request = this._createRequest(length);
-            if (!request) continue;
-            
-            request.write(queuedMessage);
-            request.end();
-        }
+        const id = ++this._sendingCounter;
+        const clear = () => {
+            if (id === this._sendingCounter) {
+                this._sent = undefined;
+            }
+        };
+        const prerequisite = this._sent ?? Promise.resolve();
+        this._sent = prerequisite.then(() => this._send(message)).then(() => {
+            clear();
+        }).catch(err => {
+            logger.warn(`Error occurred while posting data`, err);
+            clear();
+        });
     }
 
     onReceived(listener: (data: string) => void): Transport {
@@ -108,48 +115,75 @@ export class RestTransport implements Transport {
             return;
         }
         try {
-            this._buffer.clear();
+            this._sent = undefined;
         } finally {
             this._closed = true;
         }
         [ON_RECEIVED_EVENT_NAME].forEach(eventType => this._emitter.removeAllListeners(eventType));
     }
 
-    private _createRequest(length: number): http.ClientRequest | undefined {
-        const { url, protocol } = this._config;
-        const options: http.RequestOptions | https.RequestOptions = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/octet-stream',
-                'Content-Length': length,
-            }
+    private _send(message: Uint8Array, tried = 0): Promise<void> {
+        if (this._closed) {
+            return Promise.reject(`Cannot send mesage on an already closed transport`);
         }
-        const responseHandler = (res: http.IncomingMessage) => {
-            logger.debug(`STATUS: ${res.statusCode}`);
-            logger.debug(`HEADERS: ${JSON.stringify(res.headers)}`);
-            res.setEncoding('utf8');
-            res.on('data', (chunk) => {
-                logger.debug(`BODY: ${chunk}`);
-            });
-            res.on('end', () => {
-                logger.debug('No more data in response.');
-            });
-        };
-        if (protocol === "http") {
-            return http.request(url, options, responseHandler);
-        } 
-        if (protocol === "https") {
-            const { key, cert } = this._config;
-            if (!key || !cert) {
-                logger.error(`without key or cert https is not possible`);
+        return new Promise<void>((resolve, _reject) => {
+            const { url, protocol, maxRetries, closeIfFailed } = this._config;
+            const canRetry = tried + 1 < (maxRetries ?? 0);
+            const reject = (err: Error) => {
+                logger.warn(`Request failed. canRetry: ${canRetry}`, err);
+                if (canRetry) {
+                    this._send(message, tried + 1).then(resolve).catch(reject);
+                    return;
+                }
+                if (closeIfFailed) {
+                    if (!this._closed) {
+                        this.close();
+                    }
+                }
+            }
+            const options: http.RequestOptions | https.RequestOptions = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/octet-stream',
+                    'Content-Length': message.length,
+                }
+            }
+            const responseHandler = (res: http.IncomingMessage) => {
+                logger.debug(`Response Status: ${res.statusCode}`);
+                logger.debug(`Response Header: ${JSON.stringify(res.headers)}`);
+                res.setEncoding('utf8');
+                res.on('data', (chunk) => {
+                    logger.debug(`Response body: ${chunk}`);
+                });
+                res.on('end', () => {
+                    logger.debug('No more data in response.');
+                    resolve();
+                });
+            };
+            let request: http.ClientRequest | undefined;
+            if (protocol === "http") {
+                request = http.request(url, options, responseHandler);
+            } else if (protocol === "https") {
+                const { key, cert } = this._config;
+                if (!key || !cert) {
+                    reject(new Error(`without key or cert https is not possible`));
+                    return;
+                }
+                Object.assign(options, {
+                    key,
+                    cert
+                })
+                request = https.request(url, options, responseHandler);
+            }
+            if (!request) {
+                reject(new Error(`Unrecognized protocol ${protocol}`));
                 return;
             }
-            Object.assign(options, {
-                key,
-                cert
-            })
-            return https.request(url, options, responseHandler);
-        }
-        logger.warn(`Unrecognized protocol ${protocol}`);
+            request.on('error', (err: Error) => {
+                reject(err);
+            });
+            request.write(message);
+            request.end();
+        });
     }
 }

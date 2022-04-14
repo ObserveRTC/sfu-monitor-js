@@ -1,149 +1,201 @@
 import { Transport } from "./Transport";
-import { ClientOptions, WebSocket }  from 'ws';
+import { WebSocket }  from 'ws';
 import { EventEmitter } from "events";
 import { createLogger } from "../utils/logger";
-import { Queue } from "../utils/Queue";
-
-const logger = createLogger(`WebsocketTransport`)
+const logger = createLogger("WebsocketTransport");
 
 export type WebsocketTransportConfig = {
     /**
-     * The target url the websocket is opened for 
+     * Target urls in a priority order. If the Websocket has not succeeded for the first,
+     * it tries with the second. If no more url left the connection is failed
+     * 
      */
-    url: string;
-     /**
-     * The maximum number of try to connect to the server
+    urls: string[];
+    /**
+     * The maximum number of retries to connect to a server before,
+     * tha connection failed is stated.
      * 
      * DEFAULT: 3
      */
-    maxRetry?: number;
+    maxRetries?: number;
     /**
-     * An optional field for additional socket option from ws package
+     * Protocols of the websocket
      */
-    socketOptions?: ClientOptions;
+    protocols?: string | string[],
 }
 
 type WebsocketTransportConstructorConfig = WebsocketTransportConfig & {
-    maxRetry: number,
+    maxRetries: number,
 }
 
 const supplyDefaultConfig = () => {
-    const result: WebsocketTransportConstructorConfig = {
-        url: "cannot be this",
-        maxRetry: 3
-    };
-    return result;
+    const defaultConfig: WebsocketTransportConstructorConfig = {
+        urls: ["cannot be this"],
+        maxRetries: 3
+    }
+    return defaultConfig;
 }
 
-const ON_RECEIVED_EVENT_NAME = "onReceived";
 
+const ON_RECEIVED_EVENT_NAME = "onReceived";
 
 export class WebsocketTransport implements Transport {
     public static create(config?: WebsocketTransportConfig): WebsocketTransport {
         const appliedConfig = Object.assign(supplyDefaultConfig(), config);
         const result = new WebsocketTransport(appliedConfig);
-        logger.info(`${WebsocketTransport.name} is created`);
+        logger.debug(`Created`, appliedConfig);
         return result;
     }
-    private _cancelTimer?: () => void;
-    private _config: WebsocketTransportConfig;
-    private _emitter: EventEmitter = new EventEmitter();
-    private _buffer: Queue<Uint8Array> = new Queue();
-    private _closed = false;
+
     private _ws?: WebSocket;
+    private _cancelTimer?: () => void;
+    private _closed = false;
+    private _emitter: EventEmitter = new EventEmitter();
+    private _sendingCounter = 0;
+    private _sent?: Promise<void>;
+    private _config: WebsocketTransportConstructorConfig;
+
     private constructor(config: WebsocketTransportConstructorConfig) {
+        if (typeof WebSocket === 'undefined') {
+            throw new Error(`No Websocket class has found in global namespace`);
+        }
         this._config = config;
-    }
-    public get closed(): boolean {
-        return this._closed;
-    }
-
-
-    public async send(message: Uint8Array): Promise<void> {
-        if (this._closed) {
-            throw new Error(`Cannot send data on a closed transport`);
-        }
-        if (0 < this._buffer.size) {
-            this._buffer.push(message);
-            return;
-        }
-        this._buffer.push(message);
-        if (!this._ws) {
-            this._ws = await this._connect();
-        }
-        while (!this._buffer.isEmpty) {
-            const queuedMessage = this._buffer.pop();
-            this._ws.send(queuedMessage, { binary: true });
-        }
     }
 
     onReceived(listener: (data: string) => void): Transport {
-        if (this._closed) {
-            throw new Error(`Cannot receive messages on a closed transport`);
-        }
         this._emitter.on(ON_RECEIVED_EVENT_NAME, listener);
-        return this;        
+        return this;
     }
-
     offReceived(listener: (data: string) => void): Transport {
-        if (this._closed) {
-            return this;
-        }
         this._emitter.off(ON_RECEIVED_EVENT_NAME, listener);
         return this;
     }
 
-    public close(): void {
+    public get closed() {
+        return this._closed;
+    }
+
+    public get connected() {
+        return !!this._ws;
+    }
+
+    /**
+     * Closes the WebSocket connection or connection attempt, if any. If the connection is already
+     * CLOSED, this method does nothing
+     */
+    public close() {
         if (this._closed) {
+            logger.warn(`Attempted to close twice`);
             return;
         }
         try {
             if (this._ws) {
                 this._ws.close();
             }
-            this._buffer.clear();
+            if (this._cancelTimer) {
+                this._cancelTimer();
+            }
+            this._sent = undefined;
         } finally {
             this._closed = true;
+            logger.info(`Closed`);
         }
-        
-        if (this._cancelTimer) {
-            this._cancelTimer();
-        }
-        [ON_RECEIVED_EVENT_NAME].forEach(eventType => this._emitter.removeAllListeners(eventType));
     }
 
-
-    private async _connect(tried = 0): Promise<WebSocket> {
+    /**
+     * Enqueue specified data to be transmitted to the server over the WebSocket connection
+     */
+    public async send(data: ArrayBuffer): Promise<void> {
         if (this._closed) {
-            return Promise.reject(`The transport is already closed`);
+            throw new Error(`Failed to send data on an already closed transport`);
         }
-        const url = this._config.url;
-        const socketOptions = this._config.socketOptions;
-        return new Promise<WebSocket>((resolve, reject) => {
-            const ws = new WebSocket(url, socketOptions);
-            const opened = () => {
-                logger.info(`Connection is established to ${url}`);
-                resolve(ws);
-            };
-            if (ws.readyState === WebSocket.OPEN) {
-                opened();
-            } else {
-                ws.onopen = () => {
-                    opened();
-                };
-                ws.onerror = (error: any) => {
-                    reject(error);
-                };
+        const id = ++this._sendingCounter;
+        const clear = () => {
+            if (this._sendingCounter === id) {
+                this._sent = undefined;
             }
-        }).catch(async (err: any) => {
-            if (this._config.maxRetry && tried < this._config.maxRetry) {
-                logger.info(`Connection to ${url} is failed. Tried: ${tried}, Error:`, err);
+        };
+        let prerequisite: Promise<void>;
+        if (this._sent) {
+            prerequisite = this._sent
+        } else if (!this._ws) {
+            prerequisite = this._connect();
+        } else {
+            prerequisite = Promise.resolve();
+        }
+        this._sent = prerequisite.then(async () => {
+            clear();
+            if (!this._ws) {
+                if (!this._closed) {
+                    this.close();
+                }
+                return;
+            }
+            this._ws.send(data);
+        }).catch(() => {
+            clear();
+            if (!this._closed) {
+                this.close();
+            }
+        });
+        return this._sent;
+    }
+
+    private async _connect(): Promise<void> {
+        if (this._closed) {
+            throw new Error(`Failed to connect to an already closed transport`);
+        }
+        if (this._ws) {
+            logger.info(`Already connected`);
+            return;
+        }
+        const result = await this._createWebsocket();
+        result.addEventListener("message", data => {
+            this._emitter.emit(ON_RECEIVED_EVENT_NAME, data);
+        });
+        result.addEventListener("close", () => {
+            this._ws = undefined;
+            if (!this._closed) {
+                this.close();
+            }
+        });
+        result.addEventListener("error", err => {
+            this._ws = undefined;
+            logger.warn(`Error occurred in transport`, err);
+            if (!this._closed) {
+                this.close();
+            }
+        });
+        this._ws = result;
+    }
+
+    private async _createWebsocket(tried = 0): Promise<WebSocket> {
+        if (this._closed) {
+            throw new Error(`The transport is already closed`)
+        }
+        const { urls, maxRetries, protocols } = this._config;
+        const canRetry = tried < maxRetries * urls.length;
+        const url = urls[tried % urls.length]
+        return await new Promise<WebSocket>((resolve, reject) => {
+            const ws = new WebSocket(url, protocols);
+            if (ws.readyState === WebSocket.OPEN) {
+                resolve(ws);
+            } else {
+                // promise can be resolved or rejected only once, so no problem
+                ws.addEventListener("close", reject);
+                ws.addEventListener("error", reject);
+                ws.addEventListener("open", () => resolve(ws));
+            }
+        }).catch(async () => {
+            if (canRetry) {
+                // print the error out anyhow
+                logger.info(`Connection to ${url} is failed. Tried: ${tried}`);
                 await this._waitBeforeReconnect(tried + 1);
                 // if the transport is closed during waiting, 
                 // the call to connect again is going to be rejected
-                return await this._connect(tried + 1);
+                return await this._createWebsocket(tried + 1);
             }
-            throw new Error(`Cannot connect to ${url}.`);
+            throw new Error(`Cannot connect to ${urls.join(", ")}.`);
         });
     }
 

@@ -100,6 +100,7 @@ export class Sampler {
             return; 
         }
         this._closed = true;
+        logger.info(`Closed`);
     }
 
     public make(): SfuSample {

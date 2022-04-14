@@ -213,22 +213,27 @@ export class AuxCollector implements Collector {
             logger.warn(`Attempted to close Collector twice`);
             return;
         }
-        const transportIds = Array.from(this._transportStatsSuppliers.keys());
-        for (const transportId of transportIds) {
-            this.removeTransportStatsSupplier(transportId);
+        try {
+            const transportIds = Array.from(this._transportStatsSuppliers.keys());
+            for (const transportId of transportIds) {
+                this.removeTransportStatsSupplier(transportId);
+            }
+            const inboundRtpIds = Array.from(this._outboundRtpPadStatsSupplier.keys());
+            for (const inboundRtpId of inboundRtpIds) {
+                this.removeInboundRtpPadStatsSupplier(inboundRtpId);
+            }
+            const outboundRtpIds = Array.from(this._inboundRtpPadStatsSupplier.keys());
+            for (const outboundRtpId of outboundRtpIds) {
+                this.removeOutboundRtpPadStatsSupplier(outboundRtpId);
+            }
+            const sctpStreamIds = Array.from(this._sctpStreamStatsSupplier.keys());
+            for (const sctpStreamId of sctpStreamIds) {
+                this.removeSctpStreamSupplier(sctpStreamId);
+            }
+            this._statsWriter = undefined;
+        } finally {
+            this._closed = true;
+            logger.info(`Closed`);
         }
-        const inboundRtpIds = Array.from(this._outboundRtpPadStatsSupplier.keys());
-        for (const inboundRtpId of inboundRtpIds) {
-            this.removeInboundRtpPadStatsSupplier(inboundRtpId);
-        }
-        const outboundRtpIds = Array.from(this._inboundRtpPadStatsSupplier.keys());
-        for (const outboundRtpId of outboundRtpIds) {
-            this.removeOutboundRtpPadStatsSupplier(outboundRtpId);
-        }
-        const sctpStreamIds = Array.from(this._sctpStreamStatsSupplier.keys());
-        for (const sctpStreamId of sctpStreamIds) {
-            this.removeSctpStreamSupplier(sctpStreamId);
-        }
-        this._statsWriter = undefined;
     }
 }

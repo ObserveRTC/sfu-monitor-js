@@ -170,13 +170,17 @@ export class SfuMonitorImpl implements SfuMonitor {
             logger.warn(`Attempted to close twice`);
             return;
         }
-        this._closed = true;
-        if (this._timer) {
-            this._timer.clear();
-        }
-        this._sampler.close();
-        if (this._sender && !this._sender.closed) {
-            this._sender.close();
+        try {
+            if (this._timer) {
+                this._timer.clear();
+            }
+            this._sampler.close();
+            if (this._sender && !this._sender.closed) {
+                this._sender.close();
+            }
+        } finally {
+            this._closed = true;
+            logger.info(`Closed`);
         }
     }
 

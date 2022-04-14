@@ -149,6 +149,7 @@ export class Sender {
             }
         } finally {
             this._closed = true;
+            logger.info(`Closed`);
         }
         
         if (err) {

@@ -213,10 +213,14 @@ export class MediasoupCollector implements Collector {
             logger.info(`Attempted to close twice`);
             return;
         }
-        this._closed = true;
-        const transports = Array.from(this._transports.values());
-        for (const { dispose } of transports) {
-            dispose();
+        try {
+            const transports = Array.from(this._transports.values());
+            for (const { dispose } of transports) {
+                dispose();
+            }
+        } finally {
+            this._closed = true;
+            logger.info(`Closed`);
         }
     }
 
