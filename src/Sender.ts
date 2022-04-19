@@ -71,7 +71,8 @@ export class Sender {
         this._transport = createTransport({
             websocket: config.websocket,
             rest: config.rest,
-        });
+        }).setFormat(this._config.format ?? "json");
+        
     }
 
     public get closed() {

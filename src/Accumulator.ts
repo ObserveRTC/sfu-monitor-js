@@ -1,4 +1,4 @@
-import { SfuSample, Samples, version as schemaVersion } from "@observertc/schemas"
+import { SfuSample, Samples } from "@observertc/schemas"
 
 export type AccumulatorConfig = {
     maxSfuSamples?: number;
@@ -22,11 +22,7 @@ export class Accumulator  {
     }
 
     // the first message constains the version of the schema
-    private _samples: Samples = {
-        meta: {
-            schemaVersion
-        }
-    };
+    private _samples: Samples = {};
     private _buffer: Samples[] = [];
     private _empty = true;
     private _config: AccumulatorConfig;

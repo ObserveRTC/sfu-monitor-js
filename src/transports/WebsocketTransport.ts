@@ -1,7 +1,10 @@
-import { Transport } from "./Transport";
+import { makeUrl, Transport } from "./Transport";
 import { WebSocket }  from 'ws';
 import { EventEmitter } from "events";
 import { createLogger } from "../utils/logger";
+import { CodecConfig } from "../codecs/Codec";
+import { Sleeper } from "../utils/Sleeper";
+
 const logger = createLogger("WebsocketTransport");
 
 export type WebsocketTransportConfig = {
@@ -22,6 +25,12 @@ export type WebsocketTransportConfig = {
      * Protocols of the websocket
      */
     protocols?: string | string[],
+
+    /**
+     * Flag indicate to reconnect websocket if 
+     * the connection has been lost, but the transport is not closed
+     */
+    reconnect?: boolean,
 }
 
 type WebsocketTransportConstructorConfig = WebsocketTransportConfig & {
@@ -48,12 +57,13 @@ export class WebsocketTransport implements Transport {
     }
 
     private _ws?: WebSocket;
-    private _cancelTimer?: () => void;
+    private _sleeper = new Sleeper();
     private _closed = false;
     private _emitter: EventEmitter = new EventEmitter();
     private _sendingCounter = 0;
     private _sent?: Promise<void>;
     private _config: WebsocketTransportConstructorConfig;
+    private _format?: CodecConfig;
 
     private constructor(config: WebsocketTransportConstructorConfig) {
         if (typeof WebSocket === 'undefined') {
@@ -62,11 +72,17 @@ export class WebsocketTransport implements Transport {
         this._config = config;
     }
 
-    onReceived(listener: (data: string) => void): Transport {
+    public setFormat(format: CodecConfig): Transport {
+        this._format = format;
+        return this;
+    }
+
+    public onReceived(listener: (data: string) => void): Transport {
         this._emitter.on(ON_RECEIVED_EVENT_NAME, listener);
         return this;
     }
-    offReceived(listener: (data: string) => void): Transport {
+    
+    public offReceived(listener: (data: string) => void): Transport {
         this._emitter.off(ON_RECEIVED_EVENT_NAME, listener);
         return this;
     }
@@ -88,16 +104,14 @@ export class WebsocketTransport implements Transport {
             logger.warn(`Attempted to close twice`);
             return;
         }
+        this._closed = true;
         try {
             if (this._ws) {
                 this._ws.close();
             }
-            if (this._cancelTimer) {
-                this._cancelTimer();
-            }
+            this._sleeper.cancel();
             this._sent = undefined;
         } finally {
-            this._closed = true;
             logger.info(`Closed`);
         }
     }
@@ -110,32 +124,32 @@ export class WebsocketTransport implements Transport {
             throw new Error(`Failed to send data on an already closed transport`);
         }
         const id = ++this._sendingCounter;
-        const clear = () => {
-            if (this._sendingCounter === id) {
-                this._sent = undefined;
+        const _send = async (retried = false) => {
+            const { reconnect } = this._config;
+            if (!this._ws) {
+                if (this._closed) return;
+                await this._connect();
+                if (!this._ws) {
+                    if (!this._closed) this.close();
+                    return;
+                }
+            }
+            try {
+                this._ws.send(data);
+            } catch (err) {
+                if (!reconnect || retried) throw err;
+                await _send(true);
             }
         };
-        let prerequisite: Promise<void>;
-        if (this._sent) {
-            prerequisite = this._sent
-        } else if (!this._ws) {
-            prerequisite = this._connect();
-        } else {
-            prerequisite = Promise.resolve();
-        }
-        this._sent = prerequisite.then(async () => {
-            clear();
-            if (!this._ws) {
-                if (!this._closed) {
-                    this.close();
-                }
-                return;
-            }
-            this._ws.send(data);
+        this._sent = (this._sent ?? Promise.resolve()).then(async () => {
+            await _send();
         }).catch(() => {
-            clear();
             if (!this._closed) {
                 this.close();
+            }
+        }).finally(() => {
+            if (this._sendingCounter === id) {
+                this._sent = undefined;
             }
         });
         return this._sent;
@@ -150,23 +164,27 @@ export class WebsocketTransport implements Transport {
             return;
         }
         const result = await this._createWebsocket();
+        // at this point we have an open,
+        // connection established websocket.
+        const { reconnect } = this._config;
         result.addEventListener("message", data => {
             this._emitter.emit(ON_RECEIVED_EVENT_NAME, data);
         });
         result.addEventListener("close", () => {
             this._ws = undefined;
-            if (!this._closed) {
+            if (!this._closed && !reconnect) {
                 this.close();
             }
         });
         result.addEventListener("error", err => {
             this._ws = undefined;
             logger.warn(`Error occurred in transport`, err);
-            if (!this._closed) {
+            if (!this._closed && !reconnect) {
                 this.close();
             }
         });
         this._ws = result;
+        logger.info(`Connected to ${this._ws.url}`);
     }
 
     private async _createWebsocket(tried = 0): Promise<WebSocket> {
@@ -175,8 +193,9 @@ export class WebsocketTransport implements Transport {
         }
         const { urls, maxRetries, protocols } = this._config;
         const canRetry = tried < maxRetries * urls.length;
-        const url = urls[tried % urls.length]
+        const url = makeUrl(urls[tried % urls.length], this._format);
         return await new Promise<WebSocket>((resolve, reject) => {
+            // logger.info(`Connecting to ${url}`);
             const ws = new WebSocket(url, protocols);
             if (ws.readyState === WebSocket.OPEN) {
                 resolve(ws);
@@ -190,31 +209,14 @@ export class WebsocketTransport implements Transport {
             if (canRetry) {
                 // print the error out anyhow
                 logger.info(`Connection to ${url} is failed. Tried: ${tried}`);
-                await this._waitBeforeReconnect(tried + 1);
+                await this._sleeper.sleep(timeoutInMs => {
+                    logger.info(`Enforced waiting time: ${timeoutInMs}ms`);
+                })
                 // if the transport is closed during waiting, 
                 // the call to connect again is going to be rejected
                 return await this._createWebsocket(tried + 1);
             }
             throw new Error(`Cannot connect to ${urls.join(", ")}.`);
-        });
-    }
-
-    private async _waitBeforeReconnect(executed: number) {
-        const base = executed + 1;
-        const max = 1 / base;
-        const random = Math.random();
-        const exp = 1 + Math.max(0.1, Math.min(random, max));
-        const timeout = Math.floor(Math.min(Math.pow(base, exp), 60) * 1000);
-        return new Promise<void>((resolve) => {
-            const timer = setTimeout(() => {
-                this._cancelTimer = undefined;
-                resolve();
-            }, timeout);
-            this._cancelTimer = () => {
-                clearTimeout(timer);
-                this._cancelTimer = undefined;
-            };
-            logger.info(`Enforced waiting before reconnect is ${timeout}ms`);
         });
     }
 }

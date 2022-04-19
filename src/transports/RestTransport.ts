@@ -1,9 +1,11 @@
-import { Transport } from "./Transport";
+import { makeUrl, Transport } from "./Transport";
 import { EventEmitter } from "events";
 import { createLogger } from "../utils/logger";
 import { Queue } from "../utils/Queue";
 import * as http from "http";
 import * as https from "https";
+import { CodecConfig } from "../codecs/Codec";
+import { Sleeper } from "../utils/Sleeper";
 
 const logger = createLogger(`RestTransport`)
 
@@ -19,7 +21,7 @@ export type RestTransportConfig = {
     /**
      * The target url the websocket is opened for 
      */
-    url: string;
+    urls: string[];
     /**
      * Protocol to connect to a REST API server
      * 
@@ -45,7 +47,7 @@ export type RestTransportConfig = {
 
 const supplyDefaultConfig = () => {
     const result: RestTransportConfig = {
-        url: "cannot be this",
+        urls: [],
         protocol: "http",
         
     };
@@ -58,10 +60,15 @@ const ON_RECEIVED_EVENT_NAME = "onReceived";
 export class RestTransport implements Transport {
     public static create(config?: RestTransportConfig): RestTransport {
         const appliedConfig = Object.assign(supplyDefaultConfig(), config);
+        if (appliedConfig.urls.length < 1) {
+            throw new Error(`Target URLs must be provided in config`);
+        }
         const result = new RestTransport(appliedConfig);
-        logger.info(`${RestTransport.name} is created`);
+        logger.info(`Created`, appliedConfig);
         return result;
     }
+    private _sleeper = new Sleeper();
+    private _format?: CodecConfig;
     private _config: RestTransportConfig;
     private _emitter: EventEmitter = new EventEmitter();
     private _sendingCounter = 0;
@@ -94,7 +101,12 @@ export class RestTransport implements Transport {
         });
     }
 
-    onReceived(listener: (data: string) => void): Transport {
+    public setFormat(format: CodecConfig): Transport {
+        this._format = format;
+        return this;
+    }
+
+    public onReceived(listener: (data: string) => void): Transport {
         if (this._closed) {
             throw new Error(`Cannot receive messages on a closed transport`);
         }
@@ -102,7 +114,7 @@ export class RestTransport implements Transport {
         return this;        
     }
 
-    offReceived(listener: (data: string) => void): Transport {
+    public offReceived(listener: (data: string) => void): Transport {
         if (this._closed) {
             return this;
         }
@@ -127,11 +139,13 @@ export class RestTransport implements Transport {
             return Promise.reject(`Cannot send mesage on an already closed transport`);
         }
         return new Promise<void>((resolve, _reject) => {
-            const { url, protocol, maxRetries, closeIfFailed } = this._config;
-            const canRetry = tried + 1 < (maxRetries ?? 0);
-            const reject = (err: Error) => {
+            const { urls, protocol, maxRetries, closeIfFailed } = this._config;
+            const baseUrl = urls[tried % urls.length];
+            const canRetry = tried + 1 < ((maxRetries ?? 0) * urls.length);
+            const reject = async (err: Error) => {
                 logger.warn(`Request failed. canRetry: ${canRetry}`, err);
                 if (canRetry) {
+                    await this._sleeper.sleep();
                     this._send(message, tried + 1).then(resolve).catch(reject);
                     return;
                 }
@@ -161,6 +175,7 @@ export class RestTransport implements Transport {
                 });
             };
             let request: http.ClientRequest | undefined;
+            const url = makeUrl(baseUrl, this._format);
             if (protocol === "http") {
                 request = http.request(url, options, responseHandler);
             } else if (protocol === "https") {
@@ -184,6 +199,7 @@ export class RestTransport implements Transport {
             });
             request.write(message);
             request.end();
+            logger.debug(`Sending message to ${url}`);
         });
     }
 }
