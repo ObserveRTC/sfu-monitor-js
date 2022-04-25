@@ -163,14 +163,16 @@ export class RestTransport implements Transport {
                 }
             }
             const responseHandler = (res: http.IncomingMessage) => {
-                logger.debug(`Response Status: ${res.statusCode}`);
-                logger.debug(`Response Header: ${JSON.stringify(res.headers)}`);
+                const ok = res.statusCode === undefined || res.statusCode === 200;
+                const myLogger = ok ? logger.debug : logger.warn;
+                myLogger(`Response Status: ${res.statusCode}`);
+                myLogger(`Response Header: ${JSON.stringify(res.headers)}`);
                 res.setEncoding('utf8');
                 res.on('data', (chunk) => {
-                    logger.debug(`Response body: ${chunk}`);
+                    myLogger(`Response body: ${chunk}`);
                 });
                 res.on('end', () => {
-                    logger.debug('No more data in response.');
+                    myLogger('No more data in response.');
                     resolve();
                 });
             };

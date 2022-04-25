@@ -1,87 +1,30 @@
-ObserveRTC Integration for Selective Forwarding Units (SFU)
+Javascript library to monitor Selective Forwarding Units (SFU)
 ---
 
-`@observertc/sfu-monitor-js` is an SFU side library to monitor your SFU and integrate with observertc components.
+`@observertc/sfu-monitor-js` is javascript library to monitor your SFU and integrate with ObserveRTC.
 
 Table of Contents:
  * [Quick Start](#quick-start)
-   - [Collect stats from mediasoup](#collect-stats-from-mediasoup)
-   - [Collect stats from other SFUs](#collect-stats-from-other-sfus)
-   - [Sample and Send](#sample-and-send)
- * [Use collected stats](#use-collected-stats)
- * [Examples](#mediasoup-examples)
-    - [Number of RTP sessions](#number-of-rtp-sessions)
-    - [Media streams and sinks](#media-streams-and-sinks)
-    - [Receiver and sender bitrates](#receiver-and-sender-bitrates)
+    * [Integrate Mediasoup](#integrate-mediasoup)
+    * [Integrate other type of SFUs](#integrate-other-type-of-sfus)
+ * [Sfu Monitor Storage](#sfu-monitor-storage)
  * [Configurations](#configurations)
  * [API docs](#api-docs)
  * [NPM package](#npm-package)
- * [Contributions](#contributions)
+ * [Schemas](#schemas)
+ * [Getting Involved](#getting-involved)
  * [License](#license)
 
 ## Qucik Start
+
+Install the library by using NPM:
 
 ```
 npm i @observertc/sfu-monitor-js
 ```
 
-### Collect stats from mediasoup
-
-If you use [mediasoup:3.x.y]() you can use the built-in integration.
-
-```javascript
-import { SfuMonitor, MediasoupCollector } from "@observertc/sfu-monitor-js";
-// see full config in Configuration section
-const config = {
-    collectingPeriodInMs: 5000,
-};
-const monitor = SfuMonitor.create(config);
-const collector = MediasoupCollector.create();
-monitor.addStatsCollector(collector);
-
-// ... somewhere in your code
-const transport = router.createWebRtcTransport(options);
-collector.watchWebRtcTransport(transport);
-```
-
-### Collect stats from other SFUs
-
-You can write a stats collector by using `AuxCollector`.
-```javascript
-import { SfuMonitor, AuxCollector } from "@observertc/sfu-monitor-js";
-// see full config in Configuration section
-const config = {
-    collectingPeriodInMs: 5000,
-};
-const monitor = SfuMonitor.create(config);
-const collector = AuxCollector.create();
-monitor.addStatsCollector(collector);
-
-collector.addTransportStatsSupplier("transportId", async () => {
-    const stats: SfuTransport = {
-
-    };
-    return stats;
-});
-collector.removeTransportStatsSupplier("transportId");
-
-// similarly:
-collector.addInboundRtpPadStatsSupplier("padId", ...);
-collector.removeInboundRtpPadStatsSupplier("padId");
-
-collector.addOutboundRtpPadStatsSupplier("padId", ...);
-collector.removeOutboundRtpPadStatsSupplier("padId");
-
-collector.addSctpStreamStatsSupplier("channelId", ...);
-collector.removeSctpStreamSupplier("channelId");
-```
-
-### Sample and Send
-
-Sampling means the sfu-monitor creates a so-called SfuSample. SfuSample is a compound object contains a snapshot from the polled stats. SfuSample is created by a Sampler component.
-A created SfuSample is added to Samples object. Samples can be sent to the server by a Sender component.
-
-The above shown examples can be extended to sample and send by adding the following configurations:
+Once the library is installed, you need to integrate it.
+The first step is to setup a monitor in your application.
 
 ```javascript
 import { SfuMonitor } from "@observertc/sfu-monitor-js";
@@ -97,151 +40,184 @@ const config = {
     }
 };
 const monitor = SfuMonitor.create(config);
-//... the rest of your code
 ```
 
-## Use collected stats
+A monitor does three things: 
+    1. Collect Stats
+    2. Make sample based on the collected stats
+    3. Send the sample to the [observer](https://github.com/ObserveRTC/observer)
+
+### Integrate Mediasoup
+
+To integrate [mediasoup:3^](https://mediasoup.org/documentation/v3/) you can use the built-in MediasoupCollector.
 
 ```javascript
-const storage = monitor.storage;
-for (const sfuTransportEntry of storage.transports()) {
-    // use SfuTransportEntry
-}
+import { MediasoupCollector } from "@observertc/sfu-monitor-js";
 
-for (const sfuInboundRtpPadEntry of storage.inboundRtpPads()) {
-    // use SfuInboundRtpPadEntry
-}
+// you should use the previously created monitor object
+const collector = MediasoupCollector.create();
+monitor.addStatsCollector(collector);
 
-for (const sfuOutboundRtpPadEntry of storage.outboundRtpPads()) {
-    // use SfuInboundRtpPadEntry
-}
-
-for (const sctpChannelEntry of storage.sctpChannels()) {
-    // use SctpChannelEntry
-}
-
-for (const mediaStreamEntry of storage.mediaStreams()) {
-    // use MediaStreamEntry
-}
-
-for (const mediaStreamEntry of storage.audioStreams()) {
-    // use MediaStreamEntry
-}
-
-for (const mediaStreamEntry of storage.videoStreams()) {
-    // use MediaStreamEntry
-}
-
-for (const mediaSinkEntry of storage.mediaSinks()) {
-    // use MediaSinkEntry
-}
-
-for (const mediaSinkEntry of storage.audioSinks()) {
-    // use MediaSinkEntry
-}
-
-for (const mediaSinkEntry of storage.videoSinks()) {
-    // use MediaSinkEntry
-}
-```
-
-
-With `observer.stats` you accessing so called Entries. The interface for the entries visualized in the picture below:
-
-![Entry Navigations](puml/navigation.png)
-
-
-The collected stats from any integration is stored and updated in the 
-observer object. The list of collected types are the following:
-  * [SfuTransport](https://www.npmjs.com/package/@observertc/schemas#SfuTransport): A Transport level measurements provide data exchange for many inbound, outbound rtp pads, and sctp channels.
- * [SfuInboundRtpPad](https://www.npmjs.com/package/@observertc/schemas#SfuInboundRtpPad): Inbound Rtp Pad provided measurements. This is related to a client side provided [OutboundAudioTrack](https://www.npmjs.com/package/@observertc/schemas#OutboundAudioTrack), or [OutboundVideoTrack](https://www.npmjs.com/package/@observertc/schemas#OutboundVideoTrack) measurements.
-  * [SfuOutboundRtpPad](https://www.npmjs.com/package/@observertc/schemas#SfuOutboundRtpPad): Outbound Rtp Pad (each pad relates to one ssrc) provided measurements. This is related to a client side provided [InboundAudioTrack](https://www.npmjs.com/package/@observertc/schemas#InboundAudioTrack), or [InboundVideoTrack](https://www.npmjs.com/package/@observertc/schemas#InboundVideoTrack) measurements.
- * [SfuSctpChannel](https://www.npmjs.com/package/@observertc/schemas#SfuSctpChannel): SCTP channel provided measurements
-
-Additionally the observer groups the collected stats into the following entities:
- * **MediaStream**: a group of InboundRtpPad belongs to the same streamed media traffic. For example a simulcast media typically creates several SSRCs to stream the same media in different spatial or temporal aspective. Thos RTP sessions belong to the same media stream.
- * **MediaSink** A group of OutboundRtpPad sinks out media stream traffic to (typically) a client endpoint or to another SFU.
- 
-
-## Examples
-
-### Number of RTP Sessions
-
-```javascript
-const storage = monitor.storage;
-// The total number of RTP session going through the SFU
-const totalNumberOfRtpSessions = storage.getNumberOfInboundRtpPads() + storage.getNumberOfOutboundRtpPads();
-
-// The average number of rtp session in one transport (peer connection) between the SFU and its peers.
-const avgNumberOfRtpSessionsPerTransport = totalNumberOfRtpSessions / storage.getNumberOfTransports();
-const rtpPadsNum = [];
-for (const sfuTransportEntry of storage.transports()) {
-    const nrOfRtpSessions = sfuTransportEntry.getNumberOfOutboundRtpPads() + sfuTransportEntry.getNumberOfOutboundRtpPads();
-    rtpPadsNum.push(nrOfRtpSessions);
-}
-// define the getMedian like: https://www.w3resource.com/javascript-exercises/fundamental/javascript-fundamental-exercise-88.php
-const medianNumberOfRtpSessionsPerTransports = getMedian(rtpPadsNum);
-
-```
-
-### Media streams and sinks
-
-Media streams and sinks, as mentioned above are group of in-, and outbound rtp pads respectively.
-For example in simulcast usually 2-3 or even more RTP sessions are used belonging to one media stream.
-Media streams are composed by inbound RTP Pads. When a Media Stream is forwarded to a peer, a Media Sink
-is created compound outbound RTP sessions, consequently outbound RTP pads.
-
-The following example is created for mediasoup integration, but any other integration respectively provided
-`streamId` for inboundRtpPads, and `sinkId` for outbound RTP pads behave similarly.
-
-```javascript
-const storage = monitor.storage;
-
-const nrOfProducers = storage.getNumberOfMediaStreams();
-const nrOfAudioProducers = storage.getNumberOfAudioStreams();
-const nrOfVideoProducers = storage.getNumberOfVideoStreams();
-
-const nrOfConsumers = storage.getNumberOfMediaSinks();
-const nrOfAudioConsumers = storage.getNumberOfAudioSinks();
-const nrOfVideoConsumers = storage.getNumberOfVideoSinks();
-
-const avgNrOfProducersPerTransport = storage.getNumberOfMediaStreams() / storage.getNumberOfTransports();
-```
-
-### Receiver and sender bitrates
-
-```javascript
-const storage = monitor.stats;
-
-const traces = new Map();
-let lastCheck = Date.now();
-monitor.events.onStatsCollected(() => {
-    let totalReceivedBytes = 0;
-    for (const sfuInboundRtpPadEntry of storage.inboundRtpPads()) {
-        const { bytesReceived } = sfuInboundRtpPadEntry.stats;
-        const prevBytesReceived = traces.get(sfuInboundRtpPadEntry.id) || 0;
-        totalReceivedBytes += bytesReceived - prevBytesReceived;
-    }
-
-    let totalSentBytes = 0;
-    for (const sfuOutboundRtpPadEntry of storage.outboundRtpPads()) {
-        const { bytesSent } = sfuOutboundRtpPadEntry.stats;
-        const prevBytesSent = traces.get(sfuOutboundRtpPadEntry.id) || 0;
-        totalSentBytes += bytesSent - prevBytesSent;
-    }
-
-    const now = Date.now();
-    const elapsedTimeInS = (now - lastCheck) / 1000;
-    const receivingBitrate = (totalReceivedBytes * 8) / elapsedTimeInS;
-    const sendingBitrate = (totalSentBytes * 8) / elapsedTimeInS;
-    console.log("Received bytes since last check: ", totalReceivedBytes);
-    console.log("Receiving bitrate: ", receivingBitrate);
-    console.log("Sent bytes since last check: ", totalSentBytes);
-    console.log("Sending bitrate: ", sendingBitrate);
-    lastCheck = now;
+// ... somewhere in your code, where you use the mediasoup router to create transports
+const transport = router.createWebRtcTransport(options);
+collector.watchWebRtcTransport(transport, {
+    pollStats: true
 });
 ```
 
+Note, the `pollStats` is set to true. This will order the collector to call the  `getStats` method on every Consumers, Producers, DataProducers, DataConsumers added to the Transport.
+
+### Integrate other type of SFUs
+
+To have a custom integration you could use `AuxCollector` as follows:
+
+```javascript
+import { AuxCollector } from "@observertc/sfu-monitor-js";
+
+const collector = AuxCollector.create();
+monitor.addStatsCollector(collector);
+
+const transportId = "myUniqueGeneratedTransportId"
+collector.addTransportStatsSupplier(transportId, async () => {
+    const stats: SfuTransport = {
+
+    };
+    return stats;
+});
+// when you want to remove it:
+collector.removeTransportStatsSupplier(transportId);
+
+// similarly:
+collector.addInboundRtpPadStatsSupplier("padId", ...);
+collector.removeInboundRtpPadStatsSupplier("padId");
+
+collector.addOutboundRtpPadStatsSupplier("padId", ...);
+collector.removeOutboundRtpPadStatsSupplier("padId");
+
+collector.addSctpStreamStatsSupplier("channelId", ...);
+collector.removeSctpStreamSupplier("channelId");
+```
+
+## Sfu Monitor Storage
+
+Sfu Monitor collects measurements about the following components:
+
+ * **Transport**: Represent a network transport connection between an SFU and an external endpoint
+ * **Inbound RTP Pad**: Represents an ingress point for RTP sessions to the SFU.
+ * **Outbound RTP Pad**: Represents an eggress point for RTP sessions from the SFU.
+ * **Media Stream**: Represent a group of inbound RTP pads belong to the same outbound media track
+ * **Media Sink**: Represent a group of outbound RTP pads belong to the same inbound media track
+ * **SCTP Channel**: Represent an SCTP session
+
+Sfu Monitor Storage provided entries can be used to navigate from one collected components to another.
+
+![Storage Navigations](puml/navigation.png)
+
+Entries:
+ * [Transport](#transport-entries)
+ * [Inbound RTP](#inbound-rtp-entries)
+ * [Outbound RTP](#outbound-rtp-entries)
+ * [Media Stream](#media-stream-entries)
+ * [Media Sink](#media-sink-entries)
+ * [SCTP Channel](#sctp-channel-entries)
+ 
+
+### Transport Entries
+
+```javascript
+const storage = monitor.storage;
+for (const transport of storage.transports()) {
+
+    console.log(`Transport (${transport.id}) stats:`, transport.stats);
+
+    for (const inboundRtpPad of transport.inboundRtpPads()) {
+        console.log(`Inbound Rtp Pad (${inboundRtpPad.id}) belongs to transport (${transport.id}) stats:`, inboundRtpPad.stats);
+    }
+    for (const outboundRtpPad of transport.outboundRtpPads()) {
+        console.log(`Outbound Rtp Pad (${outboundRtpPad.id}) belongs to transport (${transport.id}) stats:`, outboundRtpPad.stats);
+    }
+    for (const sctpChannel of transport.sctpChannels()) {
+        console.log(`SCTP channel (${sctpChannel.id}) belongs to transport (${transport.id}) stats:`, sctpChannel.stats);
+    }
+    for (const mediaSink of transport.mediaSinks()) {
+        console.log(`Transport (${transport.id}) has a ${mediaSink.kind} 
+            sink having ${mediaSink.getNumberOfOutboundRtpPads()} outbound Rtp pads`);
+    }
+    for (const mediaStream of transport.mediaStreams()) {
+        console.log(`Transport (${transport.id}) has a ${mediaStream.kind} 
+            sink having ${mediaStream.getNumberOfInboundRtpPads()} inbound Rtp pads`);
+    }
+}
+```
+
+### Inbound RTP Entries
+
+```javascript
+for (const inboundRtpPad of storage.inboundRtpPads()) {
+    // the transport the inbound rtp pad belongs to
+    const transport = inboundRtpPad.getTransport();
+    // the media stream the inbound rtp pad belongs to
+    const mediaStream = inboundRtpPad.getMediaStream();
+}
+```
+
+### Outbound RTP Entries
+
+```javascript
+for (const outboundRtpPad of storage.outboundRtpPads()) {
+    // the transport the outbound rtp pad belongs to
+    const transport = outboundRtpPad.getTransport();
+
+    // the media stream the outbound rtp pad belongs to
+    const mediaStream = outboundRtpPad.getMediaStream();
+
+    // the media sink the outbound rtp pad belongs to
+    const mediaSInk = outboundRtpPad.getMediaSink();
+}
+```
+
+### Media Stream Entries
+
+```javascript
+for (const mediaStream of storage.mediaStreams()) {
+
+    // the transport the media stream belongs to
+    const transport = mediaStream.getTransport();
+
+    for (const inboundRtpPad of mediaStream.inboundRtpPads()) {
+        console.log(`Inbound Rtp Pad (${inboundRtpPad.id}) belongs to media stream (${mediaStream.id}) stats:`, inboundRtpPad.stats);
+    }
+    for (const mediaSink of mediaStream.mediaSinks()) {
+        console.log(`Media stream (${mediaStream.id}) has a ${mediaSink.kind} 
+            sink having ${mediaSink.getNumberOfOutboundRtpPads()} outbound Rtp pads`);
+    }
+}
+```
+
+### Media Sink Entries
+
+```javascript
+for (const mediaSink of storage.mediaSinks()) {
+    // the transport the media stream belongs to
+    const transport = mediaSink.getTransport();
+
+    // the media stream the media sink belongs to
+    const mediaStream = mediaSink.getMediaSink();
+
+    for (const outboundRtpPad of mediaSink.outboundRtpPads()) {
+        console.log(`Outbound Rtp Pad (${outboundRtpPad.id}) belongs to media stream (${mediaSink.id}) stats:`, outboundRtpPad.stats);
+    }
+}
+```
+
+### SCTP Channel Entries
+
+```javascript
+for (const sctpChannel of storage.sctpChannels()) {
+    // the transport the sctp channel belongs to
+    const transport = sctpChannel.getTransport();
+}
+```
 
 ## Configurations
 
@@ -249,7 +225,7 @@ monitor.events.onStatsCollected(() => {
 const config = {
     /**
      * By setting it, the monitor calls the added statsCollectors periodically
-     * and pulls the stats.
+     * and polls the stats.
      * 
      * DEFAULT: undefined
      */
@@ -303,9 +279,9 @@ const config = {
          */
         websocket: {
             /**
-             * The target url the websocket is opened for 
+             * The target urls the websocket is opened for 
              */
-            url: "ws://localhost:7080/samples/myServiceId/myMediaUnitId",
+            urls: ["ws://localhost:7080/samples/myServiceId/myMediaUnitId"],
             /**
              * The maximum number of try to connect to the server
              * 
@@ -326,7 +302,7 @@ const config = {
             /**
              * The target url the websocket is opened for 
              */
-            url: string;
+            urls: ["http://localhost:7080/rest/samples/myServiceId/myMediaUnitId"];
             /**
              * The maximum number of try to connect to the server
              * 
@@ -347,13 +323,17 @@ https://observertc.github.io/sfu-monitor-js/interfaces/SfuMonitor.html
 
 https://www.npmjs.com/package/@observertc/sfu-monitor-js
 
-## Schema
+## Schemas
 
 https://github.com/observertc/schemas
 
-## Contributions
+## Getting Involved
 
-Open a PR
+Sfu-monitor is made with the intention to provide an open-source monitoring solution for 
+WebRTC developers. We develop new features and maintaining the current 
+product with the help of the community. If you are interested in getting involved 
+please read our [contribution](CONTRIBUTING.md) guideline.
+
 
 ## License
 

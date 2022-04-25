@@ -170,8 +170,15 @@ export class WebsocketTransport implements Transport {
         result.addEventListener("message", data => {
             this._emitter.emit(ON_RECEIVED_EVENT_NAME, data);
         });
-        result.addEventListener("close", () => {
+        result.addEventListener("close", (closeEvent) => {
             this._ws = undefined;
+            // check for observer close reasons code:
+            if (4224 <= closeEvent.code && closeEvent.code <= 4230) {
+                // most likely observer close reasons
+                logger.warn(`Closed by the observer, reason: ${closeEvent.reason}`);
+            } else {
+                logger.info(`Websocket is closed, reason: ${closeEvent.reason}`);
+            }
             if (!this._closed && !reconnect) {
                 this.close();
             }
