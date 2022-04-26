@@ -1,7 +1,6 @@
 import { makeUrl, Transport } from "./Transport";
 import { EventEmitter } from "events";
 import { createLogger } from "../utils/logger";
-import { Queue } from "../utils/Queue";
 import * as http from "http";
 import * as https from "https";
 import { CodecConfig } from "../codecs/Codec";
@@ -30,19 +29,6 @@ export type RestTransportConfig = {
      * DEFAULT: https
      */    
     protocol?: "http" | "https";
-
-    /**
-     * In case of https protocol, this is the key
-     * 
-     * DEFAULT: undefined
-     */
-    key?: string;
-    /**
-     * In case of https protocol, this is the cert
-     * 
-     * DEFAULT: undefined
-     */
-    cert?: string;
 }
 
 const supplyDefaultConfig = () => {
@@ -181,15 +167,6 @@ export class RestTransport implements Transport {
             if (protocol === "http") {
                 request = http.request(url, options, responseHandler);
             } else if (protocol === "https") {
-                const { key, cert } = this._config;
-                if (!key || !cert) {
-                    reject(new Error(`without key or cert https is not possible`));
-                    return;
-                }
-                Object.assign(options, {
-                    key,
-                    cert
-                })
                 request = https.request(url, options, responseHandler);
             }
             if (!request) {
