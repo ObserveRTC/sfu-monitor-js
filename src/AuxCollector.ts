@@ -37,6 +37,7 @@ export class AuxCollector implements Collector {
     public static create(config?: AuxCollectorConfig): AuxCollector {
         const appliedConfig: AuxCollectorConfig = Object.assign(supplyDefaultConfig(), config);
         const collector = new AuxCollector(appliedConfig);
+        logger.debug(`Created`, appliedConfig);
         return collector;
     }
 

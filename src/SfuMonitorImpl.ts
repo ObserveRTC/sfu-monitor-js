@@ -31,7 +31,9 @@ export class SfuMonitorImpl implements SfuMonitor {
             EventEmitter.setMaxListeners(config.maxListeners);
         }
         const appliedConfig = config ? Object.assign(supplyDefaultConfig(), config) : supplyDefaultConfig();
-        return new SfuMonitorImpl(appliedConfig);
+        const result = new SfuMonitorImpl(appliedConfig);
+        logger.info(`Created`, appliedConfig);
+        return result;
     }
     private _closed = false;
     private _config: ConstructorConfig;

@@ -58,6 +58,7 @@ export class Sender {
     public static create(config?: SenderConfig) {
         const appliedConfig = Object.assign(supplyDefaultConfig(), config);
         const result = new Sender(appliedConfig);
+        logger.debug(`Created`, appliedConfig);
         return result;
     }
     private _closed = false;

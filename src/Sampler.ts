@@ -50,7 +50,9 @@ export class Sampler {
             },
             build(): Sampler {
                 const appliedConfig: SamplerConstructorConfig = Object.assign(supplyDefaultConfig(), config);
-                return new Sampler(appliedConfig);
+                const result = new Sampler(appliedConfig);
+                logger.debug(`Created`, appliedConfig);
+                return result;
             }
         }
         return result;
