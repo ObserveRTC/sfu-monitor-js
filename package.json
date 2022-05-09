@@ -1,6 +1,6 @@
 {
   "name": "@observertc/sfu-monitor-js",
-  "version": "1.0.0-beta.33",
+  "version": "1.0.0-beta.34",
   "description": "ObserveRTC SFU Integration Core Library",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -28,7 +28,7 @@
   "author": "Balazs Kreith",
   "license": "Apache-2.0",
   "dependencies": {
-    "@observertc/schemas": "^2.0.0-beta.61",
+    "@observertc/schemas": "^2.0.1",
     "@types/events": "^3.0.0",
     "@types/uuid": "^8.3.4",
     "@types/ws": "^8.5.3",
