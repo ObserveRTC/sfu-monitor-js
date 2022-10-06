@@ -28,7 +28,7 @@
   "author": "Balazs Kreith",
   "license": "Apache-2.0",
   "dependencies": {
-    "@observertc/schemas": "^2.1.8",
+    "@observertc/schemas": "^2.1.9",
     "@types/events": "^3.0.0",
     "@types/uuid": "^8.3.4",
     "@types/ws": "^8.5.3",
