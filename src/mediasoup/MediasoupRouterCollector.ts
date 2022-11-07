@@ -150,7 +150,7 @@ export class MediasoupRouterCollector implements Collector {
 
     private _createCollectorsFacade(): Collectors {
         const collectors = this._parent;
-        const isClosed = () => this._closed;
+        const collector = this;
         return new (class implements Collectors {
             add(collector: Collector): boolean {
                 return collectors.add(collector);
@@ -159,7 +159,7 @@ export class MediasoupRouterCollector implements Collector {
                 return collectors.remove(collectorId);
             }
             get closed(): boolean {
-                return isClosed();
+                return collector._closed;
             }
             /* eslint-disable @typescript-eslint/no-explicit-any */
             [Symbol.iterator](): Iterator<Collector, any, undefined> {
