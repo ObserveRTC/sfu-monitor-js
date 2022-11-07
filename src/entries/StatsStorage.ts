@@ -1,5 +1,5 @@
 import { SfuSctpChannel, SfuInboundRtpPad, SfuOutboundRtpPad, SfuTransport } from "@observertc/schemas";
-import { SfuInboundRtpPadEntry, SfuOutboundRtpPadEntry, SfuSctpChannelEntry, SfuTransportEntry, SfuMediaStreamEntry, SfuMediaStreamKind, SfuMediaSinkEntry, AppData } from "./StatsEntryInterfaces";
+import { SfuInboundRtpPadEntry, SfuOutboundRtpPadEntry, SfuSctpChannelEntry, SfuTransportEntry, SfuMediaStreamEntry, SfuMediaStreamKind, SfuMediaSinkEntry, Appendix } from "./StatsEntryInterfaces";
 import { hash } from "../utils/hash";
 import { createLogger } from "../utils/logger";
 
@@ -118,16 +118,16 @@ export interface StatsReader {
 
 export interface StatsWriter {
     removeTransport(transportId: string): void;
-    updateTransport(stats: SfuTransport, appData?: AppData): void;
+    updateTransport(stats: SfuTransport, appData?: Appendix): void;
     
     removeInboundRtpPad(rtpPadId: string): void;
-    updateInboundRtpPad(stats: SfuInboundRtpPad, appData?: AppData): void;
+    updateInboundRtpPad(stats: SfuInboundRtpPad, appData?: Appendix): void;
 
     removeOutboundRtpPad(rtpPadId: string): void;
-    updateOutboundRtpPad(stats: SfuOutboundRtpPad, appData?: AppData): void;
+    updateOutboundRtpPad(stats: SfuOutboundRtpPad, appData?: Appendix): void;
 
     removeSctpChannel(sctpStreamId: string): void;
-    updateSctpChannel(stats: SfuSctpChannel, appData?: AppData): void;
+    updateSctpChannel(stats: SfuSctpChannel, appData?: Appendix): void;
 }
 
 interface InnerSfuTransportEntry extends SfuTransportEntry {
@@ -198,7 +198,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         this._transports.delete(transportId);
         logger.debug(`Transport ${transportId} is removed`);
     }
-    public updateTransport(stats: SfuTransport, appData?: AppData): void {
+    public updateTransport(stats: SfuTransport, appendix?: Appendix): void {
         const now = Date.now();
         const transportId = stats.transportId;
         const transports = this._transports;
@@ -270,7 +270,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
             const initialInboundRtpPads = Array.from(this._inboundRtpPads.values()).filter(pad => pad.stats?.transportId === transportId);
             const intialSctpChannels = Array.from(this._sctpChannels.values()).filter(pad => pad.stats?.transportId === transportId);
             const newEntry: InnerSfuTransportEntry = entry = {
-                appData,
+                appendix,
                 internal: !!stats.internal,
                 id: transportId,
                 stats,
@@ -322,7 +322,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         
     }
 
-    public updateInboundRtpPad(stats: SfuInboundRtpPad, appData?: AppData): void {
+    public updateInboundRtpPad(stats: SfuInboundRtpPad, appendix?: Appendix): void {
         const now = Date.now();
         const inboundRtpPadId = stats.padId;
         const inboundRtpPads = this._inboundRtpPads;
@@ -330,7 +330,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         if (!entry) {
             const transportId = stats.transportId;
             const newEntry: SfuInboundRtpPadEntry = entry = {
-                appData,
+                appendix,
                 id: inboundRtpPadId,
                 stats,
                 created: now,
@@ -404,7 +404,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         this._inboundRtpPads.delete(inboundRtpPadId);
     }
 
-    public updateOutboundRtpPad(stats: SfuOutboundRtpPad, appData?: AppData): void {
+    public updateOutboundRtpPad(stats: SfuOutboundRtpPad, appendix?: Appendix): void {
         const now = Date.now();
         const outboundRtpPadId = stats.padId;
         const outboundRtpPads = this._outboundRtpPads;
@@ -412,7 +412,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         if (!entry) {
             const transportId = stats.transportId;
             const newEntry: SfuOutboundRtpPadEntry = entry = {
-                appData,
+                appendix,
                 id: outboundRtpPadId,
                 stats,
                 created: now,
@@ -498,7 +498,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         this._outboundRtpPads.delete(outboundRtpPadId);
     }
 
-    public updateSctpChannel(stats: SfuSctpChannel, appData?: AppData): void {
+    public updateSctpChannel(stats: SfuSctpChannel, appendix?: Appendix): void {
         const now = Date.now();
         const { channelId: sctpChannelId } = stats;
         const sctpChannels = this._sctpChannels;
@@ -506,7 +506,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         if (!entry) {
             const transportId = stats.transportId;
             const newEntry: SfuSctpChannelEntry = entry = {
-                appData,
+                appendix,
                 id: sctpChannelId,
                 stats,
                 created: now,
@@ -805,8 +805,8 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 transportLog.push(
                     `updated: ${transport.updated}`,
                     `touched: ${transport.touched}`,
-                    `appData:`,
-                    ...dumpObj(transport.appData).map(line => `\t${line}`),
+                    `appendix:`,
+                    ...dumpObj(transport.appendix).map(line => `\t${line}`),
                     `stats:`,
                     ...dumpObj(transport.stats).map(line => `\t${line}`),
                 )
@@ -825,8 +825,8 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 inboundRtpPadLog.push(
                     `updated: ${inboundRtpPad.updated}`,
                     `touched: ${inboundRtpPad.touched}`,
-                    `appData:`,
-                    ...dumpObj(inboundRtpPad.appData).map(line => `\t${line}`),
+                    `appendix:`,
+                    ...dumpObj(inboundRtpPad.appendix).map(line => `\t${line}`),
                     `stats:`,
                     ...dumpObj(inboundRtpPad.stats).map(line => `\t${line}`),
                 )
@@ -846,8 +846,8 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 inboundRtpPadLog.push(
                     `updated: ${outboundRtpPad.updated}`,
                     `touched: ${outboundRtpPad.touched}`,
-                    `appData:`,
-                    ...dumpObj(outboundRtpPad.appData).map(line => `\t${line}`),
+                    `appendix:`,
+                    ...dumpObj(outboundRtpPad.appendix).map(line => `\t${line}`),
                     `stats:`,
                     ...dumpObj(outboundRtpPad.stats).map(line => `\t${line}`),
                 )
@@ -864,8 +864,8 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 sctpChannelLog.push(
                     `updated: ${sctpChannel.updated}`,
                     `touched: ${sctpChannel.touched}`,
-                    `appData:`,
-                    ...dumpObj(sctpChannel.appData).map(line => `\t${line}`),
+                    `appendix:`,
+                    ...dumpObj(sctpChannel.appendix).map(line => `\t${line}`),
                     `stats:`,
                     ...dumpObj(sctpChannel.stats).map(line => `\t${line}`),
                 )

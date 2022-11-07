@@ -1,12 +1,9 @@
-export * as SfuMonitor from "./SfuMonitor";
-
 export { AuxCollector } from "./AuxCollector";
 export type { AuxCollectorConfig } from "./AuxCollector";
 
 export { MediasoupCollector } from "./mediasoup/MediasoupCollector";
 export type { MediasoupCollectorConfig } from "./mediasoup/MediasoupCollector";
 
-export type { SfuMonitorConfig } from "./SfuMonitor";
 export type { SenderConfig } from "./Sender";
 export type { SamplerConfig } from "./Sampler";
 
@@ -19,5 +16,11 @@ export type {
     SfuMediaSinkEntry,
     SfuSctpChannelEntry
 } from "./entries/StatsEntryInterfaces";
+
+export type { 
+    SfuMonitorConfig,
+    SfuMonitor,
+    createSfuMonitor,
+} from "./SfuMonitor";
 
 export type { ExtensionStat } from "@observertc/schemas";

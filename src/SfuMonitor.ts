@@ -1,4 +1,4 @@
-import { ExtensionStat } from "@observertc/schemas"
+import { CustomSfuEvent, ExtensionStat } from "@observertc/schemas"
 import { EventsRegister } from "./EventsRelayer";
 import { SamplerConfig } from "./Sampler";
 import { SenderConfig } from "./Sender";
@@ -8,6 +8,7 @@ import { setLevel as setLoggersLevel } from "./utils/logger";
 import { LogLevelDesc } from "loglevel";
 import { SfuMonitorImpl } from "./SfuMonitorImpl";
 import { Collector } from "./Collector";
+import { Collectors, CollectorsConfig } from "./Collectors";
 
 export type SfuMonitorConfig = {
     /**
@@ -42,6 +43,11 @@ export type SfuMonitorConfig = {
     statsExpirationTimeInMs?: number;
 
     /**
+     * Config related to collecting stats
+     */
+    collectors?: CollectorsConfig
+
+    /**
      * Sampling Component Related configurations
      * 
      */
@@ -62,6 +68,12 @@ export type SfuMonitorConfig = {
 };
 
 export interface SfuMonitor {
+
+    /**
+     * Access to the collectors the monitor has
+     */
+    readonly collectors: Collectors;
+
     /**
      * Access to the collected stats
      */
@@ -83,18 +95,10 @@ export interface SfuMonitor {
     addExtensionStats(stats: ExtensionStat): void;
 
     /**
-     * Add a stats collector to the monitor
-     * 
-     * @param collector 
+     * Adds a custom defined event (SFU_CLIENT_JOINED, SFU_CLIENT_MUTED, etc.)
+     * @param event 
      */
-    addStatsCollector(collector: Collector): void;
-
-    /**
-     * Remove a stats collector from the monitor
-     * 
-     * @param collectorId 
-     */
-    removeStatsCollector(collectorId: string): void;
+    addCustomSfuEvent(event: CustomSfuEvent): void;
 
     /**
      * Connects the Monitor to an observer
@@ -148,6 +152,6 @@ export function setLogLevel(level: LogLevelDesc) {
  * Create an SfuMonitor
  * @param config config for the monitor
  */
-export function create(config?: SfuMonitorConfig): SfuMonitor {
+export function createSfuMonitor(config?: SfuMonitorConfig): SfuMonitor {
     return SfuMonitorImpl.create(config);
 }

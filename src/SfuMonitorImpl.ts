@@ -1,4 +1,4 @@
-import { ExtensionStat, Samples } from "@observertc/schemas"
+import { CustomSfuEvent, ExtensionStat, Samples } from "@observertc/schemas"
 import { Collector } from "./Collector";
 import { EventsRegister, EventsRelayer } from "./EventsRelayer";
 import { Sampler, supplyDefaultConfig as supplySamplerDefaultConfig } from "./Sampler";
@@ -9,6 +9,7 @@ import { Accumulator } from "./Accumulator";
 import { createLogger } from "./utils/logger";
 import { SfuMonitor, SfuMonitorConfig } from "./SfuMonitor";
 import EventEmitter from "events";
+import { Collectors, CollectorsImpl } from "./Collectors";
 
 const logger = createLogger(`SfuMonitor`);
 
@@ -37,7 +38,7 @@ export class SfuMonitorImpl implements SfuMonitor {
     }
     private _closed = false;
     private _config: ConstructorConfig;
-    private _collectors: Map<string, Collector> = new Map();
+    private _collectors: CollectorsImpl;
     private _sampler: Sampler;
     private _sender?: Sender;
     private _timer?: Timer;
@@ -50,10 +51,12 @@ export class SfuMonitorImpl implements SfuMonitor {
         this._statsStorage = new StatsStorage();
         this._accumulator = Accumulator.create(config.accumulator);
         this._eventer = EventsRelayer.create();
+        this._collectors = this._makeCollectors();
         this._sampler = this._makeSampler();
         this._createSender();
         this._createTimer();
     }
+    
     
     public get sfuId() : string {
         /* eslint-disable @typescript-eslint/no-non-null-assertion */
@@ -64,6 +67,10 @@ export class SfuMonitorImpl implements SfuMonitor {
         return this._eventer;
     }
 
+    public get collectors(): Collectors {
+        return this._collectors;
+    }
+
     public get storage(): StatsReader {
         return this._statsStorage;
     }
@@ -72,31 +79,12 @@ export class SfuMonitorImpl implements SfuMonitor {
         return this._sender?.closed == false;
     }
 
-    public addStatsCollector(collector: Collector): void {
-        if (this._collectors.has(collector.id)) {
-            throw new Error(`Collector with id ${collector.id} has already been added`);
-        }
-        collector.setStatsWriter(this._statsStorage);
-        this._collectors.set(collector.id, collector);
-        logger.info(`Collector ${collector.id} has been added`);
-    }
-
-    public removeStatsCollector(collectorId: string): void {
-        const collector = this._collectors.get(collectorId);
-        if (!collector) {
-            logger.info(`Attempted to remove a not existing collector ${collectorId}`);
-            return;
-        }
-        if (!collector.closed) {
-            collector.close();
-        }
-        collector.setStatsWriter(null);
-        this._collectors.delete(collectorId);
-        logger.info(`Collector ${collector.id} has been removed`);
-    }
-
     public addExtensionStats(stats: ExtensionStat): void {
         this._sampler.addExtensionStats(stats);
+    }
+
+    addCustomSfuEvent(event: CustomSfuEvent): void {
+        this._sampler.addSfuCustomEvent(event);
     }
 
     public setMarker(marker: string): void {
@@ -113,10 +101,9 @@ export class SfuMonitorImpl implements SfuMonitor {
     }
 
     public async collect(): Promise<void> {
-        const collectors = Array.from(this._collectors.values());
         const started = Date.now();
-        for (const collector of collectors) {
-            await collector.collect();
+        if (!await this._collectors.collect()) {
+            return;
         }
         this._eventer.emitStatsCollected();
 
@@ -184,6 +171,13 @@ export class SfuMonitorImpl implements SfuMonitor {
             this._closed = true;
             logger.info(`Closed`);
         }
+    }
+
+    private _makeCollectors(): CollectorsImpl {
+        const collectorsConfigConfig = this._config.collectors;
+        const result = CollectorsImpl.create(collectorsConfigConfig)
+        result.statsWriter = this._statsStorage;
+        return result;
     }
 
     private _makeSampler(): Sampler {

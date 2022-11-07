@@ -1,4 +1,59 @@
 
+export type MediasoupSurrogateEventTypes = 
+"newworker"
+;
+
+export type MediasoupNewWorkerListener = (router: MediasoupWorker) => void;
+export type MediasoupSurrogateListener = MediasoupCloseListener |
+    MediasoupNewWorkerListener;
+interface MediasoupSurrogateObserver {
+    on(eventType: MediasoupSurrogateEventTypes, listener: MediasoupNewWorkerListener): void;
+    once(eventType: "close", listener: MediasoupCloseListener): void;
+    removeListener(eventType: MediasoupSurrogateEventTypes, listener: MediasoupSurrogateListener): void;
+}
+
+export interface MediasoupSurrogate {
+    version: string;
+    observer: MediasoupSurrogateObserver;
+};
+
+
+
+export type MediasoupWorkerEventTypes = 
+"newrouter"
+;
+
+export type MediasoupNewRouterListener = (router: MediasoupRouter) => void;
+export type MediasoupWorkerListener = MediasoupCloseListener |
+    MediasoupNewRouterListener;
+interface MediasoupWorkerObserver {
+    on(eventType: MediasoupWorkerEventTypes, listener: MediasoupNewRouterListener): void;
+    once(eventType: "close", listener: MediasoupCloseListener): void;
+    removeListener(eventType: MediasoupWorkerEventTypes, listener: MediasoupWorkerListener): void;
+}
+
+export interface MediasoupWorker {
+    pid: number;
+    observer: MediasoupWorkerObserver;
+};
+
+export type MediasoupRouterEventTypes = 
+"newtransport"
+;
+
+export type MediasoupNewTransportListener = (transport: MediasoupTransport) => void;
+export type MediasoupRouterListener = MediasoupCloseListener |
+    MediasoupNewTransportListener;
+interface MediasoupRouterObserver {
+    on(eventType: MediasoupRouterEventTypes, listener: MediasoupNewTransportListener): void;
+    once(eventType: "close", listener: MediasoupCloseListener): void;
+    removeListener(eventType: MediasoupRouterEventTypes, listener: MediasoupRouterListener): void;
+}
+
+export interface MediasoupRouter {
+    id: string;
+    observer: MediasoupRouterObserver;
+};
 
 export type MediasoupTransportEventTypes = 
     "newproducer" |
@@ -28,6 +83,9 @@ export interface MediasoupTransport {
     id: string;
     getStats(): Promise<MediasoupTransportStats[]>;
     observer: MediasoupTransportObserver;
+
+    iceState?: any; // only webrtc transport have
+    tuple?: any; // plain and pipe transport have it
 }
 
 interface MediasoupCommonObserver {

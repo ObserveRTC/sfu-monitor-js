@@ -1,6 +1,6 @@
 import { SfuSctpChannel, SfuInboundRtpPad, SfuOutboundRtpPad, SfuTransport } from "@observertc/schemas";
 
-export type AppData = any;
+export type Appendix = any;
 
 export interface StatsEntryAbs {
     id: string;
@@ -15,7 +15,7 @@ export interface StatsEntryAbs {
  * methods to navigate.
  */
 export interface SfuTransportEntry extends StatsEntryAbs {
-    appData: AppData,
+    appendix: Appendix,
     stats: SfuTransport;
     internal: boolean;
     inboundRtpPads(): Generator<SfuInboundRtpPadEntry, void, undefined>;
@@ -38,7 +38,7 @@ export interface SfuTransportEntry extends StatsEntryAbs {
  * methods to navigate.
  */
 export interface SfuInboundRtpPadEntry extends StatsEntryAbs {
-    appData: AppData,
+    appendix: Appendix,
     stats: SfuInboundRtpPad;
     getTransport(): SfuTransportEntry | undefined;
     getMediaStream(): SfuMediaStreamEntry | undefined;
@@ -49,7 +49,7 @@ export interface SfuInboundRtpPadEntry extends StatsEntryAbs {
  * methods to navigate.
  */
 export interface SfuOutboundRtpPadEntry extends StatsEntryAbs {
-    appData: AppData,
+    appendix: Appendix,
     stats: SfuOutboundRtpPad;
     getTransport(): SfuTransportEntry | undefined;
     getMediaStream(): SfuMediaStreamEntry | undefined;
@@ -91,7 +91,7 @@ export interface SfuMediaSinkEntry {
  * methods to navigate.
  */
 export interface SfuSctpChannelEntry extends StatsEntryAbs {
-    appData: AppData,
+    appendix: Appendix,
     stats: SfuSctpChannel;
     getTransport(): SfuTransportEntry | undefined;
 }

@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { StatsReader } from "./entries/StatsStorage";
 import { isValidUuid } from "./utils/validators";
-import { SfuSample, SfuExtensionStats } from "@observertc/schemas";
+import { SfuSample, SfuExtensionStats, CustomSfuEvent } from "@observertc/schemas";
 import { createLogger } from "./utils/logger";
 
 const logger = createLogger(`Sampler`);
@@ -65,6 +65,7 @@ export class Sampler {
     
     // all of the following fields until empty line must be reset after sampled
     private _extensionStats?: SfuExtensionStats[];
+    private _customEvents?: CustomSfuEvent[];
     private _statsReader?: StatsReader;
     // private _peerConnections: Map<string, PeerConnectionEntry> = new Map();
     private _sampled?: number;
@@ -90,6 +91,11 @@ export class Sampler {
     public addExtensionStats(stats: SfuExtensionStats): void {
         if (!this._extensionStats) this._extensionStats = [];
         this._extensionStats.push(stats);
+    }
+
+    addSfuCustomEvent(event: CustomSfuEvent) {
+        if (!this._customEvents) this._customEvents = [];
+        this._customEvents.push(event);
     }
 
     public setMarker(marker: string): void {
@@ -122,6 +128,10 @@ export class Sampler {
         if (this._extensionStats) {
             sfuSample.extensionStats = this._extensionStats;
             this._extensionStats = undefined;
+        }
+        if (this._customEvents) {
+            sfuSample.customSfuEvents = this._customEvents;
+            this._customEvents = undefined;
         }
         if (!this._statsReader) {
             logger.warn(`No StatsProvider has been assigned to Sampler`);

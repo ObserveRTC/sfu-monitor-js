@@ -116,7 +116,7 @@ export class PromiseFetcher<T> {
             promises = [];
             if (emittedBatch * batchSize < this._suppliers.size &&  this._pace) {
                 const { minPaceInMs, maxPaceInMs } = this._pace;
-                const timeoutInMs = minPaceInMs + Math.random() * (maxPaceInMs - minPaceInMs);
+                const timeoutInMs = Math.ceil(minPaceInMs + Math.random() * (maxPaceInMs - minPaceInMs));
                 if (1 < timeoutInMs) {
                     await new Promise<void>(resolve => {
                         setTimeout(() => {

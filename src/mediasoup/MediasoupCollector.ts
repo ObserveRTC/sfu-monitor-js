@@ -5,7 +5,7 @@ import { MediasoupConsumer, MediasoupConsumerPolledStats, MediasoupDataConsumer,
 import { SfuInboundRtpPad, SfuOutboundRtpPad, SfuSctpChannel, SfuTransport } from "@observertc/schemas";
 import { v4 as uuidv4 } from "uuid";
 import { createLogger } from "../utils/logger";
-import { AppData } from "../entries/StatsEntryInterfaces";
+import { Appendix } from "../entries/StatsEntryInterfaces";
 
 const logger = createLogger(`MediasoupCollector`);
 
@@ -78,25 +78,25 @@ export type MediasoupTransportWatchConfig = {
      * Add custom arbitrary data to the transport entries
      * in the StatsStorage can be accessed via StatsReader
      */
-    customTransportData?: AppData;
+    customTransportData?: Appendix;
 
      /**
      * Add custom arbitrary data to the inbound rtp pad entries
      * in the StatsStorage can be accessed via StatsReader
      */
-    customInboundRtpData?: AppData;
+    customInboundRtpData?: Appendix;
 
     /**
      * Add custom arbitrary data to the outbound rtp pad entries
      * in the StatsStorage can be accessed via StatsReader
      */
-    customOutboundRtpData?: AppData;
+    customOutboundRtpData?: Appendix;
 
     /**
      * Add custom arbitrary data to the sctp channel entries
      * in the StatsStorage can be accessed via StatsReader
      */
-    customSctpChannelData?: AppData;
+    customSctpChannelData?: Appendix;
 }
 
 const provideDefaultWatchConfig = () => {
@@ -119,7 +119,7 @@ type GetStats<Stats, Types> = {
     // mediaType?: "audio" | "video";
     type: Types;
     polledStats?: Stats[];
-    customData?: AppData;
+    customData?: Appendix;
 }
 
 type StatsSupplier<GetStats> = {
@@ -147,7 +147,7 @@ type ConsumerGetStats = GetStats<MediasoupConsumerPolledStats, "inbound-rtp" | "
     consumerId: string,
     padIds: Map<number, string>,
     mediaType?: "audio" | "video",
-    customData?: AppData,
+    customData?: Appendix,
     internal?: boolean,
 };
 type ConsumerStatsSupplier = StatsSupplier<ConsumerGetStats>;
