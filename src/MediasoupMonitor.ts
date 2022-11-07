@@ -3,7 +3,6 @@ import { EventsRegister } from "./EventsRelayer";
 import { SenderConfig } from "./Sender";
 import { StatsReader } from "./entries/StatsStorage";
 import { createLogger } from "./utils/logger";
-import { SfuMonitor } from "./SfuMonitor";
 import { Collectors } from "./Collectors";
 import {
     MediasoupConsumer,
@@ -35,22 +34,28 @@ import {
     MediasoupDataConsumerCollector,
     MediasoupDataConsumerCollectorConfig,
 } from "./mediasoup/MediasoupDataConsumerCollector";
-import { createSfuMonitor, SfuMonitorConfig } from "./SfuMonitor";
+import { SfuMonitor, SfuMonitorConfig } from "./SfuMonitor";
 import {
     MediasoupSurrogateCollectorConfig,
     MediasoupSurrogateCollector,
 } from "./mediasoup/MediasoupSurrogateCollector";
+import { SfuMonitorImpl } from "./SfuMonitorImpl";
 
 const logger = createLogger("MediasoupMonitor");
 
 export type MediasoupMonitorConfig = SfuMonitorConfig & {
-    mediasoup: MediasoupSurrogate;
+    mediasoup?: MediasoupSurrogate;
+    mediasoupCollectors?: MediasoupSurrogateCollectorConfig;
 };
 
 export class MediasoupMonitor implements SfuMonitor {
-    public static create(config?: SfuMonitorConfig): MediasoupMonitor {
-        const sfuMonitor = createSfuMonitor(config);
-        return new MediasoupMonitor(sfuMonitor);
+    public static create(config?: MediasoupMonitorConfig): MediasoupMonitor {
+        const sfuMonitor = SfuMonitorImpl.create(config);
+        const result = new MediasoupMonitor(sfuMonitor);
+        if (config?.mediasoup) {
+            result.watchAll(config.mediasoup, config.mediasoupCollectors);
+        }
+        return result;
     }
 
     private _closed = false;

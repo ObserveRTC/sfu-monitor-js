@@ -1,6 +1,7 @@
 export { AuxCollector } from "./AuxCollector";
 export type { AuxCollectorConfig } from "./AuxCollector";
 
+export { TransportTypeFunction } from "./mediasoup/MediasoupRouterCollector";
 export { MediasoupCollector } from "./mediasoup/MediasoupCollector";
 export type { MediasoupCollectorConfig } from "./mediasoup/MediasoupCollector";
 
@@ -17,6 +18,26 @@ export type {
     SfuSctpChannelEntry,
 } from "./entries/StatsEntryInterfaces";
 
-export type { SfuMonitorConfig, SfuMonitor, createSfuMonitor } from "./SfuMonitor";
+export type { SfuMonitorConfig, SfuMonitor } from "./SfuMonitor";
+export type { MediasoupMonitorConfig, MediasoupMonitor } from "./MediasoupMonitor";
 
 export type { ExtensionStat } from "@observertc/schemas";
+
+import { MediasoupMonitor, MediasoupMonitorConfig } from "./MediasoupMonitor";
+import { SfuMonitor, SfuMonitorConfig } from "./SfuMonitor";
+import { SfuMonitorImpl } from "./SfuMonitorImpl";
+/**
+ * Create an SfuMonitor
+ * @param config config for the monitor
+ */
+export function createSfuMonitor(config?: SfuMonitorConfig): SfuMonitor {
+    return SfuMonitorImpl.create(config);
+}
+
+/**
+ * Create a monitor for mediasoup
+ * @param config config for the monitor
+ */
+export function createMediasoupMonitor(config?: MediasoupMonitorConfig): MediasoupMonitor {
+    return MediasoupMonitor.create(config);
+}

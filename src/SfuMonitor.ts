@@ -8,6 +8,7 @@ import { setLevel as setLoggersLevel } from "./utils/logger";
 import { LogLevelDesc } from "loglevel";
 import { SfuMonitorImpl } from "./SfuMonitorImpl";
 import { Collectors, CollectorsConfig } from "./Collectors";
+import { MediasoupMonitor, MediasoupMonitorConfig } from "./MediasoupMonitor";
 
 export type SfuMonitorConfig = {
     /**
@@ -144,12 +145,4 @@ export interface SfuMonitor {
  */
 export function setLogLevel(level: LogLevelDesc) {
     setLoggersLevel(level);
-}
-
-/**
- * Create an SfuMonitor
- * @param config config for the monitor
- */
-export function createSfuMonitor(config?: SfuMonitorConfig): SfuMonitor {
-    return SfuMonitorImpl.create(config);
 }

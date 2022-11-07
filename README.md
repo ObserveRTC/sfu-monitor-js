@@ -49,20 +49,73 @@ A monitor does three things: 1. Collect Stats 2. Make sample based on the collec
 To integrate [mediasoup:3^](https://mediasoup.org/documentation/v3/) you can use the built-in MediasoupCollector.
 
 ```javascript
-import { MediasoupCollector } from "@observertc/sfu-monitor-js";
+import mediasoup from "mediasoup";
+import { createMediasoupMonitor } from "@observertc/sfu-monitor-js";
 
-// you should use the previously created monitor object
-const collector = MediasoupCollector.create();
-monitor.addStatsCollector(collector);
-
-// ... somewhere in your code, where you use the mediasoup router to create transports
-const transport = router.createWebRtcTransport(options);
-collector.watchWebRtcTransport(transport, {
-    pollStats: true,
+const monitor = createMediasoupMonitor({
+    collectingPeriodInMs: 5000,
+    mediasoup,
 });
 ```
 
-Note, the `pollStats` is set to true. This will order the collector to call the `getStats` method on every Consumers, Producers, DataProducers, DataConsumers added to the Transport.
+With this configuration the monitor automatically add and remove mediasoup objects. 
+
+```javascript
+monitor.events.onStatsCollected(() => {
+    const storage = monitor.storage
+    console.log(`Mediasoup SFU has ${storage.getNumberOfInboundRtpPads()} incoming RTP stream`);
+    console.log(`Mediasoup SFU has ${storage.getNumberOfOutboundRtpPads()} outgoing RTP stream`);
+    console.log(`Mediasoup SFU has ${storage.getNumberOfAudioSinks()} audio consumers`);
+    console.log(`Mediasoup SFU has ${storage.getNumberOfVideoSinks()} video consumers`);
+    console.log(`Mediasoup SFU has ${storage.getNumberOfMediaSinks()} consumers`);
+    console.log(`Mediasoup SFU has ${storage.getNumberOfAudioStreams()} audio producers`);
+    console.log(`Mediasoup SFU has ${storage.getNumberOfVideoStreams()} video producers`);
+    console.log(`Mediasoup SFU has ${storage.getNumberOfMediaStreams()} producers`);
+    console.log(`Mediasoup SFU has ${storage.getNumberOfTransports()} transports`);
+
+    for (const audioSink of storage.audioSinks()) {
+        console.log(`audio consumer ${audioSink.id} belongs to transport ${audioSink.getTransport()?.id} has the following outbound RTP stats`);
+        for (const outboundRtp of audioSink.outboundRtpPads()) {
+            console.log(`RTP Pad: ${outboundRtp.id}`, outboundRtp.stats);
+        }
+    }
+});
+```
+
+By default it does not call `getStats` as it turned out to be performance intensive in some cases. 
+If you want the collector to call the getStats on objects you can change the configuration like:
+
+```javascript
+const monitor = createMediasoupMonitor({
+    collectingPeriodInMs: 5000,
+    mediasoup,
+    mediasoupCollector: {
+        pollTransportStats: () => true,
+        pollProducerStats: () => true,
+        pollConsumerStats: () => true,
+        pollDataProducerStats: () => true,
+        pollDataConsumerStats: () => true,
+    }
+});
+```
+
+NOTE: by default the MediasoupMonitor can distinguish WebRtcTransport, and PipeTransport, but in case you use PlainTransport you need to define your own getTransportType through config like:
+
+```javascript
+const getTransportType: TransportTypeFunction = (transport: Transport) => {
+    if (transport instanceof WebRtcTransport) return "webrtc-transport";
+    if (transport instanceof PlainTransport) return "plain-transport";
+    if (transport instanceof PipeTransport) return "pipe-transport";
+    return "direct-transport";
+}
+const monitor = createMediasoupMonitor({
+    collectingPeriodInMs: 5000,
+    mediasoup,
+    mediasoupCollector: {
+        getTransportType,
+    }
+});
+```
 
 ### Integrate other type of SFUs
 
