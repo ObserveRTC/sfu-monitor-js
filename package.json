@@ -11,11 +11,9 @@
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
     "preversion": "npm run lint",
-    "format": "prettier --write \"src/**/*.ts\"",
     "lint": "./node_modules/.bin/eslint -c .eslintrc.js src/*",
     "build": "tsc",
-    "test": "jest --config jest.config.js --runInBand",
-    "version": "npm run format"
+    "test": "jest --config jest.config.js --runInBand"
   },
   "keywords": [
     "webrtc",
