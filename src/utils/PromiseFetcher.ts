@@ -33,7 +33,7 @@ export class PromiseFetcher<T> {
                 return result;
             },
             withPace: (minPaceInMs: number, maxPaceInMs: number) => {
-                if (maxPaceInMs <= minPaceInMs) {
+                if (maxPaceInMs < minPaceInMs) {
                     throw new Error(`minPaceInMs: ${minPaceInMs} is larger than the maxPaceInMs: ${maxPaceInMs}`);
                 }
                 fetcher._pace = {
