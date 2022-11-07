@@ -247,11 +247,11 @@ export class MediasoupTransportCollector implements Collector {
         const collectors = this._parent;
         const isClosed = () => this._closed;
         return new (class implements Collectors {
-            add(collector: Collector): void {
-                collectors.add(collector);
+            add(collector: Collector): boolean {
+                return collectors.add(collector);
             }
-            remove(collectorId: string): void {
-                collectors.remove(collectorId);
+            remove(collectorId: string): boolean {
+                return collectors.remove(collectorId);
             }
             get closed(): boolean {
                 return isClosed();

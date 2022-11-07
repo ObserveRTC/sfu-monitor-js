@@ -4,7 +4,6 @@ export type MediasoupNewWorkerListener = (router: MediasoupWorker) => void;
 export type MediasoupSurrogateListener = MediasoupCloseListener | MediasoupNewWorkerListener;
 interface MediasoupSurrogateObserver {
     on(eventType: MediasoupSurrogateEventTypes, listener: MediasoupNewWorkerListener): void;
-    once(eventType: "close", listener: MediasoupCloseListener): void;
     removeListener(eventType: MediasoupSurrogateEventTypes, listener: MediasoupSurrogateListener): void;
 }
 

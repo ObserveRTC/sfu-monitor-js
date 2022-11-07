@@ -100,10 +100,6 @@ export class MediasoupSurrogateCollector implements Collector {
         this._parent = parent;
         this._mediasoup = mediasoup;
         this._config = this._config = Object.assign(supplyDefaultConfig(), config);
-        this._mediasoup.observer.once("close", () => {
-            this.close();
-            logger.debug(`${this.id} is removed from watch`);
-        });
         const collectorsFacade = this._createCollectorsFacade();
         this._newWorkerListener = (worker) => {
             if (!this._statsWriter) {
@@ -137,11 +133,11 @@ export class MediasoupSurrogateCollector implements Collector {
         const collectors = this._parent;
         const isClosed = () => this._closed;
         return new (class implements Collectors {
-            add(collector: Collector): void {
-                collectors.add(collector);
+            add(collector: Collector): boolean {
+                return collectors.add(collector);
             }
-            remove(collectorId: string): void {
-                collectors.remove(collectorId);
+            remove(collectorId: string): boolean {
+                return collectors.remove(collectorId);
             }
             get closed(): boolean {
                 return isClosed();

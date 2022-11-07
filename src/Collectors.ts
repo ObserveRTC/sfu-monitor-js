@@ -33,8 +33,8 @@ const supplyDefaultConfig = () => {
 };
 
 export interface Collectors extends Iterable<Collector> {
-    add(collector: Collector): void;
-    remove(collectorId: string): void;
+    add(collector: Collector): boolean;
+    remove(collectorId: string): boolean;
     readonly closed: boolean;
 }
 
@@ -60,23 +60,26 @@ export class CollectorsImpl implements Collectors {
         return this._closed;
     }
 
-    public add(collector: Collector): void {
+    public add(collector: Collector): boolean {
         if (this._collectors.has(collector.id)) {
-            throw new Error(`Collector with id ${collector.id} has already been added`);
+            logger.warn(`Collector with id ${collector.id} has already been added`);
+            return false;
         }
         if (!this._statsWriter) {
-            throw new Error(`Cannot add collector if statsWriter is undefined`);
+            logger.warn(`Cannot add collector if statsWriter is undefined`);
+            return false;
         }
         collector.setStatsWriter(this._statsWriter);
         this._collectors.set(collector.id, collector);
         logger.info(`Collector ${collector.id} has been added`);
+        return true;
     }
 
-    public remove(collectorId: string): void {
+    public remove(collectorId: string): boolean {
         const collector = this._collectors.get(collectorId);
         if (!collector) {
             logger.info(`Attempted to remove a not existing collector ${collectorId}`);
-            return;
+            return false;
         }
         if (!collector.closed) {
             collector.close();
@@ -84,6 +87,7 @@ export class CollectorsImpl implements Collectors {
         collector.setStatsWriter(null);
         this._collectors.delete(collectorId);
         logger.info(`Collector ${collector.id} has been removed`);
+        return true;
     }
 
     async collect(): Promise<boolean> {
