@@ -24,9 +24,21 @@ export interface StatsReader {
     transports(): Generator<SfuTransportEntry, void, undefined>;
 
     /**
+     * Gets the monitored object based on identifier
+     * @param id the identifier of the transport the monitored entry belongs to
+     */
+    getTransportEntry(id: string): SfuTransportEntry | undefined;
+
+    /**
      * Iterable iterator to list all collected inbound rtp pads
      */
     inboundRtpPads(): Generator<SfuInboundRtpPadEntry, void, undefined>;
+
+    /**
+     * Gets the monitored object based on identifier
+     * @param id the identifier of the inbound RTP stream the monitored entry belongs to
+     */
+    getInboundRtpPad(id: string): SfuInboundRtpPadEntry | undefined;
 
     /**
      * Iterable iterator to list all collected outbound rtp pads
@@ -34,14 +46,32 @@ export interface StatsReader {
     outboundRtpPads(): Generator<SfuOutboundRtpPadEntry, void, undefined>;
 
     /**
+     * Gets the monitored object based on identifier
+     * @param id the identifier of the outbound RTP stream the monitored entry belongs to
+     */
+    getOutboundRtpPad(id: string): SfuOutboundRtpPadEntry | undefined;
+
+    /**
      * Iterable iterator to list all collected sctp channels
      */
     sctpChannels(): Generator<SfuSctpChannelEntry, void, undefined>;
 
     /**
+     * Gets the monitored object based on identifier
+     * @param id the identifier of the SCTP channel the monitored entry belongs to
+     */
+    getSctpChannel(id: string): SfuSctpChannelEntry | undefined;
+
+    /**
      * Iterable iterator to list all collected and groupped media streams
      */
     mediaStreams(): Generator<SfuMediaStreamEntry, void, undefined>;
+
+    /**
+     * Gets the monitored object based on identifier
+     * @param id the identifier of the sfu media stream the monitored entry belongs to
+     */
+    getMediaStream(id: string): SfuMediaStreamEntry | undefined;
 
     /**
      * Iterable iterator to list all collected and groupped audio streams
@@ -57,6 +87,12 @@ export interface StatsReader {
      * Iterable iterator to list all collected and groupped media sinks
      */
     mediaSinks(): Generator<SfuMediaSinkEntry, void, undefined>;
+
+    /**
+     * Gets the monitored object based on identifier
+     * @param id the identifier of the sfu media sink the monitored entry belongs to
+     */
+    getMediaSink(id: string): SfuMediaSinkEntry | undefined;
 
     /**
      * Iterable iterator to list all collected and groupped audio sinks
@@ -567,6 +603,8 @@ export class StatsStorage implements StatsReader, StatsWriter {
         this._sctpChannels.delete(sctpChannelId);
     }
 
+    
+
     public *transports(): Generator<SfuTransportEntry, void, undefined> {
         const entries = this._transports;
         const entryIds = Array.from(entries.keys());
@@ -574,6 +612,11 @@ export class StatsStorage implements StatsReader, StatsWriter {
             const entry = entries.get(entryId);
             if (entry) yield entry;
         }
+    }
+
+    public getTransportEntry(id: string): SfuTransportEntry | undefined {
+        
+        return this._transports.get(id);
     }
 
     public *inboundRtpPads(): Generator<SfuInboundRtpPadEntry, void, undefined> {
@@ -585,6 +628,10 @@ export class StatsStorage implements StatsReader, StatsWriter {
         }
     }
 
+    public getInboundRtpPad(id: string): SfuInboundRtpPadEntry | undefined {
+        return this._inboundRtpPads.get(id);
+    }
+
     public *outboundRtpPads(): Generator<SfuOutboundRtpPadEntry, void, undefined> {
         const entries = this._outboundRtpPads;
         const entryIds = Array.from(entries.keys());
@@ -592,6 +639,10 @@ export class StatsStorage implements StatsReader, StatsWriter {
             const entry = entries.get(entryId);
             if (entry) yield entry;
         }
+    }
+
+    public getOutboundRtpPad(id: string): SfuOutboundRtpPadEntry | undefined {
+        return this._outboundRtpPads.get(id);
     }
 
     public *sctpChannels(): Generator<SfuSctpChannelEntry, void, undefined> {
@@ -603,6 +654,10 @@ export class StatsStorage implements StatsReader, StatsWriter {
         }
     }
 
+    public getSctpChannel(id: string): SfuSctpChannelEntry | undefined {
+        return this._sctpChannels.get(id);
+    }
+
     public *mediaStreams(): Generator<SfuMediaStreamEntry, void, undefined> {
         const entries = this._mediaStreams;
         const entryIds = Array.from(entries.keys());
@@ -610,6 +665,10 @@ export class StatsStorage implements StatsReader, StatsWriter {
             const entry = entries.get(entryId);
             if (entry) yield entry;
         }
+    }
+
+    public getMediaStream(id: string): SfuMediaStreamEntry | undefined {
+        return this._mediaStreams.get(id);
     }
 
     public *audioStreams(): Generator<SfuMediaStreamEntry, void, undefined> {
@@ -637,6 +696,10 @@ export class StatsStorage implements StatsReader, StatsWriter {
             const entry = entries.get(entryId);
             if (entry) yield entry;
         }
+    }
+
+    public getMediaSink(id: string): SfuMediaSinkEntry | undefined {
+        return this._mediaSinks.get(id);
     }
 
     public *audioSinks(): Generator<SfuMediaSinkEntry, void, undefined> {
