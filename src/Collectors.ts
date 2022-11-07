@@ -100,7 +100,7 @@ export class CollectorsImpl implements Collectors {
                 result = false;
             });
         for (const collector of Array.from(this._collectors.values())) {
-            promiseFetcher.withPromiseSuppliers(collector.collect);
+            promiseFetcher.withPromiseSuppliers(collector.collect.bind(collector));
         }
         await promiseFetcher.build().fetch();
         return result;
