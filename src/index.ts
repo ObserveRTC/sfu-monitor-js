@@ -20,6 +20,7 @@ export type {
 
 export type { SfuMonitorConfig, SfuMonitor } from "./SfuMonitor";
 export type { MediasoupMonitorConfig, MediasoupMonitor } from "./MediasoupMonitor";
+export type { MediasoupTransportType } from "./mediasoup/MediasoupTypes";
 
 export type { ExtensionStat } from "@observertc/schemas";
 
