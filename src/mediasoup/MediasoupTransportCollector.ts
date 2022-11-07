@@ -284,7 +284,7 @@ export class MediasoupTransportCollector implements Collector {
         const polledStats = await this._transport.getStats();
         for (const msStats of polledStats) {
             let transportStats: SfuTransport | undefined;
-            if (this._config.transportType === "webrtc-transport") {
+            if (this._config.transportType === "webrtc-transport" || this._config.transportType === "WebRtcTransport") {
                 const stats = msStats as MediasoupWebRtcTransportStats;
                 const {
                     localIp: localAddress,
@@ -321,7 +321,7 @@ export class MediasoupTransportCollector implements Collector {
                     // sctpPacketsReceived: stats.sctpPacketsReceived,
                     // sctpPacketsSent: stats.sctpPacketsSent,
                 };
-            } else if (this._config.transportType === "plain-rtp-transport") {
+            } else if (this._config.transportType === "plain-rtp-transport" || this._config.transportType === "PlainTransport") {
                 const stats = msStats as MediasoupPlainTransport;
                 const {
                     localIp: localAddress,
@@ -343,7 +343,7 @@ export class MediasoupTransportCollector implements Collector {
                     rtxBytesReceived: stats.rtxBytesReceived,
                     rtxBytesSent: stats.rtxBytesSent,
                 };
-            } else if (this._config.transportType === "direct-transport") {
+            } else if (this._config.transportType === "direct-transport" || this._config.transportType === "DirectTransport") {
                 const stats = msStats as MediasoupDirectTransport;
                 transportStats = {
                     transportId,
@@ -353,7 +353,7 @@ export class MediasoupTransportCollector implements Collector {
                     rtxBytesReceived: stats.rtxBytesReceived,
                     rtxBytesSent: stats.rtxBytesSent,
                 };
-            } else if (this._config.transportType === "pipe-transport") {
+            } else if (this._config.transportType === "pipe-transport" || this._config.transportType === "PipeTransport") {
                 const stats = msStats as MediasoupPipeTransport;
                 const {
                     localIp: localAddress,

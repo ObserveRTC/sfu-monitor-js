@@ -12,6 +12,7 @@ export interface MediasoupSurrogate {
     observer: MediasoupSurrogateObserver;
 }
 
+
 export type MediasoupWorkerEventTypes = "newrouter";
 
 export type MediasoupNewRouterListener = (router: MediasoupRouter) => void;
@@ -190,7 +191,10 @@ type EndpointsTuple = {
     remotePort?: number;
 };
 
-export type MediasoupTransportType = "webrtc-transport" | "plain-rtp-transport" | "pipe-transport" | "direct-transport";
+export type MediasoupTransportType = 
+    "webrtc-transport" | "plain-rtp-transport" | "pipe-transport" | "direct-transport" |
+    "WebRtcTransport" | "PlainTransport" | "PipeTransport" | "DirectTransport";
+    ;
 
 export type MediasoupTransportStatsType =
     | MediasoupWebRtcTransportStats
