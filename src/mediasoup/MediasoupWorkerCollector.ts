@@ -133,6 +133,7 @@ export class MediasoupWorkerCollector implements Collector {
 
     private _createCollectorsFacade(): Collectors {
         const collectors = this._parent;
+        /* eslint-disable @typescript-eslint/no-this-alias */
         const collector = this;
         return new (class implements Collectors {
             add(collector: Collector): boolean {
