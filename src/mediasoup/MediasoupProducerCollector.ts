@@ -12,7 +12,7 @@ const logger = createLogger(`MediasoupCollector`);
 export type MediasoupProducerCollectorConfig = {
     /**
      * a supplier lambda function provides information if the collector should poll stas or not
-     * 
+     *
      * DEFAULT: undefined, which means it will not poll measurements
      */
     pollStats?: () => boolean;
@@ -21,15 +21,14 @@ export type MediasoupProducerCollectorConfig = {
      * Add arbitrary data to the inboundRtpEntry
      */
     appendix?: Appendix;
-}
+};
 
 const supplyDefaultConfig = () => {
-    const result: MediasoupProducerCollectorConfig = {
-    }
+    const result: MediasoupProducerCollectorConfig = {};
     return result;
-}
+};
 
-const NO_REPORT_SSRC = 0xDEADBEEF;
+const NO_REPORT_SSRC = 0xdeadbeef;
 
 export class MediasoupProducerCollector implements Collector {
     public readonly id = uuidv4();
@@ -41,7 +40,7 @@ export class MediasoupProducerCollector implements Collector {
     private _internal: boolean;
     private _ssrcToPadIds = new Map<number, string>();
     private _producer: MediasoupProducer;
-    private _correspondCollector?: Collector
+    private _correspondCollector?: Collector;
     public constructor(
         parent: Collectors,
         producer: MediasoupProducer,
@@ -84,15 +83,18 @@ export class MediasoupProducerCollector implements Collector {
             padId = uuidv4();
             this._ssrcToPadIds.set(NO_REPORT_SSRC, padId);
         }
-        this._statsWriter?.updateInboundRtpPad({
-            ssrc: NO_REPORT_SSRC,
-            padId,
-            streamId: this._producer.id,
-            mediaType: this._producer.kind,
-            transportId: this._transportId,
-            noReport: true,
-            internal: this._internal,
-        }, {});
+        this._statsWriter?.updateInboundRtpPad(
+            {
+                ssrc: NO_REPORT_SSRC,
+                padId,
+                streamId: this._producer.id,
+                mediaType: this._producer.kind,
+                transportId: this._transportId,
+                noReport: true,
+                internal: this._internal,
+            },
+            {}
+        );
     }
 
     public async collect(): Promise<void> {
@@ -106,7 +108,7 @@ export class MediasoupProducerCollector implements Collector {
             return;
         }
         if (!this._statsWriter) {
-            logger.debug(`No StatsWriter added to (${this.id})`)
+            logger.debug(`No StatsWriter added to (${this.id})`);
             return;
         }
         if (this._config.pollStats === undefined || this._config.pollStats() === false) {
@@ -159,14 +161,14 @@ export class MediasoupProducerCollector implements Collector {
                 fractionLost: stats.fractionLost,
                 jitter: stats.jitter,
                 roundTripTime: stats.roundTripTime,
-            }
+            };
             this._statsWriter?.updateInboundRtpPad(inboundRtpPadStats, this._config.appendix ?? {});
         }
     }
     public get closed(): boolean {
         return this._closed;
     }
-    
+
     public close(): void {
         if (this._closed) {
             logger.info(`Attempted to close twice`);

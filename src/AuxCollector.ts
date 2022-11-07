@@ -19,14 +19,13 @@ export type AuxCollectorConfig = {
      * for the outbound rtp.
      */
     batchSize?: number;
-}
+};
 const supplyDefaultConfig = () => {
     const result: AuxCollectorConfig = {
         id: uuidv4(),
-    }
+    };
     return result;
-}
-
+};
 
 export type TransportStatsSupplier = () => Promise<SfuTransport>;
 export type InboundRtpPadStatsSupplier = () => Promise<SfuInboundRtpPad>;
@@ -79,23 +78,26 @@ export class AuxCollector implements Collector {
         const transportStatsSupplierEntries = Array.from(this._transportStatsSuppliers.entries());
         const transportStatsPromises = PromiseFetcher.builder<SfuTransport>()
             .withBatchSize(batchSize)
-            .withPromiseSuppliers(...transportStatsSupplierEntries.map(entry => entry[1]))
+            .withPromiseSuppliers(...transportStatsSupplierEntries.map((entry) => entry[1]))
             .onCatchedError((err, index) => {
                 const entry = transportStatsSupplierEntries[index];
                 const entryId = entry[0];
                 logger.warn(`Transport stats supplier (${entryId}) reported an error. It will not be used again`, err);
-                
+
                 this._transportStatsSuppliers.delete(entry[0]);
             })
             .build();
         const inboundRtpPadEntries = Array.from(this._inboundRtpPadStatsSupplier.entries());
         const inboundRtpPadStatsPromises = PromiseFetcher.builder<SfuInboundRtpPad>()
             .withBatchSize(batchSize)
-            .withPromiseSuppliers(...inboundRtpPadEntries.map(entry => entry[1]))
+            .withPromiseSuppliers(...inboundRtpPadEntries.map((entry) => entry[1]))
             .onCatchedError((err, index) => {
                 const entry = inboundRtpPadEntries[index];
                 const entryId = entry[0];
-                logger.warn(`Inbound Rtp Pad stats collector (${entryId}) reported an error, it will not be used again`, err);
+                logger.warn(
+                    `Inbound Rtp Pad stats collector (${entryId}) reported an error, it will not be used again`,
+                    err
+                );
                 this._inboundRtpPadStatsSupplier.delete(entry[0]);
             })
             .build();
@@ -103,11 +105,14 @@ export class AuxCollector implements Collector {
         const outboundRtpPadEntries = Array.from(this._outboundRtpPadStatsSupplier.entries());
         const outboundRtpPadStatsPromises = PromiseFetcher.builder<SfuOutboundRtpPad>()
             .withBatchSize(batchSize)
-            .withPromiseSuppliers(...outboundRtpPadEntries.map(entry => entry[1]))
+            .withPromiseSuppliers(...outboundRtpPadEntries.map((entry) => entry[1]))
             .onCatchedError((err, index) => {
                 const entry = outboundRtpPadEntries[index];
                 const entryId = entry[0];
-                logger.warn(`Outbound Rtp Pad stats collector (${entryId}) reported an error, it will not be used again`, err);
+                logger.warn(
+                    `Outbound Rtp Pad stats collector (${entryId}) reported an error, it will not be used again`,
+                    err
+                );
                 this._outboundRtpPadStatsSupplier.delete(entry[0]);
             })
             .build();
@@ -115,11 +120,14 @@ export class AuxCollector implements Collector {
         const sctpStreamEntries = Array.from(this._sctpStreamStatsSupplier.entries());
         const sctpStreamStatsPromises = PromiseFetcher.builder<SfuSctpChannel>()
             .withBatchSize(batchSize)
-            .withPromiseSuppliers(...sctpStreamEntries.map(entry => entry[1]))
+            .withPromiseSuppliers(...sctpStreamEntries.map((entry) => entry[1]))
             .onCatchedError((err, index) => {
                 const entry = sctpStreamEntries[index];
                 const entryId = entry[0];
-                logger.warn(`Sctp Stream stats collector (${entryId}) reported an error, it will not be used again`, err);
+                logger.warn(
+                    `Sctp Stream stats collector (${entryId}) reported an error, it will not be used again`,
+                    err
+                );
                 this._sctpStreamStatsSupplier.delete(entry[0]);
             })
             .build();

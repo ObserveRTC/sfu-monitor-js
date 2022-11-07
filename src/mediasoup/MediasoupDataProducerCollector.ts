@@ -1,6 +1,6 @@
 import { StatsWriter } from "../entries/StatsStorage";
 import { Collector } from "../Collector";
-import { SfuInboundRtpPad, SfuSctpChannel } from "@observertc/schemas";
+import { SfuSctpChannel } from "@observertc/schemas";
 import { v4 as uuidv4 } from "uuid";
 import { createLogger } from "../utils/logger";
 import { Collectors } from "../Collectors";
@@ -12,7 +12,7 @@ const logger = createLogger(`MediasoupCollector`);
 export type MediasoupDataProducerCollectorConfig = {
     /**
      * a supplier lambda function provides information if the collector should poll stas or not
-     * 
+     *
      * DEFAULT: undefined, which means it will not poll measurements
      */
     pollStats?: () => boolean;
@@ -21,15 +21,12 @@ export type MediasoupDataProducerCollectorConfig = {
      * Add arbitrary data to the inboundRtpEntry
      */
     appendix?: Appendix;
-}
+};
 
 const supplyDefaultConfig = () => {
-    const result: MediasoupDataProducerCollectorConfig = {
-    }
+    const result: MediasoupDataProducerCollectorConfig = {};
     return result;
-}
-
-const NO_REPORT_SSRC = 0xDEADBEEF;
+};
 
 export class MediasoupDataProducerCollector implements Collector {
     public readonly id = uuidv4();
@@ -41,7 +38,7 @@ export class MediasoupDataProducerCollector implements Collector {
     private _internal: boolean;
     private _ssrcToPadIds = new Map<number, string>();
     private _dataProducer: MediasoupDataProducer;
-    private _correspondCollector?: Collector
+    private _correspondCollector?: Collector;
     public constructor(
         parent: Collectors,
         dataProducer: MediasoupDataProducer,
@@ -79,13 +76,16 @@ export class MediasoupDataProducerCollector implements Collector {
     }
 
     private async _collectWithoutStats(): Promise<void> {
-        this._statsWriter?.updateSctpChannel({
-            transportId: this._transportId,
-            streamId: this._dataProducer.id,
-            channelId: this._dataProducer.id,
-            noReport: true,
-            internal: this._internal,
-        }, {});
+        this._statsWriter?.updateSctpChannel(
+            {
+                transportId: this._transportId,
+                streamId: this._dataProducer.id,
+                channelId: this._dataProducer.id,
+                noReport: true,
+                internal: this._internal,
+            },
+            {}
+        );
     }
 
     public async collect(): Promise<void> {
@@ -99,7 +99,7 @@ export class MediasoupDataProducerCollector implements Collector {
             return;
         }
         if (!this._statsWriter) {
-            logger.debug(`No StatsWriter added to (${this.id})`)
+            logger.debug(`No StatsWriter added to (${this.id})`);
             return;
         }
         if (this._config.pollStats === undefined || this._config.pollStats() === false) {
@@ -132,7 +132,7 @@ export class MediasoupDataProducerCollector implements Collector {
     public get closed(): boolean {
         return this._closed;
     }
-    
+
     public close(): void {
         if (this._closed) {
             logger.info(`Attempted to close twice`);

@@ -9,22 +9,22 @@ const logger = createLogger(`Sampler`);
 export type SamplerConfig = {
     /**
      * The identifier of the SFU.
-     * 
+     *
      * DEFAULT: a generated unique value
      */
     sfuId?: string;
 
     /**
      * Indicate if the sampler only sample stats updated since the last sampling.
-     * 
+     *
      * DEFAULT: true
      */
     incrementalSampling?: boolean;
-}
+};
 
 type SamplerConstructorConfig = SamplerConfig & {
-    sfuId: string,
-}
+    sfuId: string;
+};
 
 export const supplyDefaultConfig = () => {
     const defaultConfig: SamplerConstructorConfig = {
@@ -32,8 +32,7 @@ export const supplyDefaultConfig = () => {
         incrementalSampling: true,
     };
     return defaultConfig;
-}
-
+};
 
 interface Builder {
     withConfig(value?: SamplerConfig): Builder;
@@ -53,8 +52,8 @@ export class Sampler {
                 const result = new Sampler(appliedConfig);
                 logger.debug(`Created`, appliedConfig);
                 return result;
-            }
-        }
+            },
+        };
         return result;
     }
 
@@ -62,7 +61,7 @@ export class Sampler {
         const appliedConfig = Object.assign(supplyDefaultConfig(), config);
         return new Sampler(appliedConfig);
     }
-    
+
     // all of the following fields until empty line must be reset after sampled
     private _extensionStats?: SfuExtensionStats[];
     private _customEvents?: CustomSfuEvent[];
@@ -105,7 +104,7 @@ export class Sampler {
     public close(): void {
         if (this._closed) {
             logger.warn(`Attempted to close the Sampler twice`);
-            return; 
+            return;
         }
         this._closed = true;
         logger.info(`Closed`);

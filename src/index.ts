@@ -7,20 +7,16 @@ export type { MediasoupCollectorConfig } from "./mediasoup/MediasoupCollector";
 export type { SenderConfig } from "./Sender";
 export type { SamplerConfig } from "./Sampler";
 
-export type { StatsReader } from "./entries/StatsStorage"
-export type { 
+export type { StatsReader } from "./entries/StatsStorage";
+export type {
     SfuTransportEntry,
     SfuInboundRtpPadEntry,
     SfuOutboundRtpPadEntry,
     SfuMediaStreamEntry,
     SfuMediaSinkEntry,
-    SfuSctpChannelEntry
+    SfuSctpChannelEntry,
 } from "./entries/StatsEntryInterfaces";
 
-export type { 
-    SfuMonitorConfig,
-    SfuMonitor,
-    createSfuMonitor,
-} from "./SfuMonitor";
+export type { SfuMonitorConfig, SfuMonitor, createSfuMonitor } from "./SfuMonitor";
 
 export type { ExtensionStat } from "@observertc/schemas";

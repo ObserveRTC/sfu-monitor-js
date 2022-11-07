@@ -1,5 +1,6 @@
 import { SfuSctpChannel, SfuInboundRtpPad, SfuOutboundRtpPad, SfuTransport } from "@observertc/schemas";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export type Appendix = any;
 
 export interface StatsEntryAbs {
@@ -15,7 +16,7 @@ export interface StatsEntryAbs {
  * methods to navigate.
  */
 export interface SfuTransportEntry extends StatsEntryAbs {
-    appendix: Appendix,
+    appendix: Appendix;
     stats: SfuTransport;
     internal: boolean;
     inboundRtpPads(): Generator<SfuInboundRtpPadEntry, void, undefined>;
@@ -38,7 +39,7 @@ export interface SfuTransportEntry extends StatsEntryAbs {
  * methods to navigate.
  */
 export interface SfuInboundRtpPadEntry extends StatsEntryAbs {
-    appendix: Appendix,
+    appendix: Appendix;
     stats: SfuInboundRtpPad;
     getTransport(): SfuTransportEntry | undefined;
     getMediaStream(): SfuMediaStreamEntry | undefined;
@@ -49,7 +50,7 @@ export interface SfuInboundRtpPadEntry extends StatsEntryAbs {
  * methods to navigate.
  */
 export interface SfuOutboundRtpPadEntry extends StatsEntryAbs {
-    appendix: Appendix,
+    appendix: Appendix;
     stats: SfuOutboundRtpPad;
     getTransport(): SfuTransportEntry | undefined;
     getMediaStream(): SfuMediaStreamEntry | undefined;
@@ -65,7 +66,7 @@ export interface SfuMediaStreamEntry {
     id: string;
     kind: SfuMediaStreamKind;
     inboundRtpPads(): Generator<SfuInboundRtpPadEntry, void, undefined>;
-    mediaSinks(): Generator<SfuMediaSinkEntry, void, undefined>
+    mediaSinks(): Generator<SfuMediaSinkEntry, void, undefined>;
 
     getTransport(): SfuTransportEntry | undefined;
     getNumberOfInboundRtpPads(): number;
@@ -82,7 +83,7 @@ export interface SfuMediaSinkEntry {
 
     getMediaStream(): SfuMediaStreamEntry | undefined;
     getTransport(): SfuTransportEntry | undefined;
-    
+
     getNumberOfOutboundRtpPads(): number;
 }
 
@@ -91,7 +92,7 @@ export interface SfuMediaSinkEntry {
  * methods to navigate.
  */
 export interface SfuSctpChannelEntry extends StatsEntryAbs {
-    appendix: Appendix,
+    appendix: Appendix;
     stats: SfuSctpChannel;
     getTransport(): SfuTransportEntry | undefined;
 }

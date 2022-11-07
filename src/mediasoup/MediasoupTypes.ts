@@ -1,11 +1,7 @@
-
-export type MediasoupSurrogateEventTypes = 
-"newworker"
-;
+export type MediasoupSurrogateEventTypes = "newworker";
 
 export type MediasoupNewWorkerListener = (router: MediasoupWorker) => void;
-export type MediasoupSurrogateListener = MediasoupCloseListener |
-    MediasoupNewWorkerListener;
+export type MediasoupSurrogateListener = MediasoupCloseListener | MediasoupNewWorkerListener;
 interface MediasoupSurrogateObserver {
     on(eventType: MediasoupSurrogateEventTypes, listener: MediasoupNewWorkerListener): void;
     once(eventType: "close", listener: MediasoupCloseListener): void;
@@ -15,17 +11,12 @@ interface MediasoupSurrogateObserver {
 export interface MediasoupSurrogate {
     version: string;
     observer: MediasoupSurrogateObserver;
-};
+}
 
-
-
-export type MediasoupWorkerEventTypes = 
-"newrouter"
-;
+export type MediasoupWorkerEventTypes = "newrouter";
 
 export type MediasoupNewRouterListener = (router: MediasoupRouter) => void;
-export type MediasoupWorkerListener = MediasoupCloseListener |
-    MediasoupNewRouterListener;
+export type MediasoupWorkerListener = MediasoupCloseListener | MediasoupNewRouterListener;
 interface MediasoupWorkerObserver {
     on(eventType: MediasoupWorkerEventTypes, listener: MediasoupNewRouterListener): void;
     once(eventType: "close", listener: MediasoupCloseListener): void;
@@ -35,15 +26,12 @@ interface MediasoupWorkerObserver {
 export interface MediasoupWorker {
     pid: number;
     observer: MediasoupWorkerObserver;
-};
+}
 
-export type MediasoupRouterEventTypes = 
-"newtransport"
-;
+export type MediasoupRouterEventTypes = "newtransport";
 
 export type MediasoupNewTransportListener = (transport: MediasoupTransport) => void;
-export type MediasoupRouterListener = MediasoupCloseListener |
-    MediasoupNewTransportListener;
+export type MediasoupRouterListener = MediasoupCloseListener | MediasoupNewTransportListener;
 interface MediasoupRouterObserver {
     on(eventType: MediasoupRouterEventTypes, listener: MediasoupNewTransportListener): void;
     once(eventType: "close", listener: MediasoupCloseListener): void;
@@ -53,25 +41,20 @@ interface MediasoupRouterObserver {
 export interface MediasoupRouter {
     id: string;
     observer: MediasoupRouterObserver;
-};
+}
 
-export type MediasoupTransportEventTypes = 
-    "newproducer" |
-    "newconsumer" |
-    "newdataproducer" |
-    "newdataconsumer"
-    ;
+export type MediasoupTransportEventTypes = "newproducer" | "newconsumer" | "newdataproducer" | "newdataconsumer";
 export type MediasoupCloseListener = () => void;
 export type MediasoupNewConsumerListener = (consumer: MediasoupConsumer) => void;
 export type MediasoupNewProducerListener = (producer: MediasoupProducer) => void;
 export type MediasoupNewDataProducerListener = (dataProducer: MediasoupDataProducer) => void;
 export type MediasoupNewDataConsumerListener = (dataConsumer: MediasoupDataConsumer) => void;
-export type MediasoupTransportListener = MediasoupCloseListener |
-    MediasoupNewConsumerListener |
-    MediasoupNewProducerListener |
-    MediasoupNewDataProducerListener |
-    MediasoupNewDataConsumerListener
-;
+export type MediasoupTransportListener =
+    | MediasoupCloseListener
+    | MediasoupNewConsumerListener
+    | MediasoupNewProducerListener
+    | MediasoupNewDataProducerListener
+    | MediasoupNewDataConsumerListener;
 
 interface MediasoupTransportObserver {
     on(eventType: MediasoupTransportEventTypes, listener: MediasoupTransportListener): void;
@@ -83,8 +66,11 @@ export interface MediasoupTransport {
     id: string;
     getStats(): Promise<MediasoupTransportStats[]>;
     observer: MediasoupTransportObserver;
-
+    
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     iceState?: any; // only webrtc transport have
+    
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     tuple?: any; // plain and pipe transport have it
 }
 
@@ -123,196 +109,194 @@ export interface MediasoupDataConsumer {
     observer: MediasoupCommonObserver;
 }
 
-
-export type  MediasoupProducerStats = {
-
-    bitrate?: number,
+export type MediasoupProducerStats = {
+    bitrate?: number;
     // bitrateByLayer?: Record<string, number>,
-    byteCount?: number,
-    firCount?: number,
-    fractionLost?: number,
-    jitter?: number,
-    kind?: string,
-    mimeType?: string,
-    nackCount?: number,
-    nackPacketCount?: number,
-    packetCount?: number,
-    packetsDiscarded?: number,
-    packetsLost?: number,
-    packetsRepaired?: number,
-    packetsRetransmitted?: number,
-    pliCount?: number,
-    rid?: string,
-    roundTripTime?: number,
-    rtxPacketsDiscarded?: number,
-    rtxSsrc?: number,
-    score?: number,
-    timestamp?: number,
+    byteCount?: number;
+    firCount?: number;
+    fractionLost?: number;
+    jitter?: number;
+    kind?: string;
+    mimeType?: string;
+    nackCount?: number;
+    nackPacketCount?: number;
+    packetCount?: number;
+    packetsDiscarded?: number;
+    packetsLost?: number;
+    packetsRepaired?: number;
+    packetsRetransmitted?: number;
+    pliCount?: number;
+    rid?: string;
+    roundTripTime?: number;
+    rtxPacketsDiscarded?: number;
+    rtxSsrc?: number;
+    score?: number;
+    timestamp?: number;
 
     // mandatory types
-    ssrc: number,
-    type: "inbound-rtp"
-}
+    ssrc: number;
+    type: "inbound-rtp";
+};
 
-export type  MediasoupConsumerStats = {
-    bitrate?: number,
-    byteCount?: number,
-    firCount?: number,
-    fractionLost?: number,
-    kind?: string,
-    mimeType?: string,
-    nackCount?: number,
-    nackPacketCount?: number,
-    packetCount?: number,
-    packetsDiscarded?: number,
-    packetsLost?: number,
-    packetsRepaired?: number,
-    packetsRetransmitted?: number,
-    pliCount?: number,
-    roundTripTime?: number,
-    rtxSsrc?: number,
-    score?: number,
-    timestamp?: number,
-
-    // mandatory fields
-    ssrc: number,
-    type: "outbound-rtp"
-}
-
-export type  MediasoupDataProducerStats = {
-    label?: string,
-    protocol?: string,
-    messagesReceived?: number,
-    bytesReceived?: number
+export type MediasoupConsumerStats = {
+    bitrate?: number;
+    byteCount?: number;
+    firCount?: number;
+    fractionLost?: number;
+    kind?: string;
+    mimeType?: string;
+    nackCount?: number;
+    nackPacketCount?: number;
+    packetCount?: number;
+    packetsDiscarded?: number;
+    packetsLost?: number;
+    packetsRepaired?: number;
+    packetsRetransmitted?: number;
+    pliCount?: number;
+    roundTripTime?: number;
+    rtxSsrc?: number;
+    score?: number;
+    timestamp?: number;
 
     // mandatory fields
-    type: "data-producer",
-}
+    ssrc: number;
+    type: "outbound-rtp";
+};
 
-export type  MediasoupDataConsumerStats = {
-    label?: string,
-    protocol?: string,
+export type MediasoupDataProducerStats = {
+    label?: string;
+    protocol?: string;
+    messagesReceived?: number;
+    bytesReceived?: number;
+
+    // mandatory fields
+    type: "data-producer";
+};
+
+export type MediasoupDataConsumerStats = {
+    label?: string;
+    protocol?: string;
     messagesSent?: number;
     bytesSent?: number;
 
     // mandatory fields
-    type: "data-consumer",
-}
+    type: "data-consumer";
+};
 
 type EndpointsTuple = {
-    localIp?: string,
-    localPort?: number,
-    protocol?: string,
-    remoteIp?: string,
+    localIp?: string;
+    localPort?: number;
+    protocol?: string;
+    remoteIp?: string;
     remotePort?: number;
-}
+};
 
-export type MediasoupTransportType = "webrtc-transport" |
-    "plain-rtp-transport" |
-    "pipe-transport" |
-    "direct-transport";
+export type MediasoupTransportType = "webrtc-transport" | "plain-rtp-transport" | "pipe-transport" | "direct-transport";
 
-export type MediasoupTransportStatsType = MediasoupWebRtcTransportStats |
-    MediasoupPlainTransport |
-    MediasoupPipeTransport |
-    MediasoupDirectTransport;
+export type MediasoupTransportStatsType =
+    | MediasoupWebRtcTransportStats
+    | MediasoupPlainTransport
+    | MediasoupPipeTransport
+    | MediasoupDirectTransport;
 
 export type MediasoupWebRtcTransportStats = {
-    bytesReceived?: number,
-    bytesSent?: number,
-    dtlsState?: string,
-    iceRole?: string,
-    iceSelectedTuple?: EndpointsTuple,
-    iceState?: string,
-    probationBytesSent?: number,
-    probationSendBitrate?: number,
-    recvBitrate?: number,
-    rtpBytesReceived?: number,
-    rtpBytesSent?: number,
-    rtpRecvBitrate?: number,
-    rtpSendBitrate?: number,
-    rtxBytesReceived?: number,
-    rtxBytesSent?: number,
-    rtxRecvBitrate?: number,
-    rtxSendBitrate?: number,
-    sctpState?: string,
-    sendBitrate?: number,
-    timestamp?: number,
+    bytesReceived?: number;
+    bytesSent?: number;
+    dtlsState?: string;
+    iceRole?: string;
+    iceSelectedTuple?: EndpointsTuple;
+    iceState?: string;
+    probationBytesSent?: number;
+    probationSendBitrate?: number;
+    recvBitrate?: number;
+    rtpBytesReceived?: number;
+    rtpBytesSent?: number;
+    rtpRecvBitrate?: number;
+    rtpSendBitrate?: number;
+    rtxBytesReceived?: number;
+    rtxBytesSent?: number;
+    rtxRecvBitrate?: number;
+    rtxSendBitrate?: number;
+    sctpState?: string;
+    sendBitrate?: number;
+    timestamp?: number;
 
     // mandatory types
-    transportId: string,
+    transportId: string;
     type: "webrtc-transport";
-}
+};
 
 export type MediasoupPlainTransport = {
-    bytesReceived?: number,
-    bytesSent?: number,
-    comedia?: boolean,
-    rtcpMux?: boolean,
-    probationBytesSent?: number,
-    probationSendBitrate?: number,
-    recvBitrate?: number,
-    rtpBytesReceived?: number,
-    rtpBytesSent?: number,
-    rtpRecvBitrate?: number,
-    rtpSendBitrate?: number,
-    rtxBytesReceived?: number,
-    rtxBytesSent?: number,
-    rtxRecvBitrate?: number,
-    rtxSendBitrate?: number,
-    sendBitrate?: number,
-    timestamp?: number,
-    tuple?: EndpointsTuple,
+    bytesReceived?: number;
+    bytesSent?: number;
+    comedia?: boolean;
+    rtcpMux?: boolean;
+    probationBytesSent?: number;
+    probationSendBitrate?: number;
+    recvBitrate?: number;
+    rtpBytesReceived?: number;
+    rtpBytesSent?: number;
+    rtpRecvBitrate?: number;
+    rtpSendBitrate?: number;
+    rtxBytesReceived?: number;
+    rtxBytesSent?: number;
+    rtxRecvBitrate?: number;
+    rtxSendBitrate?: number;
+    sendBitrate?: number;
+    timestamp?: number;
+    tuple?: EndpointsTuple;
 
     // mandatory fields
-    transportId: string,
-    type: "plain-rtp-transport"
-}
+    transportId: string;
+    type: "plain-rtp-transport";
+};
 
 export type MediasoupPipeTransport = {
-    probationBytesSent?: number,
-    probationSendBitrate?: number,
-    recvBitrate?: number,
-    rtpBytesReceived?: number,
-    rtpBytesSent?: number,
-    rtpRecvBitrate?: number,
-    rtpSendBitrate?: number,
-    rtxBytesReceived?: number,
-    rtxBytesSent?: number,
-    rtxRecvBitrate?: number,
-    rtxSendBitrate?: number,
-    sendBitrate?: number,
-    timestamp?: number,
-    tuple?: EndpointsTuple,
+    probationBytesSent?: number;
+    probationSendBitrate?: number;
+    recvBitrate?: number;
+    rtpBytesReceived?: number;
+    rtpBytesSent?: number;
+    rtpRecvBitrate?: number;
+    rtpSendBitrate?: number;
+    rtxBytesReceived?: number;
+    rtxBytesSent?: number;
+    rtxRecvBitrate?: number;
+    rtxSendBitrate?: number;
+    sendBitrate?: number;
+    timestamp?: number;
+    tuple?: EndpointsTuple;
 
     // mandatory fields
-    transportId: string,
-    type: "pipe-transport"
-}
+    transportId: string;
+    type: "pipe-transport";
+};
 
 export type MediasoupDirectTransport = {
-    probationBytesSent?: number,
-    probationSendBitrate?: number,
-    recvBitrate?: number,
-    rtpBytesReceived?: number,
-    rtpBytesSent?: number,
-    rtpRecvBitrate?: number,
-    rtpSendBitrate?: number,
-    rtxBytesReceived?: number,
-    rtxBytesSent?: number,
-    rtxRecvBitrate?: number,
-    rtxSendBitrate?: number,
-    sendBitrate?: number,
-    timestamp?: number,
+    probationBytesSent?: number;
+    probationSendBitrate?: number;
+    recvBitrate?: number;
+    rtpBytesReceived?: number;
+    rtpBytesSent?: number;
+    rtpRecvBitrate?: number;
+    rtpSendBitrate?: number;
+    rtxBytesReceived?: number;
+    rtxBytesSent?: number;
+    rtxRecvBitrate?: number;
+    rtxSendBitrate?: number;
+    sendBitrate?: number;
+    timestamp?: number;
 
     // mandatory fields
-    transportId: string,
-    type: "direct-transport"
-}
+    transportId: string;
+    type: "direct-transport";
+};
 
-export type MediasoupTransportStats = MediasoupWebRtcTransportStats |
-    MediasoupPlainTransport |
-    MediasoupPipeTransport |
-    MediasoupDirectTransport | {
-        type: string,
-    };
+export type MediasoupTransportStats =
+    | MediasoupWebRtcTransportStats
+    | MediasoupPlainTransport
+    | MediasoupPipeTransport
+    | MediasoupDirectTransport
+    | {
+          type: string;
+      };

@@ -14,24 +14,24 @@ function makeStatsWriter({
     removeSctpChannel,
     updateSctpChannel,
 }: {
-    removeTransport?: (transportId: string) => void,
-    updateTransport?: (stats: SfuTransport) => void,
-    removeInboundRtpPad?: (rtpPadId: string) => void,
-    updateInboundRtpPad?: (stats: SfuInboundRtpPad) => void,
-    removeOutboundRtpPad?: (rtpPadId: string) => void,
-    updateOutboundRtpPad?: (stats: SfuOutboundRtpPad) => void,
-    removeSctpChannel?: (sctpStreamId: string) => void,
-    updateSctpChannel?: (stats: SfuSctpChannel) => void,
+    removeTransport?: (transportId: string) => void;
+    updateTransport?: (stats: SfuTransport) => void;
+    removeInboundRtpPad?: (rtpPadId: string) => void;
+    updateInboundRtpPad?: (stats: SfuInboundRtpPad) => void;
+    removeOutboundRtpPad?: (rtpPadId: string) => void;
+    updateOutboundRtpPad?: (stats: SfuOutboundRtpPad) => void;
+    removeSctpChannel?: (sctpStreamId: string) => void;
+    updateSctpChannel?: (stats: SfuSctpChannel) => void;
 }) {
     const errorHandler = (methodName: string) => {
         return () => {
             throw new Error(`${methodName} is called and handler has not been provided`);
         };
-    }
+    };
     const result: StatsWriter = {
         removeTransport: removeTransport ?? errorHandler("removeTransport"),
         updateTransport: updateTransport ?? errorHandler("updateTransport"),
-        
+
         removeInboundRtpPad: removeInboundRtpPad ?? errorHandler("removeInboundRtpPad"),
         updateInboundRtpPad: updateInboundRtpPad ?? errorHandler("updateInboundRtpPad"),
 
@@ -40,7 +40,7 @@ function makeStatsWriter({
 
         removeSctpChannel: removeSctpChannel ?? errorHandler("removeSctpChannel"),
         updateSctpChannel: updateSctpChannel ?? errorHandler("updateSctpChannel"),
-    }
+    };
     return result;
 }
 
@@ -82,7 +82,7 @@ const makeStatsEventer = (collector: MediasoupCollector) => {
     });
     collector.setStatsWriter(statsWriter);
     return emitter;
-}
+};
 
 describe("MediasoupCollector", () => {
     describe("Given a mediasoup collector a statsStorage, and a watched mediasoup transport", () => {
@@ -95,7 +95,7 @@ describe("MediasoupCollector", () => {
 
         describe("When transport create a new producer", () => {
             const producer = transport.produce();
-            it ("Then collector collect stats from it", done => {
+            it("Then collector collect stats from it", (done) => {
                 emitter.once(UPDATE_INBOUND_RTP_PAD_EVENT, async (actual: SfuInboundRtpPad) => {
                     const producerStats = (await producer.getStats())[0];
                     expect(actual.ssrc).toEqual(producerStats.ssrc);
@@ -108,15 +108,17 @@ describe("MediasoupCollector", () => {
                         done();
                     });
                     producer.close();
-                })
+                });
                 collector.collect();
-            })
+            });
         });
         describe("When transport create a new consumer", () => {
             const consumer = transport.consume();
-            it ("Then collector collect stats from it", done => {
+            it("Then collector collect stats from it", (done) => {
                 emitter.once(UPDATE_OUTBOUND_RTP_PAD_EVENT, async (actual: SfuOutboundRtpPad) => {
-                    const consumerStats = (await consumer.getStats()).filter(stats => stats.type === "outbound-rtp")[0];
+                    const consumerStats = (await consumer.getStats()).filter(
+                        (stats) => stats.type === "outbound-rtp"
+                    )[0];
                     expect(actual.ssrc).toEqual(consumerStats.ssrc);
                     expect(actual.sinkId).toEqual(consumer.id);
                     expect(actual.streamId).toEqual(consumer.producerId);
@@ -132,7 +134,7 @@ describe("MediasoupCollector", () => {
                 collector.collect();
             });
         });
-        it ("When transport create a new dataProducer Then collector collect stats from it", done => {
+        it("When transport create a new dataProducer Then collector collect stats from it", (done) => {
             const dataProducer = transport.produceData();
             emitter.once(UPDATE_SCTP_CHANNEL_EVENT, async (actual: SfuSctpChannel) => {
                 expect(actual.channelId).toEqual(dataProducer.id);
@@ -147,7 +149,7 @@ describe("MediasoupCollector", () => {
             });
             collector.collect();
         });
-        it ("When transport create a new dataConsumer Then collector collect stats from it", done => {
+        it("When transport create a new dataConsumer Then collector collect stats from it", (done) => {
             const dataConsumer = transport.consumeData();
             emitter.once(UPDATE_SCTP_CHANNEL_EVENT, async (actual: SfuSctpChannel) => {
                 expect(actual.channelId).toEqual(dataConsumer.id);
@@ -171,18 +173,18 @@ describe("MediasoupCollector", () => {
 
         describe("When transport create a new producer", () => {
             const producer = transport.produce();
-            it ("Then collector collect stats with a noReport flag", done => {
+            it("Then collector collect stats with a noReport flag", (done) => {
                 emitter.once(UPDATE_INBOUND_RTP_PAD_EVENT, async (actual: SfuInboundRtpPad) => {
                     expect(actual.noReport).toEqual(true);
                     producer.close();
                     done();
-                })
+                });
                 collector.collect();
-            })
+            });
         });
         describe("When transport create a new consumer", () => {
             const consumer = transport.consume();
-            it ("Then collector collect stats with a noReport flag", done => {
+            it("Then collector collect stats with a noReport flag", (done) => {
                 emitter.once(UPDATE_OUTBOUND_RTP_PAD_EVENT, async (actual: SfuOutboundRtpPad) => {
                     expect(actual.noReport).toEqual(true);
                     consumer.close();
@@ -191,7 +193,7 @@ describe("MediasoupCollector", () => {
                 collector.collect();
             });
         });
-        it ("When transport create a new dataProducer Then collector collect stats from it", done => {
+        it("When transport create a new dataProducer Then collector collect stats from it", (done) => {
             const dataProducer = transport.produceData();
             emitter.once(UPDATE_SCTP_CHANNEL_EVENT, async (actual: SfuSctpChannel) => {
                 expect(actual.noReport).toEqual(true);
@@ -200,7 +202,7 @@ describe("MediasoupCollector", () => {
             });
             collector.collect();
         });
-        it ("When transport create a new dataConsumer Then collector collect stats from it", done => {
+        it("When transport create a new dataConsumer Then collector collect stats from it", (done) => {
             const dataConsumer = transport.consumeData();
             emitter.once(UPDATE_SCTP_CHANNEL_EVENT, async (actual: SfuSctpChannel) => {
                 expect(actual.noReport).toEqual(true);
@@ -225,27 +227,19 @@ describe("MediasoupCollector", () => {
                 updateInboundRtpPad: (inboundRtpPad) => {
                     inboundRtpPadNoReport = inboundRtpPad.noReport;
                 },
-                removeInboundRtpPad: () => {
-
-                },
+                removeInboundRtpPad: () => {},
                 updateOutboundRtpPad: (outboundRtpPad) => {
                     outboundRtpPadNoReport = outboundRtpPad.noReport;
                 },
-                removeOutboundRtpPad: () => {
-
-                },
+                removeOutboundRtpPad: () => {},
                 updateSctpChannel: (sctpChannel) => {
                     sctpChannelNoReport = sctpChannelNoReport && sctpChannel.noReport;
                 },
-                removeSctpChannel: () => {
-
-                },
+                removeSctpChannel: () => {},
                 updateTransport: (transport) => {
                     transportNoReport = transport.noReport;
                 },
-                removeTransport: () => {
-
-                },
+                removeTransport: () => {},
             });
             collector.setStatsWriter(statsWriter);
             transport.produce();
@@ -254,7 +248,7 @@ describe("MediasoupCollector", () => {
             transport.consumeData();
             if (numberOfCollecting) {
                 for (let i = 0; i < numberOfCollecting; ++i) {
-                    await collector.collect();        
+                    await collector.collect();
                 }
             } else {
                 await collector.collect();
@@ -263,23 +257,19 @@ describe("MediasoupCollector", () => {
                 inboundRtpPadNoReport,
                 outboundRtpPadNoReport,
                 sctpChannelNoReport,
-                transportNoReport
+                transportNoReport,
             };
             transport.close();
             collector.close();
             return result;
-        }
+        };
         describe("When only Producer stats are polled", () => {
             const promise = collect("Producer", {
-                pollProducerStats: true
+                pollProducerStats: true,
             });
-            it ("Then only inbound Rtp pad has reports", async () => {
-                const {
-                    inboundRtpPadNoReport,
-                    outboundRtpPadNoReport,
-                    sctpChannelNoReport,
-                    transportNoReport
-                } = await promise;
+            it("Then only inbound Rtp pad has reports", async () => {
+                const { inboundRtpPadNoReport, outboundRtpPadNoReport, sctpChannelNoReport, transportNoReport } =
+                    await promise;
                 expect(!!inboundRtpPadNoReport).toEqual(false);
                 expect(!!outboundRtpPadNoReport).toEqual(true);
                 expect(!!sctpChannelNoReport).toEqual(true);
@@ -288,15 +278,11 @@ describe("MediasoupCollector", () => {
         });
         describe("When only Consumer stats are polled", () => {
             const promise = collect("Consumer", {
-                pollConsumerStats: true
+                pollConsumerStats: true,
             });
-            it ("Then only outbound Rtp pad has reports", async () => {
-                const {
-                    inboundRtpPadNoReport,
-                    outboundRtpPadNoReport,
-                    sctpChannelNoReport,
-                    transportNoReport
-                } = await promise;
+            it("Then only outbound Rtp pad has reports", async () => {
+                const { inboundRtpPadNoReport, outboundRtpPadNoReport, sctpChannelNoReport, transportNoReport } =
+                    await promise;
                 expect(!!inboundRtpPadNoReport).toEqual(true);
                 expect(!!outboundRtpPadNoReport).toEqual(false);
                 expect(!!sctpChannelNoReport).toEqual(true);
@@ -305,15 +291,11 @@ describe("MediasoupCollector", () => {
         });
         describe("When only DataConsumer stats are polled", () => {
             const promise = collect("DataConsumer", {
-                pollDataConsumerStats: true
+                pollDataConsumerStats: true,
             });
-            it ("Then only SctpChannel has reports", async () => {
-                const {
-                    inboundRtpPadNoReport,
-                    outboundRtpPadNoReport,
-                    sctpChannelNoReport,
-                    transportNoReport
-                } = await promise;
+            it("Then only SctpChannel has reports", async () => {
+                const { inboundRtpPadNoReport, outboundRtpPadNoReport, sctpChannelNoReport, transportNoReport } =
+                    await promise;
                 expect(!!inboundRtpPadNoReport).toEqual(true);
                 expect(!!outboundRtpPadNoReport).toEqual(true);
                 expect(!!sctpChannelNoReport).toEqual(false);
@@ -322,15 +304,11 @@ describe("MediasoupCollector", () => {
         });
         describe("When only DataProducer are polled", () => {
             const promise = collect("DataProducer", {
-                pollDataProducerStats: true
+                pollDataProducerStats: true,
             });
-            it ("Then only SctpChannel has reports", async () => {
-                const {
-                    inboundRtpPadNoReport,
-                    outboundRtpPadNoReport,
-                    sctpChannelNoReport,
-                    transportNoReport
-                } = await promise;
+            it("Then only SctpChannel has reports", async () => {
+                const { inboundRtpPadNoReport, outboundRtpPadNoReport, sctpChannelNoReport, transportNoReport } =
+                    await promise;
                 expect(!!inboundRtpPadNoReport).toEqual(true);
                 expect(!!outboundRtpPadNoReport).toEqual(true);
                 expect(!!sctpChannelNoReport).toEqual(false);
@@ -339,15 +317,11 @@ describe("MediasoupCollector", () => {
         });
         describe("When only transport is polled", () => {
             const promise = collect("pollTransportStats", {
-                pollTransportStats: true
+                pollTransportStats: true,
             });
-            it ("Then only transport has reports", async () => {
-                const {
-                    inboundRtpPadNoReport,
-                    outboundRtpPadNoReport,
-                    sctpChannelNoReport,
-                    transportNoReport
-                } = await promise;
+            it("Then only transport has reports", async () => {
+                const { inboundRtpPadNoReport, outboundRtpPadNoReport, sctpChannelNoReport, transportNoReport } =
+                    await promise;
                 expect(!!inboundRtpPadNoReport).toEqual(true);
                 expect(!!outboundRtpPadNoReport).toEqual(true);
                 expect(!!sctpChannelNoReport).toEqual(true);
@@ -355,33 +329,28 @@ describe("MediasoupCollector", () => {
             });
         });
         describe("When transport is polled only once", () => {
-            
-            it ("Then at first transport has reports", async () => {
+            it("Then at first transport has reports", async () => {
                 const promise = collect("pollTransportStats", {
-                    pollTransportStats: 1
+                    pollTransportStats: 1,
                 });
-                const {
-                    inboundRtpPadNoReport,
-                    outboundRtpPadNoReport,
-                    sctpChannelNoReport,
-                    transportNoReport
-                } = await promise;
+                const { inboundRtpPadNoReport, outboundRtpPadNoReport, sctpChannelNoReport, transportNoReport } =
+                    await promise;
                 expect(!!inboundRtpPadNoReport).toEqual(true);
                 expect(!!outboundRtpPadNoReport).toEqual(true);
                 expect(!!sctpChannelNoReport).toEqual(true);
                 expect(!!transportNoReport).toEqual(false);
             });
 
-            it ("Then at second transport has no reports", async () => {
-                const promise = collect("pollTransportStats", {
-                    pollTransportStats: 1
-                }, 2);
-                const {
-                    inboundRtpPadNoReport,
-                    outboundRtpPadNoReport,
-                    sctpChannelNoReport,
-                    transportNoReport
-                } = await promise;
+            it("Then at second transport has no reports", async () => {
+                const promise = collect(
+                    "pollTransportStats",
+                    {
+                        pollTransportStats: 1,
+                    },
+                    2
+                );
+                const { inboundRtpPadNoReport, outboundRtpPadNoReport, sctpChannelNoReport, transportNoReport } =
+                    await promise;
                 expect(!!inboundRtpPadNoReport).toEqual(true);
                 expect(!!outboundRtpPadNoReport).toEqual(true);
                 expect(!!sctpChannelNoReport).toEqual(true);
@@ -392,7 +361,12 @@ describe("MediasoupCollector", () => {
 
     describe("Given a mediasoup collector a statsStorage, and a watched mediasoup transport, producer and consumer is only polled when they are not paused", () => {
         type CollectConfig = MediasoupTransportWatchConfig;
-        const collect = async (test: string, config: CollectConfig, pausedProducer?: boolean, pausedConsumer?: boolean) => {
+        const collect = async (
+            test: string,
+            config: CollectConfig,
+            pausedProducer?: boolean,
+            pausedConsumer?: boolean
+        ) => {
             const transport = Generator.createWebRtcTransport();
             const collector = MediasoupCollector.create();
             collector.watchWebRtcTransport(transport, config);
@@ -402,28 +376,20 @@ describe("MediasoupCollector", () => {
                 updateInboundRtpPad: (inboundRtpPad) => {
                     inboundRtpPadNoReport = inboundRtpPad.noReport;
                 },
-                removeInboundRtpPad: () => {
-
-                },
+                removeInboundRtpPad: () => {},
                 updateOutboundRtpPad: (outboundRtpPad) => {
                     outboundRtpPadNoReport = outboundRtpPad.noReport;
                 },
-                removeOutboundRtpPad: () => {
-
-                },
-                updateTransport: () => {
-                    
-                },
-                removeTransport: () => {
-
-                },
+                removeOutboundRtpPad: () => {},
+                updateTransport: () => {},
+                removeTransport: () => {},
             });
             collector.setStatsWriter(statsWriter);
             const producer = transport.produce();
             const consumer = transport.consume();
             producer.paused = pausedProducer === true;
             consumer.paused = pausedConsumer === true;
-            await collector.collect();        
+            await collector.collect();
             const result = {
                 inboundRtpPadNoReport,
                 outboundRtpPadNoReport,
@@ -431,32 +397,32 @@ describe("MediasoupCollector", () => {
             transport.close();
             collector.close();
             return result;
-        }
+        };
         describe("When Producer is paused", () => {
-            const promise = collect("Producer", {
-                    pollProducerStats: true
-                }, 
+            const promise = collect(
+                "Producer",
+                {
+                    pollProducerStats: true,
+                },
                 true, // pausedProducer
-                false, // pausedConsumer
+                false // pausedConsumer
             );
-            it ("Then it does not reports", async () => {
-                const {
-                    inboundRtpPadNoReport,
-                } = await promise;
+            it("Then it does not reports", async () => {
+                const { inboundRtpPadNoReport } = await promise;
                 expect(!!inboundRtpPadNoReport).toEqual(true);
             });
         });
         describe("When Consumer is paused", () => {
-            const promise = collect("Producer", {
-                    pollProducerStats: true
-                }, 
+            const promise = collect(
+                "Producer",
+                {
+                    pollProducerStats: true,
+                },
                 false, // pausedProducer
-                true, // pausedConsumer
+                true // pausedConsumer
             );
-            it ("Then it does not reports", async () => {
-                const {
-                    outboundRtpPadNoReport,
-                } = await promise;
+            it("Then it does not reports", async () => {
+                const { outboundRtpPadNoReport } = await promise;
                 expect(!!outboundRtpPadNoReport).toEqual(true);
             });
         });
@@ -471,18 +437,18 @@ describe("MediasoupCollector", () => {
             const statsStorage = new StatsStorage();
             collector.setStatsWriter(statsStorage);
             return { transport, collector, statsStorage };
-        }
+        };
         const { transport, collector, statsStorage } = makeTransport();
-        const producerPromise = new Promise<Generator.ProvidedProducer>(resolve => {
-            it ("When Transport add a producer Then the number of inbound rtp is 1", async () => {
+        const producerPromise = new Promise<Generator.ProvidedProducer>((resolve) => {
+            it("When Transport add a producer Then the number of inbound rtp is 1", async () => {
                 const result = transport.produce();
                 await collector.collect();
                 expect(statsStorage.getNumberOfInboundRtpPads()).toBe(1);
                 resolve(result);
             });
         });
-        const consumerPromise = new Promise<Generator.ProvidedConsumer>(resolve => {
-            it ("When producer is closed and consumer is requested Then the number of inbound rtp pad is 0 and the number of outbound rtp pad is 1", async () => {
+        const consumerPromise = new Promise<Generator.ProvidedConsumer>((resolve) => {
+            it("When producer is closed and consumer is requested Then the number of inbound rtp pad is 0 and the number of outbound rtp pad is 1", async () => {
                 const producer = await producerPromise;
                 const consumer = transport.consume();
                 producer.close();
@@ -492,8 +458,8 @@ describe("MediasoupCollector", () => {
                 resolve(consumer);
             });
         });
-        const dataConsumerPromise = new Promise<Generator.ProvidedDataConsumer>(resolve => {
-            it ("When consumer is closed and dataconsumer is requested Then the number of outbound rtp pad is 0 and the number of sctp channel is 1", async () => {
+        const dataConsumerPromise = new Promise<Generator.ProvidedDataConsumer>((resolve) => {
+            it("When consumer is closed and dataconsumer is requested Then the number of outbound rtp pad is 0 and the number of sctp channel is 1", async () => {
                 const consumer = await consumerPromise;
                 const dataConsumer = transport.consumeData();
                 consumer.close();
@@ -503,8 +469,8 @@ describe("MediasoupCollector", () => {
                 resolve(dataConsumer);
             });
         });
-        const dataProducerPromise = new Promise<Generator.ProvidedDataProducer>(resolve => {
-            it ("When data consumer is requested Then the number of sctp channel is 0", async () => {
+        const dataProducerPromise = new Promise<Generator.ProvidedDataProducer>((resolve) => {
+            it("When data consumer is requested Then the number of sctp channel is 0", async () => {
                 const dataConsumer = await dataConsumerPromise;
                 dataConsumer.close();
                 expect(statsStorage.getNumberOfSctpChannels()).toBe(0);
@@ -513,7 +479,7 @@ describe("MediasoupCollector", () => {
                 resolve(dataProducer);
             });
         });
-        it ("When data producer is requested Then the number of inbound rtp pad is 1 and when its closed the number is 0", async () => {
+        it("When data producer is requested Then the number of inbound rtp pad is 1 and when its closed the number is 0", async () => {
             const dataProducer = await dataProducerPromise;
             await collector.collect();
             expect(statsStorage.getNumberOfSctpChannels()).toBe(1);
@@ -521,6 +487,5 @@ describe("MediasoupCollector", () => {
             await collector.collect();
             expect(statsStorage.getNumberOfSctpChannels()).toBe(0);
         });
-        
     });
 });

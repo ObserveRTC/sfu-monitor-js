@@ -22,7 +22,7 @@ function generateIntegerBetween(min = 0, max = 1000): number {
     return result;
 }
 
-function generateFrom<T>(...params: T[]): T{
+function generateFrom<T>(...params: T[]): T {
     if (!params) {
         throw new Error(`Cannot generate random items from an empty array`);
     }

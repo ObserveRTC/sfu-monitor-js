@@ -1,5 +1,14 @@
 import { SfuSctpChannel, SfuInboundRtpPad, SfuOutboundRtpPad, SfuTransport } from "@observertc/schemas";
-import { SfuInboundRtpPadEntry, SfuOutboundRtpPadEntry, SfuSctpChannelEntry, SfuTransportEntry, SfuMediaStreamEntry, SfuMediaStreamKind, SfuMediaSinkEntry, Appendix } from "./StatsEntryInterfaces";
+import {
+    SfuInboundRtpPadEntry,
+    SfuOutboundRtpPadEntry,
+    SfuSctpChannelEntry,
+    SfuTransportEntry,
+    SfuMediaStreamEntry,
+    SfuMediaStreamKind,
+    SfuMediaSinkEntry,
+    Appendix,
+} from "./StatsEntryInterfaces";
 import { hash } from "../utils/hash";
 import { createLogger } from "../utils/logger";
 
@@ -58,7 +67,7 @@ export interface StatsReader {
      * Iterable iterator to list all collected and groupped video sinks
      */
     videoSinks(): Generator<SfuMediaSinkEntry, void, undefined>;
-    
+
     /**
      * Gets the number of tracked transports
      */
@@ -78,7 +87,7 @@ export interface StatsReader {
      * Gets the number of tracked sctp channel
      */
     getNumberOfSctpChannels(): number;
-    
+
     /**
      * Gets the number of tracked media streams
      */
@@ -119,7 +128,7 @@ export interface StatsReader {
 export interface StatsWriter {
     removeTransport(transportId: string): void;
     updateTransport(stats: SfuTransport, appData?: Appendix): void;
-    
+
     removeInboundRtpPad(rtpPadId: string): void;
     updateInboundRtpPad(stats: SfuInboundRtpPad, appData?: Appendix): void;
 
@@ -148,9 +157,8 @@ interface InnerSfuMediaStreamEntry extends SfuMediaStreamEntry {
 interface InnerSfuMediaSinkEntry extends SfuMediaSinkEntry {
     outboundRtpPadIds: Set<string>;
     transportId: string;
-    mediaStreamId: string,
+    mediaStreamId: string;
 }
-
 
 export class StatsStorage implements StatsReader, StatsWriter {
     private _transports: Map<string, InnerSfuTransportEntry> = new Map();
@@ -161,7 +169,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
     private _mediaStreams: Map<string, InnerSfuMediaStreamEntry> = new Map();
     private _audioStreamIds: Set<string> = new Set();
     private _videoStreamIds: Set<string> = new Set();
-    
+
     private _mediaSinks: Map<string, InnerSfuMediaSinkEntry> = new Map();
     private _audioSinkIds: Set<string> = new Set();
     private _videoSinkIds: Set<string> = new Set();
@@ -206,7 +214,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         if (!entry) {
             const inboundRtpPadsMap = this._inboundRtpPads;
             /* eslint-disable no-inner-declarations */
-            function *inboundRtpPads(): Generator<SfuInboundRtpPadEntry, void, undefined> {
+            function* inboundRtpPads(): Generator<SfuInboundRtpPadEntry, void, undefined> {
                 const transportEntry = transports.get(transportId);
                 if (!transportEntry) return;
                 const rtpPadIds = Array.from(transportEntry.inboundRtpPadIds);
@@ -218,7 +226,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
             }
             const outboundRtpPadsMap = this._outboundRtpPads;
             /* eslint-disable no-inner-declarations */
-            function *outboundRtpPads(): Generator<SfuOutboundRtpPadEntry, void, undefined> {
+            function* outboundRtpPads(): Generator<SfuOutboundRtpPadEntry, void, undefined> {
                 const transportEntry = transports.get(transportId);
                 if (!transportEntry) return;
                 const rtpPadIds = Array.from(transportEntry.outboundRtpPadIds);
@@ -230,7 +238,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
             }
             const sctpChannelsMap = this._sctpChannels;
             /* eslint-disable no-inner-declarations */
-            function *sctpChannels(): Generator<SfuSctpChannelEntry, void, undefined> {
+            function* sctpChannels(): Generator<SfuSctpChannelEntry, void, undefined> {
                 const transportEntry = transports.get(transportId);
                 if (!transportEntry) return;
                 const sctpChannelIds = Array.from(transportEntry.sctpChannelIds);
@@ -242,7 +250,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
             }
             const mediaSinksMap = this._mediaSinks;
             /* eslint-disable no-inner-declarations */
-            function *mediaSinks(): Generator<SfuMediaSinkEntry, void, undefined> {
+            function* mediaSinks(): Generator<SfuMediaSinkEntry, void, undefined> {
                 const transportEntry = transports.get(transportId);
                 if (!transportEntry) return;
                 const mediaSinkIds = Array.from(transportEntry.mediaSinkIds);
@@ -254,7 +262,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
             }
             const mediaStreamsMap = this._mediaStreams;
             /* eslint-disable no-inner-declarations */
-            function *mediaStreams(): Generator<SfuMediaStreamEntry, void, undefined> {
+            function* mediaStreams(): Generator<SfuMediaStreamEntry, void, undefined> {
                 const transportEntry = transports.get(transportId);
                 if (!transportEntry) return;
                 const mediaStreamIds = Array.from(transportEntry.mediaStreamIds);
@@ -264,12 +272,22 @@ export class StatsStorage implements StatsReader, StatsWriter {
                     yield mediaStream;
                 }
             }
-            const mediaSinkIds = Array.from(this._mediaSinks.values()).filter(sink => sink.transportId === transportId).map(sink => sink.id);
-            const mediaStreamIds = Array.from(this._mediaStreams.values()).filter(stream => stream.transportId === transportId).map(stream => stream.id);
-            const initialOutboundRtpPads = Array.from(this._outboundRtpPads.values()).filter(pad => pad.stats?.transportId === transportId);
-            const initialInboundRtpPads = Array.from(this._inboundRtpPads.values()).filter(pad => pad.stats?.transportId === transportId);
-            const intialSctpChannels = Array.from(this._sctpChannels.values()).filter(pad => pad.stats?.transportId === transportId);
-            const newEntry: InnerSfuTransportEntry = entry = {
+            const mediaSinkIds = Array.from(this._mediaSinks.values())
+                .filter((sink) => sink.transportId === transportId)
+                .map((sink) => sink.id);
+            const mediaStreamIds = Array.from(this._mediaStreams.values())
+                .filter((stream) => stream.transportId === transportId)
+                .map((stream) => stream.id);
+            const initialOutboundRtpPads = Array.from(this._outboundRtpPads.values()).filter(
+                (pad) => pad.stats?.transportId === transportId
+            );
+            const initialInboundRtpPads = Array.from(this._inboundRtpPads.values()).filter(
+                (pad) => pad.stats?.transportId === transportId
+            );
+            const intialSctpChannels = Array.from(this._sctpChannels.values()).filter(
+                (pad) => pad.stats?.transportId === transportId
+            );
+            const newEntry: InnerSfuTransportEntry = (entry = {
                 appendix,
                 internal: !!stats.internal,
                 id: transportId,
@@ -278,9 +296,9 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 touched: now,
                 updated: now,
                 hashCode: "notHashed",
-                inboundRtpPadIds: new Set<string>(initialInboundRtpPads.map(pad => pad.id)),
-                outboundRtpPadIds: new Set<string>(initialOutboundRtpPads.map(pad => pad.id)),
-                sctpChannelIds: new Set<string>(intialSctpChannels.map(channel => channel.id)),
+                inboundRtpPadIds: new Set<string>(initialInboundRtpPads.map((pad) => pad.id)),
+                outboundRtpPadIds: new Set<string>(initialOutboundRtpPads.map((pad) => pad.id)),
+                sctpChannelIds: new Set<string>(intialSctpChannels.map((channel) => channel.id)),
                 mediaSinkIds: new Set<string>(mediaSinkIds),
                 mediaStreamIds: new Set<string>(mediaStreamIds),
                 inboundRtpPads,
@@ -304,7 +322,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 getNumberOfMediaStreams: () => {
                     return newEntry.mediaStreamIds.size;
                 },
-            };
+            });
             newEntry.hashCode = hash(stats);
             this._transports.set(transportId, newEntry);
         } else {
@@ -319,7 +337,6 @@ export class StatsStorage implements StatsReader, StatsWriter {
             }
             entry.touched = now;
         }
-        
     }
 
     public updateInboundRtpPad(stats: SfuInboundRtpPad, appendix?: Appendix): void {
@@ -329,7 +346,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         let entry = inboundRtpPads.get(inboundRtpPadId);
         if (!entry) {
             const transportId = stats.transportId;
-            const newEntry: SfuInboundRtpPadEntry = entry = {
+            const newEntry: SfuInboundRtpPadEntry = (entry = {
                 appendix,
                 id: inboundRtpPadId,
                 stats,
@@ -342,8 +359,8 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 },
                 getMediaStream: () => {
                     return this._mediaStreams.get(newEntry.stats.streamId);
-                }
-            }
+                },
+            });
             entry.hashCode = hash(stats);
             inboundRtpPads.set(newEntry.id, newEntry);
             const { streamId, mediaType: kind } = stats;
@@ -411,7 +428,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         let entry = outboundRtpPads.get(outboundRtpPadId);
         if (!entry) {
             const transportId = stats.transportId;
-            const newEntry: SfuOutboundRtpPadEntry = entry = {
+            const newEntry: SfuOutboundRtpPadEntry = (entry = {
                 appendix,
                 id: outboundRtpPadId,
                 stats,
@@ -427,8 +444,8 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 },
                 getMediaSink: () => {
                     return this._mediaSinks.get(newEntry.stats.sinkId);
-                }
-            }
+                },
+            });
             entry.hashCode = hash(stats);
             outboundRtpPads.set(newEntry.id, newEntry);
             const { streamId, sinkId, mediaType: kind } = stats;
@@ -505,7 +522,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         let entry = sctpChannels.get(sctpChannelId);
         if (!entry) {
             const transportId = stats.transportId;
-            const newEntry: SfuSctpChannelEntry = entry = {
+            const newEntry: SfuSctpChannelEntry = (entry = {
                 appendix,
                 id: sctpChannelId,
                 stats,
@@ -516,7 +533,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 getTransport: () => {
                     return this._transports.get(transportId);
                 },
-            }
+            });
             entry.hashCode = hash(stats);
             this._sctpChannels.set(newEntry.id, newEntry);
 
@@ -550,13 +567,12 @@ export class StatsStorage implements StatsReader, StatsWriter {
         this._sctpChannels.delete(sctpChannelId);
     }
 
-
     public *transports(): Generator<SfuTransportEntry, void, undefined> {
         const entries = this._transports;
         const entryIds = Array.from(entries.keys());
         for (const entryId of entryIds) {
             const entry = entries.get(entryId);
-            if (entry) yield entry
+            if (entry) yield entry;
         }
     }
 
@@ -565,7 +581,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         const entryIds = Array.from(entries.keys());
         for (const entryId of entryIds) {
             const entry = entries.get(entryId);
-            if (entry) yield entry
+            if (entry) yield entry;
         }
     }
 
@@ -574,7 +590,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         const entryIds = Array.from(entries.keys());
         for (const entryId of entryIds) {
             const entry = entries.get(entryId);
-            if (entry) yield entry
+            if (entry) yield entry;
         }
     }
 
@@ -583,7 +599,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         const entryIds = Array.from(entries.keys());
         for (const entryId of entryIds) {
             const entry = entries.get(entryId);
-            if (entry) yield entry
+            if (entry) yield entry;
         }
     }
 
@@ -592,7 +608,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         const entryIds = Array.from(entries.keys());
         for (const entryId of entryIds) {
             const entry = entries.get(entryId);
-            if (entry) yield entry
+            if (entry) yield entry;
         }
     }
 
@@ -619,7 +635,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
         const entryIds = Array.from(entries.keys());
         for (const entryId of entryIds) {
             const entry = entries.get(entryId);
-            if (entry) yield entry
+            if (entry) yield entry;
         }
     }
 
@@ -684,21 +700,20 @@ export class StatsStorage implements StatsReader, StatsWriter {
     private _getOrCreateMediaStream({
         transportId,
         streamId,
-        kind    
+        kind,
     }: {
-        transportId: string,
-        streamId: string,
-        kind: SfuMediaStreamKind
-    }): InnerSfuMediaStreamEntry 
-    {
+        transportId: string;
+        streamId: string;
+        kind: SfuMediaStreamKind;
+    }): InnerSfuMediaStreamEntry {
         const mediaStreams = this._mediaStreams;
         let result = mediaStreams.get(streamId);
         if (result) return result;
         const inboundRtpPadsMap = this._inboundRtpPads;
-        function *inboundRtpPads(): Generator<SfuInboundRtpPadEntry, void, undefined> {
+        function* inboundRtpPads(): Generator<SfuInboundRtpPadEntry, void, undefined> {
             const mediaStream = mediaStreams.get(streamId);
             if (!mediaStream) return;
-            const inboundRtpPadIds = Array.from((mediaStream.inboundRtpPadIds));
+            const inboundRtpPadIds = Array.from(mediaStream.inboundRtpPadIds);
             for (const inboundRtpPadId of inboundRtpPadIds) {
                 const inboundRtpPad = inboundRtpPadsMap.get(inboundRtpPadId);
                 if (!inboundRtpPad) continue;
@@ -706,19 +721,23 @@ export class StatsStorage implements StatsReader, StatsWriter {
             }
         }
         const mediaSinksMap = this._mediaSinks;
-        function *mediaSinks(): Generator<SfuMediaSinkEntry, void, undefined> {
+        function* mediaSinks(): Generator<SfuMediaSinkEntry, void, undefined> {
             const mediaStream = mediaStreams.get(streamId);
             if (!mediaStream) return;
-            const mediaSinkIds = Array.from((mediaStream.mediaSinkIds));
+            const mediaSinkIds = Array.from(mediaStream.mediaSinkIds);
             for (const mediaSinkId of mediaSinkIds) {
                 const mediaSink = mediaSinksMap.get(mediaSinkId);
                 if (!mediaSink) continue;
                 yield mediaSink;
             }
         }
-        const inboundRtpPadIds = Array.from(this._inboundRtpPads.values()).filter(pad => pad.stats?.streamId === streamId).map(pad => pad.id);
-        const mediaSinkIds = Array.from(this._mediaSinks.values()).filter(mediaSink => mediaSink.mediaStreamId === streamId).map(sink => sink.id);
-        const mediaStream: InnerSfuMediaStreamEntry = result = {
+        const inboundRtpPadIds = Array.from(this._inboundRtpPads.values())
+            .filter((pad) => pad.stats?.streamId === streamId)
+            .map((pad) => pad.id);
+        const mediaSinkIds = Array.from(this._mediaSinks.values())
+            .filter((mediaSink) => mediaSink.mediaStreamId === streamId)
+            .map((sink) => sink.id);
+        const mediaStream: InnerSfuMediaStreamEntry = (result = {
             id: streamId,
             transportId,
             kind,
@@ -735,8 +754,8 @@ export class StatsStorage implements StatsReader, StatsWriter {
             },
             getNumberOfMediaSinks: () => {
                 return mediaStream.mediaSinkIds.size;
-            }
-        };
+            },
+        });
         mediaStreams.set(streamId, mediaStream);
         return result;
     }
@@ -747,27 +766,29 @@ export class StatsStorage implements StatsReader, StatsWriter {
         sinkId,
         kind,
     }: {
-        transportId: string,
-        streamId: string,
-        sinkId: string,
-        kind: SfuMediaStreamKind
+        transportId: string;
+        streamId: string;
+        sinkId: string;
+        kind: SfuMediaStreamKind;
     }): InnerSfuMediaSinkEntry {
         const mediaSinks = this._mediaSinks;
         let result = mediaSinks.get(sinkId);
         if (result) return result;
         const outboundRtpPadsMap = this._outboundRtpPads;
-        function *outboundRtpPads(): Generator<SfuOutboundRtpPadEntry, void, undefined> {
+        function* outboundRtpPads(): Generator<SfuOutboundRtpPadEntry, void, undefined> {
             const mediaSink = mediaSinks.get(sinkId);
             if (!mediaSink) return;
-            const outboundRtpPadIds = Array.from((mediaSink.outboundRtpPadIds));
+            const outboundRtpPadIds = Array.from(mediaSink.outboundRtpPadIds);
             for (const outboundRtpPadId of outboundRtpPadIds) {
                 const outboundRtpPad = outboundRtpPadsMap.get(outboundRtpPadId);
                 if (!outboundRtpPad) continue;
                 yield outboundRtpPad;
             }
         }
-        const outboundRtpPadIds = Array.from(this._outboundRtpPads.values()).filter(pad => pad.stats?.sinkId === sinkId).map(pad => pad.id);
-        const mediaSink: InnerSfuMediaSinkEntry = result = {
+        const outboundRtpPadIds = Array.from(this._outboundRtpPads.values())
+            .filter((pad) => pad.stats?.sinkId === sinkId)
+            .map((pad) => pad.id);
+        const mediaSink: InnerSfuMediaSinkEntry = (result = {
             id: sinkId,
             mediaStreamId: streamId,
             transportId,
@@ -783,14 +804,15 @@ export class StatsStorage implements StatsReader, StatsWriter {
             },
             getNumberOfOutboundRtpPads: () => {
                 return mediaSink.outboundRtpPadIds.size;
-            }
-        }
+            },
+        });
         mediaSinks.set(sinkId, mediaSink);
         return result;
     }
 
     public dump(withStats = false) {
-        const dumpObj = (obj: { [s: string]: unknown; } | ArrayLike<unknown> | undefined) => obj ? Array.from(Object.entries(obj)).map(([key, value]) => `${key}: ${value}`) : ["undefined"];
+        const dumpObj = (obj: { [s: string]: unknown } | ArrayLike<unknown> | undefined) =>
+            obj ? Array.from(Object.entries(obj)).map(([key, value]) => `${key}: ${value}`) : ["undefined"];
         const transportLogs: string[] = [];
         for (const [transportId, transport] of this._transports.entries()) {
             const transportLog: string[] = [
@@ -806,12 +828,12 @@ export class StatsStorage implements StatsReader, StatsWriter {
                     `updated: ${transport.updated}`,
                     `touched: ${transport.touched}`,
                     `appendix:`,
-                    ...dumpObj(transport.appendix).map(line => `\t${line}`),
+                    ...dumpObj(transport.appendix).map((line) => `\t${line}`),
                     `stats:`,
-                    ...dumpObj(transport.stats).map(line => `\t${line}`),
-                )
+                    ...dumpObj(transport.stats).map((line) => `\t${line}`)
+                );
             }
-            transportLogs.push(...transportLog.map(line => `\t${line}`), `\n`);
+            transportLogs.push(...transportLog.map((line) => `\t${line}`), `\n`);
         }
 
         const inboundRtpPadLogs: string[] = [];
@@ -819,19 +841,19 @@ export class StatsStorage implements StatsReader, StatsWriter {
             const inboundRtpPadLog: string[] = [
                 `padId: ${inboundRtpPadId}`,
                 `transportId: ${inboundRtpPad.getTransport()?.id}`,
-                `streamId: ${inboundRtpPad.getMediaStream()?.id}`
+                `streamId: ${inboundRtpPad.getMediaStream()?.id}`,
             ];
             if (withStats) {
                 inboundRtpPadLog.push(
                     `updated: ${inboundRtpPad.updated}`,
                     `touched: ${inboundRtpPad.touched}`,
                     `appendix:`,
-                    ...dumpObj(inboundRtpPad.appendix).map(line => `\t${line}`),
+                    ...dumpObj(inboundRtpPad.appendix).map((line) => `\t${line}`),
                     `stats:`,
-                    ...dumpObj(inboundRtpPad.stats).map(line => `\t${line}`),
-                )
+                    ...dumpObj(inboundRtpPad.stats).map((line) => `\t${line}`)
+                );
             }
-            inboundRtpPadLogs.push(...inboundRtpPadLog.map(line => `\t${line}`), `\n`);
+            inboundRtpPadLogs.push(...inboundRtpPadLog.map((line) => `\t${line}`), `\n`);
         }
 
         const outboundRtpPadLogs: string[] = [];
@@ -847,30 +869,28 @@ export class StatsStorage implements StatsReader, StatsWriter {
                     `updated: ${outboundRtpPad.updated}`,
                     `touched: ${outboundRtpPad.touched}`,
                     `appendix:`,
-                    ...dumpObj(outboundRtpPad.appendix).map(line => `\t${line}`),
+                    ...dumpObj(outboundRtpPad.appendix).map((line) => `\t${line}`),
                     `stats:`,
-                    ...dumpObj(outboundRtpPad.stats).map(line => `\t${line}`),
-                )
+                    ...dumpObj(outboundRtpPad.stats).map((line) => `\t${line}`)
+                );
             }
-            outboundRtpPadLogs.push(...inboundRtpPadLog.map(line => `\t${line}`), `\n`);
+            outboundRtpPadLogs.push(...inboundRtpPadLog.map((line) => `\t${line}`), `\n`);
         }
 
         const sctpChannelLogs: string[] = [];
         for (const [channelId, sctpChannel] of this._sctpChannels.entries()) {
-            const sctpChannelLog: string[] = [
-                `channelId: ${channelId}`,
-            ];
+            const sctpChannelLog: string[] = [`channelId: ${channelId}`];
             if (withStats) {
                 sctpChannelLog.push(
                     `updated: ${sctpChannel.updated}`,
                     `touched: ${sctpChannel.touched}`,
                     `appendix:`,
-                    ...dumpObj(sctpChannel.appendix).map(line => `\t${line}`),
+                    ...dumpObj(sctpChannel.appendix).map((line) => `\t${line}`),
                     `stats:`,
-                    ...dumpObj(sctpChannel.stats).map(line => `\t${line}`),
-                )
+                    ...dumpObj(sctpChannel.stats).map((line) => `\t${line}`)
+                );
             }
-            sctpChannelLogs.push(...sctpChannelLog.map(line => `\t${line}`), `\n`);
+            sctpChannelLogs.push(...sctpChannelLog.map((line) => `\t${line}`), `\n`);
         }
 
         const mediaStreamLogs: string[] = [];
@@ -881,7 +901,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 `inboundRtpPadIds: ${Array.from(mediaStream.inboundRtpPadIds).join(", ")}`,
                 `mediaSinkIds: ${Array.from(mediaStream.mediaSinkIds).join(", ")}`,
             ];
-            mediaStreamLogs.push(...mediaStreamLog.map(line => `\t${line}`), `\n`);
+            mediaStreamLogs.push(...mediaStreamLog.map((line) => `\t${line}`), `\n`);
         }
 
         const mediaSinkLogs: string[] = [];
@@ -892,23 +912,22 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 `transportId: ${mediaSink.transportId}`,
                 `outboundRtpPadIds: ${Array.from(mediaSink.outboundRtpPadIds).join(", ")}`,
             ];
-            mediaSinkLogs.push(...mediaSinkLog.map(line => `\t${line}`), `\n`);
+            mediaSinkLogs.push(...mediaSinkLog.map((line) => `\t${line}`), `\n`);
         }
         const entries: string[] = [
             `Transports\n`,
-            ...transportLogs.map(line => `\t${line}`),
+            ...transportLogs.map((line) => `\t${line}`),
             `InboundRtpPads\n`,
-            ...inboundRtpPadLogs.map(line => `\t${line}`),
+            ...inboundRtpPadLogs.map((line) => `\t${line}`),
             `OutboundRtpPads\n`,
-            ...outboundRtpPadLogs.map(line => `\t${line}`),
+            ...outboundRtpPadLogs.map((line) => `\t${line}`),
             `SctpChannels\n`,
-            ...sctpChannelLogs.map(line => `\t${line}`),
+            ...sctpChannelLogs.map((line) => `\t${line}`),
             `MediaStreams\n`,
-            ...mediaStreamLogs.map(line => `\t${line}`),
+            ...mediaStreamLogs.map((line) => `\t${line}`),
             `MediaSinks\n`,
-            ...mediaSinkLogs.map(line => `\t${line}`),
-
+            ...mediaSinkLogs.map((line) => `\t${line}`),
         ];
-        return entries.join('\n');
+        return entries.join("\n");
     }
 }

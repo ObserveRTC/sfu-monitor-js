@@ -1,63 +1,64 @@
 import { StatsWriter } from "../entries/StatsStorage";
-import { PromiseFetcher, PromiseSupplier } from "../utils/PromiseFetcher";
 import { Collector } from "../Collector";
-import { MediasoupConsumer, MediasoupConsumerPolledStats, MediasoupDataConsumer, MediasoupDataConsumerStats, MediasoupDataProducer, MediasoupDataProducerStats, MediasoupDirectTransport, MediasoupNewConsumerListener, MediasoupNewDataConsumerListener, MediasoupNewDataProducerListener, MediasoupNewProducerListener, MediasoupNewTransportListener, MediasoupPipeTransport, MediasoupPlainTransport, MediasoupProducer, MediasoupProducerStats, MediasoupRouter, MediasoupTransport, MediasoupTransportStats, MediasoupTransportType, MediasoupWebRtcTransportStats } from "./MediasoupTypes";
-import { SfuInboundRtpPad, SfuOutboundRtpPad, SfuSctpChannel, SfuTransport } from "@observertc/schemas";
+import {
+    MediasoupNewTransportListener,
+    MediasoupRouter,
+    MediasoupTransport,
+    MediasoupTransportType,
+} from "./MediasoupTypes";
 import { v4 as uuidv4 } from "uuid";
 import { createLogger } from "../utils/logger";
 import { Collectors } from "../Collectors";
 import { MediasoupTransportCollector, MediasoupTransportCollectorConfig } from "./MediasoupTransportCollector";
-import { MediasoupConsumerCollectorConfig } from "./MediasoupConsumerCollector";
 import { Appendix } from "../entries/StatsEntryInterfaces";
 
 const logger = createLogger(`MediasoupRouter`);
 
 export type TransportTypeFunction = (transport: MediasoupTransport) => MediasoupTransportType;
 
-const defaultGetTransportType: TransportTypeFunction = transport => {
+const defaultGetTransportType: TransportTypeFunction = (transport) => {
     if (transport?.iceState) return "webrtc-transport";
     if (transport?.tuple) return "pipe-transport";
     return "direct-transport";
-}
-
+};
 
 export type MediasoupRouterCollectorConfig = {
     /**
      * The type of the transport attempted to watch
      */
-    getTransportType?: TransportTypeFunction
+    getTransportType?: TransportTypeFunction;
 
     /**
      * Indicate if we want to poll the transport stats
-     * 
+     *
      * DEFAULT: false,
      */
     pollTransportStats?: () => boolean;
 
     /**
      * Indicate if we want to poll the producer stats
-     * 
+     *
      * DEFAULT: false,
      */
     pollProducerStats?: () => boolean;
 
     /**
      * Indicate if we want to poll the consumer stats
-     * 
+     *
      * DEFAULT: false,
      */
     pollConsumerStats?: () => boolean;
 
     /**
      * Indicate if we want to poll the dataProducer stats
-     * 
+     *
      * DEFAULT: false,
      */
     pollDataProducerStats?: () => boolean;
 
     /**
      * Indicate if we want to poll the data consumer stats
-     * 
+     *
      * DEFAULT: false,
      */
     pollDataConsumerStats?: () => boolean;
@@ -68,7 +69,7 @@ export type MediasoupRouterCollectorConfig = {
      */
     transportAppendix?: Appendix;
 
-     /**
+    /**
      * Add custom arbitrary data to the inbound rtp pad entries
      * in the StatsStorage can be accessed via StatsReader
      */
@@ -85,15 +86,14 @@ export type MediasoupRouterCollectorConfig = {
      * in the StatsStorage can be accessed via StatsReader
      */
     sctpChannelAppendix?: Appendix;
-}
+};
 
 const supplyDefaultConfig = () => {
     const result: MediasoupRouterCollectorConfig = {
         getTransportType: defaultGetTransportType,
-    
     };
     return result;
-}
+};
 
 export class MediasoupRouterCollector implements Collector {
     public readonly id = uuidv4();
@@ -103,11 +103,7 @@ export class MediasoupRouterCollector implements Collector {
     private _statsWriter?: StatsWriter;
     private _router: MediasoupRouter;
     private _newTransportListener: MediasoupNewTransportListener;
-    public constructor(
-        parent: Collectors,
-        router: MediasoupRouter,
-        config?: MediasoupRouterCollectorConfig,
-    ) {
+    public constructor(parent: Collectors, router: MediasoupRouter, config?: MediasoupRouterCollectorConfig) {
         this.id = `mediasoup-router-${router.id}`;
         this._parent = parent;
         this._router = router;
@@ -119,7 +115,7 @@ export class MediasoupRouterCollector implements Collector {
             logger.debug(`Router ${routerId} is removed from watch`);
         });
         const collectorsFacade = this._createCollectorsFacade();
-        this._newTransportListener = transport => {
+        this._newTransportListener = (transport) => {
             if (!this._statsWriter) {
                 logger.warn(`Cannot create corresponded collectors without statswriter`);
                 return;
@@ -127,11 +123,11 @@ export class MediasoupRouterCollector implements Collector {
             const transportCollectorConfig: MediasoupTransportCollectorConfig = {
                 ...this._config,
                 transportType: getTransportType(transport),
-            }
+            };
             const transportCollector = new MediasoupTransportCollector(
                 collectorsFacade,
                 transport,
-                transportCollectorConfig,
+                transportCollectorConfig
             );
             transportCollector.setStatsWriter(this._statsWriter);
             this._parent.add(transportCollector);
@@ -155,7 +151,7 @@ export class MediasoupRouterCollector implements Collector {
     private _createCollectorsFacade(): Collectors {
         const collectors = this._parent;
         const isClosed = () => this._closed;
-        return new class implements Collectors {
+        return new (class implements Collectors {
             add(collector: Collector): void {
                 collectors.add(collector);
             }
@@ -165,10 +161,11 @@ export class MediasoupRouterCollector implements Collector {
             get closed(): boolean {
                 return isClosed();
             }
+            /* eslint-disable @typescript-eslint/no-explicit-any */
             [Symbol.iterator](): Iterator<Collector, any, undefined> {
                 return collectors[Symbol.iterator]();
             }
-        };
+        })();
     }
 
     public async collect(): Promise<void> {
@@ -185,7 +182,7 @@ export class MediasoupRouterCollector implements Collector {
     public get closed(): boolean {
         return this._closed;
     }
-    
+
     public close(): void {
         if (this._closed) {
             logger.info(`Attempted to close twice`);

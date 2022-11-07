@@ -1,7 +1,9 @@
 import { StatsWriter } from "../entries/StatsStorage";
 import { Collector } from "../Collector";
-import { MediasoupConsumer, MediasoupConsumerPolledStats, MediasoupDataConsumer, MediasoupDataConsumerStats, MediasoupDataProducer, MediasoupDataProducerStats, MediasoupDirectTransport, MediasoupNewConsumerListener, MediasoupNewDataConsumerListener, MediasoupNewDataProducerListener, MediasoupNewProducerListener, MediasoupPipeTransport, MediasoupPlainTransport, MediasoupProducer, MediasoupProducerStats, MediasoupTransport, MediasoupTransportStats, MediasoupTransportType, MediasoupWebRtcTransportStats } from "./MediasoupTypes";
-import { SfuInboundRtpPad, SfuOutboundRtpPad, SfuSctpChannel, SfuTransport } from "@observertc/schemas";
+import {
+    MediasoupConsumer,
+} from "./MediasoupTypes";
+import { SfuOutboundRtpPad } from "@observertc/schemas";
 import { v4 as uuidv4 } from "uuid";
 import { createLogger } from "../utils/logger";
 import { Collectors } from "../Collectors";
@@ -12,7 +14,7 @@ const logger = createLogger(`MediasoupCollector`);
 export type MediasoupConsumerCollectorConfig = {
     /**
      * a supplier lambda function provides information if the collector should poll stas or not
-     * 
+     *
      * DEFAULT: undefined, which means it will not poll measurements
      */
     pollStats?: () => boolean;
@@ -21,15 +23,14 @@ export type MediasoupConsumerCollectorConfig = {
      * Add arbitrary data to the inboundRtpEntry
      */
     appendix?: Appendix;
-}
+};
 
 const supplyDefaultConfig = () => {
-    const result: MediasoupConsumerCollectorConfig = {
-    }
+    const result: MediasoupConsumerCollectorConfig = {};
     return result;
-}
+};
 
-const NO_REPORT_SSRC = 0xDEADBEEF;
+const NO_REPORT_SSRC = 0xdeadbeef;
 
 export class MediasoupConsumerCollector implements Collector {
     public readonly id = uuidv4();
@@ -41,7 +42,7 @@ export class MediasoupConsumerCollector implements Collector {
     private _internal: boolean;
     private _ssrcToPadIds = new Map<number, string>();
     private _consumer: MediasoupConsumer;
-    private _correspondCollector?: Collector
+    private _correspondCollector?: Collector;
     public constructor(
         parent: Collectors,
         consumer: MediasoupConsumer,
@@ -84,16 +85,19 @@ export class MediasoupConsumerCollector implements Collector {
             padId = uuidv4();
             this._ssrcToPadIds.set(NO_REPORT_SSRC, padId);
         }
-        this._statsWriter?.updateOutboundRtpPad({
-            ssrc: NO_REPORT_SSRC,
-            padId,
-            streamId: this._consumer.producerId,
-            sinkId: this._consumer.id,
-            mediaType: this._consumer.kind,
-            transportId: this._transportId,
-            noReport: true,
-            internal: this._internal,
-        }, {});
+        this._statsWriter?.updateOutboundRtpPad(
+            {
+                ssrc: NO_REPORT_SSRC,
+                padId,
+                streamId: this._consumer.producerId,
+                sinkId: this._consumer.id,
+                mediaType: this._consumer.kind,
+                transportId: this._transportId,
+                noReport: true,
+                internal: this._internal,
+            },
+            {}
+        );
     }
 
     public async collect(): Promise<void> {
@@ -107,7 +111,7 @@ export class MediasoupConsumerCollector implements Collector {
             return;
         }
         if (!this._statsWriter) {
-            logger.debug(`No StatsWriter added to (${this.id})`)
+            logger.debug(`No StatsWriter added to (${this.id})`);
             return;
         }
         if (this._config.pollStats === undefined || this._config.pollStats() === false) {
@@ -163,14 +167,14 @@ export class MediasoupConsumerCollector implements Collector {
                 fractionLost: stats.fractionLost,
                 // jitter: stats.jitter,
                 roundTripTime: stats.roundTripTime,
-            }
+            };
             this._statsWriter?.updateOutboundRtpPad(outboundRtpPadStats, this._config.appendix ?? {});
         }
     }
     public get closed(): boolean {
         return this._closed;
     }
-    
+
     public close(): void {
         if (this._closed) {
             logger.info(`Attempted to close twice`);

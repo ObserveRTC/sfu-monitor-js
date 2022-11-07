@@ -3,9 +3,14 @@ import { Collector } from "../Collector";
 import { v4 as uuidv4 } from "uuid";
 import { createLogger } from "../utils/logger";
 import { Collectors } from "../Collectors";
-import { MediasoupRouterCollector, MediasoupRouterCollectorConfig, TransportTypeFunction } from "./MediasoupRouterCollector";
-import { MediasoupNewRouterListener, MediasoupNewWorkerListener, MediasoupSurrogate, MediasoupWorker } from "./MediasoupTypes";
-import { hash } from "../utils/hash";
+import {
+    MediasoupRouterCollectorConfig,
+    TransportTypeFunction,
+} from "./MediasoupRouterCollector";
+import {
+    MediasoupNewWorkerListener,
+    MediasoupSurrogate,
+} from "./MediasoupTypes";
 import { MediasoupWorkerCollector, MediasoupWorkerCollectorConfig } from "./MediasoupWorkerCollector";
 import { Appendix } from "../entries/StatsEntryInterfaces";
 
@@ -15,39 +20,39 @@ export type MediasoupSurrogateCollectorConfig = {
     /**
      * The type of the transport attempted to watch
      */
-    getTransportType?: TransportTypeFunction
+    getTransportType?: TransportTypeFunction;
 
     /**
      * Indicate if we want to poll the transport stats
-     * 
+     *
      * DEFAULT: false,
      */
     pollTransportStats?: () => boolean;
 
     /**
      * Indicate if we want to poll the producer stats
-     * 
+     *
      * DEFAULT: false,
      */
     pollProducerStats?: () => boolean;
 
     /**
      * Indicate if we want to poll the consumer stats
-     * 
+     *
      * DEFAULT: false,
      */
     pollConsumerStats?: () => boolean;
 
     /**
      * Indicate if we want to poll the dataProducer stats
-     * 
+     *
      * DEFAULT: false,
      */
     pollDataProducerStats?: () => boolean;
 
     /**
      * Indicate if we want to poll the data consumer stats
-     * 
+     *
      * DEFAULT: false,
      */
     pollDataConsumerStats?: () => boolean;
@@ -58,7 +63,7 @@ export type MediasoupSurrogateCollectorConfig = {
      */
     transportAppendix?: Appendix;
 
-     /**
+    /**
      * Add custom arbitrary data to the inbound rtp pad entries
      * in the StatsStorage can be accessed via StatsReader
      */
@@ -75,14 +80,12 @@ export type MediasoupSurrogateCollectorConfig = {
      * in the StatsStorage can be accessed via StatsReader
      */
     sctpChannelAppendix?: Appendix;
-}
+};
 
 const supplyDefaultConfig = () => {
-    const result: MediasoupRouterCollectorConfig = {
-    
-    };
+    const result: MediasoupRouterCollectorConfig = {};
     return result;
-}
+};
 
 export class MediasoupSurrogateCollector implements Collector {
     public readonly id = uuidv4();
@@ -92,12 +95,7 @@ export class MediasoupSurrogateCollector implements Collector {
     private _statsWriter?: StatsWriter;
     private _mediasoup: MediasoupSurrogate;
     private _newWorkerListener: MediasoupNewWorkerListener;
-    public constructor(
-        parent: Collectors,
-        mediasoup: MediasoupSurrogate,
-        config?: MediasoupSurrogateCollectorConfig,
-    ) {
-        
+    public constructor(parent: Collectors, mediasoup: MediasoupSurrogate, config?: MediasoupSurrogateCollectorConfig) {
         this.id = `mediasoup-${mediasoup.version}`;
         this._parent = parent;
         this._mediasoup = mediasoup;
@@ -107,19 +105,15 @@ export class MediasoupSurrogateCollector implements Collector {
             logger.debug(`${this.id} is removed from watch`);
         });
         const collectorsFacade = this._createCollectorsFacade();
-        this._newWorkerListener = worker => {
+        this._newWorkerListener = (worker) => {
             if (!this._statsWriter) {
                 logger.warn(`Cannot create corresponded collectors without statswriter`);
                 return;
             }
             const routerCollectorConfig: MediasoupWorkerCollectorConfig = {
                 ...this._config,
-            }
-            const routerCollector = new MediasoupWorkerCollector(
-                collectorsFacade,
-                worker,
-                routerCollectorConfig,
-            );
+            };
+            const routerCollector = new MediasoupWorkerCollector(collectorsFacade, worker, routerCollectorConfig);
             routerCollector.setStatsWriter(this._statsWriter);
             this._parent.add(routerCollector);
         };
@@ -142,7 +136,7 @@ export class MediasoupSurrogateCollector implements Collector {
     private _createCollectorsFacade(): Collectors {
         const collectors = this._parent;
         const isClosed = () => this._closed;
-        return new class implements Collectors {
+        return new (class implements Collectors {
             add(collector: Collector): void {
                 collectors.add(collector);
             }
@@ -152,10 +146,11 @@ export class MediasoupSurrogateCollector implements Collector {
             get closed(): boolean {
                 return isClosed();
             }
+            /* eslint-disable @typescript-eslint/no-explicit-any */
             [Symbol.iterator](): Iterator<Collector, any, undefined> {
                 return collectors[Symbol.iterator]();
             }
-        };
+        })();
     }
 
     public async collect(): Promise<void> {
@@ -172,7 +167,7 @@ export class MediasoupSurrogateCollector implements Collector {
     public get closed(): boolean {
         return this._closed;
     }
-    
+
     public close(): void {
         if (this._closed) {
             logger.info(`Attempted to close twice`);

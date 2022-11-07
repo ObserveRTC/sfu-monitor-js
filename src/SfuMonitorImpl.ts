@@ -1,5 +1,4 @@
-import { CustomSfuEvent, ExtensionStat, Samples } from "@observertc/schemas"
-import { Collector } from "./Collector";
+import { CustomSfuEvent, ExtensionStat, Samples } from "@observertc/schemas";
 import { EventsRegister, EventsRelayer } from "./EventsRelayer";
 import { Sampler, supplyDefaultConfig as supplySamplerDefaultConfig } from "./Sampler";
 import { Sender, SenderConfig } from "./Sender";
@@ -20,9 +19,9 @@ const supplyDefaultConfig = () => {
         // samplingPeriodInMs: 5000,
         // sendingPeriodInMs: 10000,
         sampler: supplySamplerDefaultConfig(),
-    }
+    };
     return defaultConfig;
-}
+};
 
 const NO_SENDER_FOR_SENDING_FLAG = "noSenderForSending";
 
@@ -56,9 +55,8 @@ export class SfuMonitorImpl implements SfuMonitor {
         this._createSender();
         this._createTimer();
     }
-    
-    
-    public get sfuId() : string {
+
+    public get sfuId(): string {
         /* eslint-disable @typescript-eslint/no-non-null-assertion */
         return this._sampler.sfuId!;
     }
@@ -102,7 +100,7 @@ export class SfuMonitorImpl implements SfuMonitor {
 
     public async collect(): Promise<void> {
         const started = Date.now();
-        if (!await this._collectors.collect()) {
+        if (!(await this._collectors.collect())) {
             return;
         }
         this._eventer.emitStatsCollected();
@@ -115,9 +113,13 @@ export class SfuMonitorImpl implements SfuMonitor {
         const { collectingPeriodInMs } = this._config;
         if (collectingPeriodInMs) {
             if (collectingPeriodInMs < elapsedInMs) {
-                logger.warn(`Collecting from collector took ${elapsedInMs} and Collecting period is ${collectingPeriodInMs}!`);
+                logger.warn(
+                    `Collecting from collector took ${elapsedInMs} and Collecting period is ${collectingPeriodInMs}!`
+                );
             } else if (collectingPeriodInMs / 2 < elapsedInMs) {
-                logger.info(`Collecting from collector took ${elapsedInMs} and Collecting period is ${collectingPeriodInMs}!`);
+                logger.info(
+                    `Collecting from collector took ${elapsedInMs} and Collecting period is ${collectingPeriodInMs}!`
+                );
             }
         }
         logger.debug(`Collecting took `, elapsedInMs);
@@ -126,7 +128,7 @@ export class SfuMonitorImpl implements SfuMonitor {
     public async sample(): Promise<void> {
         const sfuSample = this._sampler.make();
         if (this._sender) {
-            this._accumulator.addSfuSample(sfuSample);    
+            this._accumulator.addSfuSample(sfuSample);
         }
         this._eventer.emitSampleCreated(sfuSample);
     }
@@ -141,7 +143,7 @@ export class SfuMonitorImpl implements SfuMonitor {
             return;
         }
         const queue: Samples[] = [];
-        this._accumulator.drainTo(samples => {
+        this._accumulator.drainTo((samples) => {
             if (!samples) return;
             queue.push(samples);
         });
@@ -175,16 +177,14 @@ export class SfuMonitorImpl implements SfuMonitor {
 
     private _makeCollectors(): CollectorsImpl {
         const collectorsConfigConfig = this._config.collectors;
-        const result = CollectorsImpl.create(collectorsConfigConfig)
+        const result = CollectorsImpl.create(collectorsConfigConfig);
         result.statsWriter = this._statsStorage;
         return result;
     }
 
     private _makeSampler(): Sampler {
         const samplerConfig = this._config.sampler;
-        const result = Sampler.builder()
-            .withConfig(samplerConfig)
-            .build();
+        const result = Sampler.builder().withConfig(samplerConfig).build();
         result.statsProvider = this._statsStorage;
         return result;
     }
@@ -195,7 +195,7 @@ export class SfuMonitorImpl implements SfuMonitor {
             return;
         }
         this._sender = Sender.create(senderConfig)
-            .onError(err => {
+            .onError((err) => {
                 logger.warn(`Sender component is closed due to error`, err);
                 this._sender = undefined;
                 this._eventer.emitSenderDisconnected();
@@ -207,13 +207,9 @@ export class SfuMonitorImpl implements SfuMonitor {
     }
 
     private _createTimer(): void {
-        const {
-            collectingPeriodInMs,
-            samplingPeriodInMs,
-            sendingPeriodInMs,
-        } = this._config;
+        const { collectingPeriodInMs, samplingPeriodInMs, sendingPeriodInMs } = this._config;
         if (this._timer) {
-            logger.warn(`Attempted to recreate timer.`)
+            logger.warn(`Attempted to recreate timer.`);
             return;
         }
         if (!collectingPeriodInMs && !samplingPeriodInMs && !sendingPeriodInMs) {
@@ -225,7 +221,7 @@ export class SfuMonitorImpl implements SfuMonitor {
                 type: "collect",
                 process: this.collect.bind(this),
                 fixedDelayInMs: collectingPeriodInMs,
-                context: "Collect Stats"
+                context: "Collect Stats",
             });
         }
         if (samplingPeriodInMs && 0 < samplingPeriodInMs) {
@@ -233,7 +229,7 @@ export class SfuMonitorImpl implements SfuMonitor {
                 type: "sample",
                 process: this.sample.bind(this),
                 fixedDelayInMs: samplingPeriodInMs,
-                context: "Creating Sample"
+                context: "Creating Sample",
             });
         }
         if (sendingPeriodInMs && 0 < sendingPeriodInMs) {
@@ -241,7 +237,7 @@ export class SfuMonitorImpl implements SfuMonitor {
                 type: "send",
                 process: this.send.bind(this),
                 fixedDelayInMs: sendingPeriodInMs,
-                context: "Sending Samples"
+                context: "Sending Samples",
             });
         }
         this._timer = result;

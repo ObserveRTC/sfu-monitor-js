@@ -1,4 +1,3 @@
-
 export class Sleeper {
     private _executed = 0;
     private _cancelTimer?: () => void;

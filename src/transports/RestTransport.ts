@@ -6,42 +6,40 @@ import * as https from "https";
 import { CodecConfig } from "../codecs/Codec";
 import { Sleeper } from "../utils/Sleeper";
 
-const logger = createLogger(`RestTransport`)
+const logger = createLogger(`RestTransport`);
 
 export type RestTransportConfig = {
     /**
      * Flag indicating if the Transport should be closed if request sending is failed
      */
-    closeIfFailed?: boolean
+    closeIfFailed?: boolean;
     /**
      * The maximum number of retrying to send one message
      */
     maxRetries?: number;
     /**
-     * The target url the websocket is opened for 
+     * The target url the websocket is opened for
      */
     urls: string[];
     /**
      * Protocol to connect to a REST API server
-     * 
+     *
      * possible values: "http", "https"
-     * 
+     *
      * DEFAULT: https
-     */    
+     */
     protocol?: "http" | "https";
-}
+};
 
 const supplyDefaultConfig = () => {
     const result: RestTransportConfig = {
         urls: [],
         protocol: "http",
-        
     };
     return result;
-}
+};
 
 const ON_RECEIVED_EVENT_NAME = "onReceived";
-
 
 export class RestTransport implements Transport {
     public static create(config?: RestTransportConfig): RestTransport {
@@ -67,7 +65,6 @@ export class RestTransport implements Transport {
         return this._closed;
     }
 
-
     public async send(message: Uint8Array): Promise<void> {
         if (this._closed) {
             throw new Error(`Cannot send data on a closed transport`);
@@ -79,12 +76,15 @@ export class RestTransport implements Transport {
             }
         };
         const prerequisite = this._sent ?? Promise.resolve();
-        this._sent = prerequisite.then(() => this._send(message)).then(() => {
-            clear();
-        }).catch(err => {
-            logger.warn(`Error occurred while posting data`, err);
-            clear();
-        });
+        this._sent = prerequisite
+            .then(() => this._send(message))
+            .then(() => {
+                clear();
+            })
+            .catch((err) => {
+                logger.warn(`Error occurred while posting data`, err);
+                clear();
+            });
     }
 
     public setFormat(format: CodecConfig): Transport {
@@ -97,7 +97,7 @@ export class RestTransport implements Transport {
             throw new Error(`Cannot receive messages on a closed transport`);
         }
         this._emitter.on(ON_RECEIVED_EVENT_NAME, listener);
-        return this;        
+        return this;
     }
 
     public offReceived(listener: (data: string) => void): Transport {
@@ -117,7 +117,7 @@ export class RestTransport implements Transport {
         } finally {
             this._closed = true;
         }
-        [ON_RECEIVED_EVENT_NAME].forEach(eventType => this._emitter.removeAllListeners(eventType));
+        [ON_RECEIVED_EVENT_NAME].forEach((eventType) => this._emitter.removeAllListeners(eventType));
     }
 
     private _send(message: Uint8Array, tried = 0): Promise<void> {
@@ -127,12 +127,14 @@ export class RestTransport implements Transport {
         return new Promise<void>((resolve, _reject) => {
             const { urls, protocol, maxRetries, closeIfFailed } = this._config;
             const baseUrl = urls[tried % urls.length];
-            const canRetry = tried + 1 < ((maxRetries ?? 0) * urls.length);
+            const canRetry = tried + 1 < (maxRetries ?? 0) * urls.length;
             const reject = async (err: Error) => {
                 logger.warn(`Request failed. canRetry: ${canRetry}`, err);
                 if (canRetry) {
                     await this._sleeper.sleep();
-                    this._send(message, tried + 1).then(resolve).catch(reject);
+                    this._send(message, tried + 1)
+                        .then(resolve)
+                        .catch(reject);
                     return;
                 }
                 if (closeIfFailed) {
@@ -140,25 +142,25 @@ export class RestTransport implements Transport {
                         this.close();
                     }
                 }
-            }
+            };
             const options: http.RequestOptions | https.RequestOptions = {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/octet-stream',
-                    'Content-Length': message.length,
-                }
-            }
+                    "Content-Type": "application/octet-stream",
+                    "Content-Length": message.length,
+                },
+            };
             const responseHandler = (res: http.IncomingMessage) => {
                 const ok = res.statusCode === undefined || res.statusCode === 200;
                 const myLogger = ok ? logger.debug : logger.warn;
                 myLogger(`Response Status: ${res.statusCode}`);
                 myLogger(`Response Header: ${JSON.stringify(res.headers)}`);
-                res.setEncoding('utf8');
-                res.on('data', (chunk) => {
+                res.setEncoding("utf8");
+                res.on("data", (chunk) => {
                     myLogger(`Response body: ${chunk}`);
                 });
-                res.on('end', () => {
-                    myLogger('No more data in response.');
+                res.on("end", () => {
+                    myLogger("No more data in response.");
                     resolve();
                 });
             };
@@ -173,7 +175,7 @@ export class RestTransport implements Transport {
                 reject(new Error(`Unrecognized protocol ${protocol}`));
                 return;
             }
-            request.on('error', (err: Error) => {
+            request.on("error", (err: Error) => {
                 reject(err);
             });
             request.write(message);

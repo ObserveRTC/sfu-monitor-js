@@ -1,42 +1,42 @@
 name: Publish
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+    push:
+        branches:
+            - master
+    pull_request:
+        branches:
+            - master
 
 jobs:
-  publish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 14
-      - name: Install
-        run: yarn
+    publish:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v1
+            - uses: actions/setup-node@v1
+              with:
+                  node-version: 14
+            - name: Install
+              run: yarn
 
-      - name: Build
-        run: yarn build
+            - name: Build
+              run: yarn build
 
-      - name: Test
-        run: yarn test
-      
-      - name: Setup Custom Contexts
-        shell: bash
-        run: | 
-          echo "##[set-output name=branch;]$(echo ${GITHUB_REF##*/})"
-          echo "##[set-output name=version;]$(cat ./package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')"
-        id: job_context
+            - name: Test
+              run: yarn test
 
-      - name: Make snapshot version
-        if: steps.job_context.outputs.branch != 'master'
-        run: |
-          npm version ${{ steps.job_context.outputs.version }}-SNAPSHOT.${{ github.sha }} --git-tag-version false
+            - name: Setup Custom Contexts
+              shell: bash
+              run: |
+                  echo "##[set-output name=branch;]$(echo ${GITHUB_REF##*/})"
+                  echo "##[set-output name=version;]$(cat ./package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')"
+              id: job_context
 
-      - uses: JS-DevTools/npm-publish@v1
-        with:
-          access: public
-          token: ${{ secrets.NPM_TOKEN }}
+            - name: Make snapshot version
+              if: steps.job_context.outputs.branch != 'master'
+              run: |
+                  npm version ${{ steps.job_context.outputs.version }}-SNAPSHOT.${{ github.sha }} --git-tag-version false
+
+            - uses: JS-DevTools/npm-publish@v1
+              with:
+                  access: public
+                  token: ${{ secrets.NPM_TOKEN }}

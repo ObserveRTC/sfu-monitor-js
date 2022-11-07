@@ -1,12 +1,12 @@
 import { Timer } from "../../src/utils/Timer";
 
 describe("Timer", () => {
-    it('When it is constructed Then no error', () => {
+    it("When it is constructed Then no error", () => {
         new Timer();
     });
-    it('When process is added Then process is invoked', async () => {
+    it("When process is added Then process is invoked", async () => {
         const timer = new Timer();
-        await new Promise<void>(resolve => {
+        await new Promise<void>((resolve) => {
             timer.add({
                 type: "collect",
                 process: () => resolve(),
@@ -15,7 +15,7 @@ describe("Timer", () => {
         });
         timer.clear();
     });
-    it('When two process are added Then both are invoked', async () => {
+    it("When two process are added Then both are invoked", async () => {
         const timer = new Timer();
         let process1: number = 0;
         let process2: number = 0;
@@ -31,7 +31,7 @@ describe("Timer", () => {
             fixedDelayInMs: 500,
             context: "proc2",
         });
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
             setTimeout(resolve, 700);
         });
         timer.clear();
@@ -39,7 +39,7 @@ describe("Timer", () => {
         expect(process2).toBe(1);
     });
 
-    it('When Timer is cleared Then it does not invoke processes', async () => {
+    it("When Timer is cleared Then it does not invoke processes", async () => {
         const timer = new Timer();
         let invoked: number = 0;
         timer.add({
@@ -47,20 +47,20 @@ describe("Timer", () => {
             process: () => ++invoked,
             fixedDelayInMs: 250,
         });
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
             setTimeout(resolve, 350);
         });
         timer.clear();
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
             setTimeout(resolve, 1050);
         });
         expect(invoked).toBe(1);
     });
 
-    it('When different type of processes (collect, sample, send) are added Then they are called strictly in typed order (collect, sample, send)', async () => {
+    it("When different type of processes (collect, sample, send) are added Then they are called strictly in typed order (collect, sample, send)", async () => {
         const timer = new Timer();
         let invoked: number = 0;
-        await new Promise<void>(resolve => {
+        await new Promise<void>((resolve) => {
             timer.add({
                 type: "send",
                 process: () => {
@@ -83,7 +83,7 @@ describe("Timer", () => {
                 },
                 fixedDelayInMs: 100,
             });
-        })
+        });
         timer.clear();
         expect(invoked).toBe(3);
     });

@@ -6,14 +6,14 @@ describe("StatsStorage", () => {
         const storage = new StatsStorage();
         const transportStats = Generator.createSfuTransport();
         describe("When updateTransport is called", () => {
-            it ("Then getNumberOfTransports() is 1", () => {
+            it("Then getNumberOfTransports() is 1", () => {
                 storage.updateTransport(transportStats);
 
                 expect(storage.getNumberOfTransports()).toBe(1);
             });
         });
         describe("When updateTransport and removeTransport are called", () => {
-            it ("Then getNumberOfTransports() is 0", () => {
+            it("Then getNumberOfTransports() is 0", () => {
                 storage.updateTransport(transportStats);
                 storage.removeTransport(transportStats.transportId);
 
@@ -22,7 +22,7 @@ describe("StatsStorage", () => {
         });
 
         describe("When updateTransport is called and then trim", () => {
-            it ("Then getNumberOfTransports() is 0", () => {
+            it("Then getNumberOfTransports() is 0", () => {
                 const expirationThresholdInMs = Date.now() + 5000;
                 storage.updateTransport(transportStats);
                 storage.trim(expirationThresholdInMs);
@@ -31,15 +31,15 @@ describe("StatsStorage", () => {
             });
         });
         describe("When updateTransport is calledwith the same stats but different time", () => {
-            it ("Then getNumberOfTransports() is 0", async () => {
+            it("Then getNumberOfTransports() is 0", async () => {
                 storage.updateTransport(transportStats);
-                await new Promise<void>(resolve => {
+                await new Promise<void>((resolve) => {
                     setTimeout(() => {
                         storage.updateTransport(transportStats);
                         resolve();
                     }, 1000);
                 });
-                
+
                 const transport = Array.from(storage.transports())[0];
 
                 expect(transport.touched).not.toEqual(transport.updated);
@@ -51,14 +51,14 @@ describe("StatsStorage", () => {
         const storage = new StatsStorage();
         const inboundRtpPadStats = Generator.createSfuInboundRtpPad();
         describe("When updateInboundRtpPad is called", () => {
-            it ("Then getNumberOfTransports() is 1", () => {
+            it("Then getNumberOfTransports() is 1", () => {
                 storage.updateInboundRtpPad(inboundRtpPadStats);
 
                 expect(storage.getNumberOfInboundRtpPads()).toBe(1);
             });
         });
         describe("When updateInboundRtpPad and removeInboundRtpPad are called", () => {
-            it ("Then getNumberOfInboundRtpPads() is 0", () => {
+            it("Then getNumberOfInboundRtpPads() is 0", () => {
                 storage.updateInboundRtpPad(inboundRtpPadStats);
                 storage.removeInboundRtpPad(inboundRtpPadStats.padId);
 
@@ -67,7 +67,7 @@ describe("StatsStorage", () => {
         });
 
         describe("When updateInboundRtpPad is called and then trim", () => {
-            it ("Then getNumberOfInboundRtpPads() is 0", () => {
+            it("Then getNumberOfInboundRtpPads() is 0", () => {
                 const expirationThresholdInMs = Date.now() + 5000;
                 storage.updateInboundRtpPad(inboundRtpPadStats);
                 storage.trim(expirationThresholdInMs);
@@ -76,15 +76,15 @@ describe("StatsStorage", () => {
             });
         });
         describe("When updateInboundRtpPad is calledwith the same stats but different time", () => {
-            it ("Then getNumberOfTransports() is 0", async () => {
+            it("Then getNumberOfTransports() is 0", async () => {
                 storage.updateInboundRtpPad(inboundRtpPadStats);
-                await new Promise<void>(resolve => {
+                await new Promise<void>((resolve) => {
                     setTimeout(() => {
                         storage.updateInboundRtpPad(inboundRtpPadStats);
                         resolve();
                     }, 1000);
                 });
-                
+
                 const inboundRtpPad = Array.from(storage.inboundRtpPads())[0];
 
                 expect(inboundRtpPad.touched).not.toEqual(inboundRtpPad.updated);
@@ -97,14 +97,14 @@ describe("StatsStorage", () => {
         const storage = new StatsStorage();
         const outboundRtpPadStats = Generator.createSfuOutboundRtpPad();
         describe("When updateOutboundRtpPad is called", () => {
-            it ("Then getNumberOfOutboundRtpPads() is 1", () => {
+            it("Then getNumberOfOutboundRtpPads() is 1", () => {
                 storage.updateOutboundRtpPad(outboundRtpPadStats);
 
                 expect(storage.getNumberOfOutboundRtpPads()).toBe(1);
             });
         });
         describe("When updateOutboundRtpPad and removeOutboundRtpPad are called", () => {
-            it ("Then getNumberOfOutboundRtpPads() is 0", () => {
+            it("Then getNumberOfOutboundRtpPads() is 0", () => {
                 storage.updateOutboundRtpPad(outboundRtpPadStats);
                 storage.removeOutboundRtpPad(outboundRtpPadStats.padId);
 
@@ -113,7 +113,7 @@ describe("StatsStorage", () => {
         });
 
         describe("When updateOutboundRtpPad is called and then trim", () => {
-            it ("Then getNumberOfOutboundRtpPads() is 0", () => {
+            it("Then getNumberOfOutboundRtpPads() is 0", () => {
                 const expirationThresholdInMs = Date.now() + 5000;
                 storage.updateOutboundRtpPad(outboundRtpPadStats);
                 storage.trim(expirationThresholdInMs);
@@ -122,15 +122,15 @@ describe("StatsStorage", () => {
             });
         });
         describe("When updateOutboundRtpPad is calledwith the same stats but different time", () => {
-            it ("Then getNumberOfTransports() is 0", async () => {
+            it("Then getNumberOfTransports() is 0", async () => {
                 storage.updateOutboundRtpPad(outboundRtpPadStats);
-                await new Promise<void>(resolve => {
+                await new Promise<void>((resolve) => {
                     setTimeout(() => {
                         storage.updateOutboundRtpPad(outboundRtpPadStats);
                         resolve();
                     }, 1000);
                 });
-                
+
                 const outboundRtpPad = Array.from(storage.outboundRtpPads())[0];
 
                 expect(outboundRtpPad.touched).not.toEqual(outboundRtpPad.updated);
@@ -143,14 +143,14 @@ describe("StatsStorage", () => {
         const storage = new StatsStorage();
         const sctpChannelStats = Generator.createSfuSctpChannel();
         describe("When updateSctpChannel is called", () => {
-            it ("Then getNumberOfSctpChannels() is 1", () => {
+            it("Then getNumberOfSctpChannels() is 1", () => {
                 storage.updateSctpChannel(sctpChannelStats);
 
                 expect(storage.getNumberOfSctpChannels()).toBe(1);
             });
         });
         describe("When updateSctpChannel and removeSctpChannel are called", () => {
-            it ("Then getNumberOfSctpChannels() is 0", () => {
+            it("Then getNumberOfSctpChannels() is 0", () => {
                 storage.updateSctpChannel(sctpChannelStats);
                 storage.removeSctpChannel(sctpChannelStats.channelId);
 
@@ -159,7 +159,7 @@ describe("StatsStorage", () => {
         });
 
         describe("When updateOutboundRtpPad is called and then trim", () => {
-            it ("Then getNumberOfSctpChannels() is 0", () => {
+            it("Then getNumberOfSctpChannels() is 0", () => {
                 const expirationThresholdInMs = Date.now() + 5000;
                 storage.updateSctpChannel(sctpChannelStats);
                 storage.trim(expirationThresholdInMs);
@@ -168,15 +168,15 @@ describe("StatsStorage", () => {
             });
         });
         describe("When updateSctpChannel is calledwith the same stats but different time", () => {
-            it ("Then getNumberOfSctpChannels() is 0", async () => {
+            it("Then getNumberOfSctpChannels() is 0", async () => {
                 storage.updateSctpChannel(sctpChannelStats);
-                await new Promise<void>(resolve => {
+                await new Promise<void>((resolve) => {
                     setTimeout(() => {
                         storage.updateSctpChannel(sctpChannelStats);
                         resolve();
                     }, 1000);
                 });
-                
+
                 const sctpChannel = Array.from(storage.sctpChannels())[0];
 
                 expect(sctpChannel.touched).not.toEqual(sctpChannel.updated);
@@ -421,4 +421,4 @@ describe("StatsStorage", () => {
             });
         });
     });
-})
+});

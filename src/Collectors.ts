@@ -1,13 +1,13 @@
 import { Collector } from "./Collector";
 import { StatsWriter } from "./entries/StatsStorage";
 import { createLogger } from "./utils/logger";
-import { PromiseFetcher, PromiseSupplier } from "./utils/PromiseFetcher";
+import { PromiseFetcher } from "./utils/PromiseFetcher";
 
 const logger = createLogger(`Collectors`);
 
 export type CollectorsConfig = {
     /**
-     * Limits the number of collector pulled at once. When you have 500 collectors, 
+     * Limits the number of collector pulled at once. When you have 500 collectors,
      * and the batchSize is 50, the resource pull 50 collectors at once.
      */
     batchSize?: number;
@@ -16,12 +16,12 @@ export type CollectorsConfig = {
      * Minimum pacing time between two batches to fetch
      */
     minBatchPaceInMs?: number;
-    
+
     /**
      * Maximum pacing time between two batches
      */
     maxBatchPaceInMs?: number;
-}
+};
 
 const supplyDefaultConfig = () => {
     const result: CollectorsConfig = {
@@ -30,15 +30,13 @@ const supplyDefaultConfig = () => {
         maxBatchPaceInMs: 0,
     };
     return result;
-}
+};
 
 export interface Collectors extends Iterable<Collector> {
     add(collector: Collector): void;
     remove(collectorId: string): void;
     readonly closed: boolean;
 }
-
-
 
 export class CollectorsImpl implements Collectors {
     public static create(config?: CollectorsConfig): CollectorsImpl {
@@ -93,7 +91,7 @@ export class CollectorsImpl implements Collectors {
         const promiseFetcher = PromiseFetcher.builder()
             .withBatchSize(this._config.batchSize ?? 0)
             .withPace(this._config.maxBatchPaceInMs ?? 0, this._config.maxBatchPaceInMs ?? 0)
-            .onCatchedError(err => {
+            .onCatchedError((err) => {
                 logger.warn(`Error occurred while collecting`, err);
                 result = false;
             });

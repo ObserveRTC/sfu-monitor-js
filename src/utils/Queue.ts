@@ -1,4 +1,4 @@
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export class Queue<T = any> {
     private _items: any = {};
     private _head = 0;

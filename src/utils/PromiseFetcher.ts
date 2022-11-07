@@ -1,6 +1,7 @@
 import { createLogger } from "./logger";
 
-const logger = createLogger(`PromiseFetcher`)
+/* eslint-disable @typescript-eslint/no-unused-vars */
+const logger = createLogger(`PromiseFetcher`);
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type ErrorListener = (err: any, i: number) => void;
@@ -11,15 +12,15 @@ const EMPTY_ARRAY: any = [];
 type Nullable<T> = T | null;
 
 type Pace = {
-    minPaceInMs: number,
-    maxPaceInMs: number,
-}
+    minPaceInMs: number;
+    maxPaceInMs: number;
+};
 
 interface Builder<U> {
     withBatchSize(value: number): Builder<U>;
     withPromiseSuppliers(...suppliers: PromiseSupplier<U>[]): Builder<U>;
     onCatchedError(listener: ErrorListener): Builder<U>;
-    withPace(minPaceInMs: number, maxPaceInMs: number): Builder<U>,
+    withPace(minPaceInMs: number, maxPaceInMs: number): Builder<U>;
     build(): PromiseFetcher<U>;
 }
 
@@ -38,7 +39,7 @@ export class PromiseFetcher<T> {
                 fetcher._pace = {
                     minPaceInMs,
                     maxPaceInMs,
-                }
+                };
                 return result;
             },
             withPromiseSuppliers: (...suppliers: PromiseSupplier<U>[]) => {
@@ -55,7 +56,7 @@ export class PromiseFetcher<T> {
             },
             build: () => {
                 return fetcher;
-            }
+            },
         };
         return result;
     }
@@ -78,13 +79,12 @@ export class PromiseFetcher<T> {
         return result;
     }
 
-
     async *values(): AsyncGenerator<T, void, undefined> {
         let errorHandler = this._errorHandler;
         if (!errorHandler) {
             errorHandler = (err, index) => {
                 throw new Error(`Promise ${index}th is rejected with an error: ` + err);
-            }
+            };
         }
         const batchSize = 0 < this._batchSize ? this._batchSize : this._suppliers.size;
         let emittedBatch = 0;
@@ -94,7 +94,7 @@ export class PromiseFetcher<T> {
             const supplier = this._suppliers.get(index);
             if (!supplier) continue;
             const promise = supplier()
-                .then(item => {
+                .then((item) => {
                     values.set(index, item);
                 })
                 .catch((err) => {
@@ -114,15 +114,15 @@ export class PromiseFetcher<T> {
             ++emittedBatch;
             values.clear();
             promises = [];
-            if (emittedBatch * batchSize < this._suppliers.size &&  this._pace) {
+            if (emittedBatch * batchSize < this._suppliers.size && this._pace) {
                 const { minPaceInMs, maxPaceInMs } = this._pace;
                 const timeoutInMs = Math.ceil(minPaceInMs + Math.random() * (maxPaceInMs - minPaceInMs));
                 if (1 < timeoutInMs) {
-                    await new Promise<void>(resolve => {
+                    await new Promise<void>((resolve) => {
                         setTimeout(() => {
                             resolve();
                         }, timeoutInMs);
-                    })
+                    });
                 }
             }
         }

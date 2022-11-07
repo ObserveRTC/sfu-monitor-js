@@ -4,9 +4,9 @@ import * as protobufjs from "protobufjs/light";
 import { Codec } from "./Codec";
 
 export type ProtobufConfig = {
-    validate?: boolean,
-    messageSchema: protobufjs.Type
-}
+    validate?: boolean;
+    messageSchema: protobufjs.Type;
+};
 
 type ProtobufConstructorConfig = ProtobufConfig;
 const supplyDefaultConfig = () => {
@@ -15,9 +15,9 @@ const supplyDefaultConfig = () => {
     const result: ProtobufConstructorConfig = {
         validate: false,
         messageSchema,
-    }
+    };
     return result;
-}
+};
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export class ProtobufCodec implements Codec<any, Uint8Array> {

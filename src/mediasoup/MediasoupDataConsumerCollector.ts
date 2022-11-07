@@ -12,7 +12,7 @@ const logger = createLogger(`MediasoupCollector`);
 export type MediasoupDataConsumerCollectorConfig = {
     /**
      * a supplier lambda function provides information if the collector should poll stas or not
-     * 
+     *
      * DEFAULT: undefined, which means it will not poll measurements
      */
     pollStats?: () => boolean;
@@ -21,15 +21,12 @@ export type MediasoupDataConsumerCollectorConfig = {
      * Add arbitrary data to the inboundRtpEntry
      */
     appendix?: Appendix;
-}
+};
 
 const supplyDefaultConfig = () => {
-    const result: MediasoupDataConsumerCollectorConfig = {
-    }
+    const result: MediasoupDataConsumerCollectorConfig = {};
     return result;
-}
-
-const NO_REPORT_SSRC = 0xDEADBEEF;
+};
 
 export class MediasoupDataConsumerCollector implements Collector {
     public readonly id = uuidv4();
@@ -41,7 +38,7 @@ export class MediasoupDataConsumerCollector implements Collector {
     private _internal: boolean;
     private _ssrcToPadIds = new Map<number, string>();
     private _dataConsumer: MediasoupDataConsumer;
-    private _correspondCollector?: Collector
+    private _correspondCollector?: Collector;
     public constructor(
         parent: Collectors,
         dataConsumer: MediasoupDataConsumer,
@@ -79,13 +76,16 @@ export class MediasoupDataConsumerCollector implements Collector {
     }
 
     private async _collectWithoutStats(): Promise<void> {
-        this._statsWriter?.updateSctpChannel({
-            transportId: this._transportId,
-            streamId: this._dataConsumer.id,
-            channelId: this._dataConsumer.id,
-            noReport: true,
-            internal: this._internal,
-        }, {});
+        this._statsWriter?.updateSctpChannel(
+            {
+                transportId: this._transportId,
+                streamId: this._dataConsumer.id,
+                channelId: this._dataConsumer.id,
+                noReport: true,
+                internal: this._internal,
+            },
+            {}
+        );
     }
 
     public async collect(): Promise<void> {
@@ -99,7 +99,7 @@ export class MediasoupDataConsumerCollector implements Collector {
             return;
         }
         if (!this._statsWriter) {
-            logger.debug(`No StatsWriter added to (${this.id})`)
+            logger.debug(`No StatsWriter added to (${this.id})`);
             return;
         }
         if (this._config.pollStats === undefined || this._config.pollStats() === false) {
@@ -132,7 +132,7 @@ export class MediasoupDataConsumerCollector implements Collector {
     public get closed(): boolean {
         return this._closed;
     }
-    
+
     public close(): void {
         if (this._closed) {
             logger.info(`Attempted to close twice`);
