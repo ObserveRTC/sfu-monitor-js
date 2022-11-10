@@ -11,6 +11,9 @@ const logger = createLogger(`Sender`);
 const ON_ERROR_EVENT_NAME = "onError";
 const ON_CLOSED_EVENT_NAME = "onClosed";
 
+/*eslint-disable @typescript-eslint/no-explicit-any */
+export type SamplesSentCallback = (err?: any) => void;
+
 export type SenderConfig = {
     /**
      * Configure the codec used to transport samples or receieve
@@ -79,7 +82,7 @@ export class Sender {
         return this._closed;
     }
 
-    public send(samples: Samples): void {
+    public send(samples: Samples, callback?: SamplesSentCallback): void {
         if (this._closed) {
             throw new Error(`Cannot use an already closed Sender`);
         }
@@ -91,8 +94,15 @@ export class Sender {
         //     original: JSON.stringify(samples),
         //     messageInBase64
         // });
-        this._transport.send(message).catch((err) => {
+        this._transport.send(message).then(() => {
+            if (!this._closed && callback) {
+                callback();
+            }
+        }).catch((err) => {
             if (!this._closed) {
+                if (callback) {
+                    callback(err);
+                }
                 this._close(err);
             }
         });

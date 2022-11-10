@@ -1,7 +1,7 @@
 import { CustomSfuEvent, ExtensionStat, Samples } from "@observertc/schemas";
 import { EventsRegister, EventsRelayer } from "./EventsRelayer";
 import { Sampler, supplyDefaultConfig as supplySamplerDefaultConfig } from "./Sampler";
-import { Sender, SenderConfig } from "./Sender";
+import { SamplesSentCallback, Sender, SenderConfig } from "./Sender";
 import { Timer } from "./utils/Timer";
 import { StatsReader, StatsStorage } from "./entries/StatsStorage";
 import { Accumulator } from "./Accumulator";
@@ -125,7 +125,7 @@ export class SfuMonitorImpl implements SfuMonitor {
         logger.debug(`Collecting took `, elapsedInMs);
     }
 
-    public async sample(): Promise<void> {
+    public sample(): void {
         const sfuSample = this._sampler.make();
         if (this._sender) {
             this._accumulator.addSfuSample(sfuSample);
@@ -133,7 +133,7 @@ export class SfuMonitorImpl implements SfuMonitor {
         this._eventer.emitSampleCreated(sfuSample);
     }
 
-    public async send(): Promise<void> {
+    public send(callback?: SamplesSentCallback): void {
         if (!this._sender) {
             if (this._flags.has(NO_SENDER_FOR_SENDING_FLAG)) {
                 return;
@@ -148,7 +148,7 @@ export class SfuMonitorImpl implements SfuMonitor {
             queue.push(samples);
         });
         for (const samples of queue) {
-            this._sender.send(samples);
+            this._sender.send(samples, callback);
         }
     }
 

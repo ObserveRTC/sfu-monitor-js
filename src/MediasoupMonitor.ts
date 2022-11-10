@@ -1,6 +1,6 @@
 import { CustomSfuEvent, ExtensionStat } from "@observertc/schemas";
 import { EventsRegister } from "./EventsRelayer";
-import { SenderConfig } from "./Sender";
+import { SamplesSentCallback, SenderConfig } from "./Sender";
 import { StatsReader } from "./entries/StatsStorage";
 import { createLogger } from "./utils/logger";
 import { Collectors } from "./Collectors";
@@ -97,12 +97,12 @@ export class MediasoupMonitor implements SfuMonitor {
         return this._monitor.collect();
     }
 
-    public sample(): Promise<void> {
-        return this._monitor.sample();
+    public sample(): void {
+        this._monitor.sample();
     }
 
-    public send(): Promise<void> {
-        return this.send();
+    public send(callback?: SamplesSentCallback): void {
+        return this.send(callback);
     }
 
     public get closed(): boolean {

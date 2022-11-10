@@ -1,14 +1,12 @@
 import { CustomSfuEvent, ExtensionStat } from "@observertc/schemas";
 import { EventsRegister } from "./EventsRelayer";
 import { SamplerConfig } from "./Sampler";
-import { SenderConfig } from "./Sender";
+import { SamplesSentCallback, SenderConfig } from "./Sender";
 import { StatsReader } from "./entries/StatsStorage";
 import { AccumulatorConfig } from "./Accumulator";
 import { setLevel as setLoggersLevel } from "./utils/logger";
 import { LogLevelDesc } from "loglevel";
-import { SfuMonitorImpl } from "./SfuMonitorImpl";
 import { Collectors, CollectorsConfig } from "./Collectors";
-import { MediasoupMonitor, MediasoupMonitorConfig } from "./MediasoupMonitor";
 
 export type SfuMonitorConfig = {
     /**
@@ -120,12 +118,12 @@ export interface SfuMonitor {
     /**
      * Make client sample from a collected stats
      */
-    sample(): Promise<void>;
+    sample(): void;
 
     /**
      * Send samples
      */
-    send(): Promise<void>;
+    send(callback?: SamplesSentCallback): void;
 
     /**
      * Indicate if the SfuObserver is closed or not

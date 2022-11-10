@@ -1,6 +1,48 @@
 import EventEmitter from "events";
 import * as Types from "../../src/mediasoup/MediasoupTypes";
 import { v4 as uuidv4 } from "uuid";
+import { SfuInboundRtpPad, SfuOutboundRtpPad, SfuSctpChannel, SfuTransport } from "@observertc/schemas";
+import { StatsWriter } from "../../src/entries/StatsStorage";
+
+export function makeStatsWriterRelayer({
+    removeTransport,
+    updateTransport,
+    removeInboundRtpPad,
+    updateInboundRtpPad,
+    removeOutboundRtpPad,
+    updateOutboundRtpPad,
+    removeSctpChannel,
+    updateSctpChannel,
+}: {
+    removeTransport?: (transportId: string) => void;
+    updateTransport?: (stats: SfuTransport) => void;
+    removeInboundRtpPad?: (rtpPadId: string) => void;
+    updateInboundRtpPad?: (stats: SfuInboundRtpPad) => void;
+    removeOutboundRtpPad?: (rtpPadId: string) => void;
+    updateOutboundRtpPad?: (stats: SfuOutboundRtpPad) => void;
+    removeSctpChannel?: (sctpStreamId: string) => void;
+    updateSctpChannel?: (stats: SfuSctpChannel) => void;
+}) {
+    const errorHandler = (methodName: string) => {
+        return () => {
+            throw new Error(`${methodName} is called and handler has not been provided`);
+        };
+    };
+    const result: StatsWriter = {
+        removeTransport: removeTransport ?? errorHandler("removeTransport"),
+        updateTransport: updateTransport ?? errorHandler("updateTransport"),
+
+        removeInboundRtpPad: removeInboundRtpPad ?? errorHandler("removeInboundRtpPad"),
+        updateInboundRtpPad: updateInboundRtpPad ?? errorHandler("updateInboundRtpPad"),
+
+        removeOutboundRtpPad: removeOutboundRtpPad ?? errorHandler("removeOutboundRtpPad"),
+        updateOutboundRtpPad: updateOutboundRtpPad ?? errorHandler("updateOutboundRtpPad"),
+
+        removeSctpChannel: removeSctpChannel ?? errorHandler("removeSctpChannel"),
+        updateSctpChannel: updateSctpChannel ?? errorHandler("updateSctpChannel"),
+    };
+    return result;
+}
 
 const DEFAULT_TRANSPORT_ID = uuidv4();
 const DEFAULT_PRODUCER_ID = uuidv4();
