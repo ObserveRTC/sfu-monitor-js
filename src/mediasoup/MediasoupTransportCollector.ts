@@ -328,7 +328,6 @@ export class MediasoupTransportCollector implements Collector {
         const transportId = this._transport.id;
         const polledStats = await this._transport.getStats();
         for (const msStats of polledStats) {
-            let transportStats: SfuTransport | undefined;
             const stats = msStats as MediasoupWebRtcTransportStats;
             const {
                 localIp: localAddress,
@@ -337,7 +336,7 @@ export class MediasoupTransportCollector implements Collector {
                 remoteIp: remoteAddress,
                 remotePort,
             } = stats.iceSelectedTuple ?? {};
-            transportStats = {
+            const transportStats: SfuTransport = {
                 transportId,
                 noReport: false,
                 dtlsState: stats.dtlsState,
@@ -365,9 +364,7 @@ export class MediasoupTransportCollector implements Collector {
                 // sctpPacketsReceived: stats.sctpPacketsReceived,
                 // sctpPacketsSent: stats.sctpPacketsSent,
             };
-            if (transportStats) {
-                this._statsWriter?.updateTransport(transportStats, this._config.transportAppendix ?? {});
-            }
+            this._statsWriter?.updateTransport(transportStats, this._config.transportAppendix ?? {});
         }
     }
 
@@ -378,9 +375,8 @@ export class MediasoupTransportCollector implements Collector {
         const transportId = this._transport.id;
         const polledStats = await this._transport.getStats();
         for (const msStats of polledStats) {
-            let transportStats: SfuTransport | undefined;
             const stats = msStats as MediasoupDirectTransport;
-            transportStats = {
+            const transportStats: SfuTransport = {
                 transportId,
                 noReport: false,
                 rtpBytesReceived: stats.rtpBytesReceived,
@@ -388,9 +384,7 @@ export class MediasoupTransportCollector implements Collector {
                 rtxBytesReceived: stats.rtxBytesReceived,
                 rtxBytesSent: stats.rtxBytesSent,
             };
-            if (transportStats) {
-                this._statsWriter?.updateTransport(transportStats, this._config.transportAppendix ?? {});
-            }
+            this._statsWriter?.updateTransport(transportStats, this._config.transportAppendix ?? {});
         }
     }
 
@@ -401,32 +395,29 @@ export class MediasoupTransportCollector implements Collector {
         const transportId = this._transport.id;
         const polledStats = await this._transport.getStats();
         for (const msStats of polledStats) {
-            let transportStats: SfuTransport | undefined;
             const stats = msStats as MediasoupPipeTransport;
-                const {
-                    localIp: localAddress,
-                    protocol,
-                    localPort,
-                    remoteIp: remoteAddress,
-                    remotePort,
-                } = stats.tuple ?? {};
-                transportStats = {
-                    internal: true,
-                    noReport: false,
-                    transportId,
-                    localAddress,
-                    localPort,
-                    protocol,
-                    remoteAddress,
-                    remotePort,
-                    rtpBytesReceived: stats.rtpBytesReceived,
-                    rtpBytesSent: stats.rtpBytesSent,
-                    rtxBytesReceived: stats.rtxBytesReceived,
-                    rtxBytesSent: stats.rtxBytesSent,
-                };
-            if (transportStats) {
-                this._statsWriter?.updateTransport(transportStats, this._config.transportAppendix ?? {});
-            }
+            const {
+                localIp: localAddress,
+                protocol,
+                localPort,
+                remoteIp: remoteAddress,
+                remotePort,
+            } = stats.tuple ?? {};
+            const transportStats: SfuTransport = {
+                internal: true,
+                noReport: false,
+                transportId,
+                localAddress,
+                localPort,
+                protocol,
+                remoteAddress,
+                remotePort,
+                rtpBytesReceived: stats.rtpBytesReceived,
+                rtpBytesSent: stats.rtpBytesSent,
+                rtxBytesReceived: stats.rtxBytesReceived,
+                rtxBytesSent: stats.rtxBytesSent,
+            };
+            this._statsWriter?.updateTransport(transportStats, this._config.transportAppendix ?? {});
         }
     }
 
@@ -437,31 +428,28 @@ export class MediasoupTransportCollector implements Collector {
         const transportId = this._transport.id;
         const polledStats = await this._transport.getStats();
         for (const msStats of polledStats) {
-            let transportStats: SfuTransport | undefined;
             const stats = msStats as MediasoupPlainTransport;
-                const {
-                    localIp: localAddress,
-                    protocol,
-                    localPort,
-                    remoteIp: remoteAddress,
-                    remotePort,
-                } = stats.tuple ?? {};
-                transportStats = {
-                    transportId,
-                    noReport: false,
-                    localAddress,
-                    localPort,
-                    protocol,
-                    remoteAddress,
-                    remotePort,
-                    rtpBytesReceived: stats.rtpBytesReceived,
-                    rtpBytesSent: stats.rtpBytesSent,
-                    rtxBytesReceived: stats.rtxBytesReceived,
-                    rtxBytesSent: stats.rtxBytesSent,
-                };
-            if (transportStats) {
-                this._statsWriter?.updateTransport(transportStats, this._config.transportAppendix ?? {});
-            }
+            const {
+                localIp: localAddress,
+                protocol,
+                localPort,
+                remoteIp: remoteAddress,
+                remotePort,
+            } = stats.tuple ?? {};
+            const transportStats = {
+                transportId,
+                noReport: false,
+                localAddress,
+                localPort,
+                protocol,
+                remoteAddress,
+                remotePort,
+                rtpBytesReceived: stats.rtpBytesReceived,
+                rtpBytesSent: stats.rtpBytesSent,
+                rtxBytesReceived: stats.rtxBytesReceived,
+                rtxBytesSent: stats.rtxBytesSent,
+            };
+            this._statsWriter?.updateTransport(transportStats, this._config.transportAppendix ?? {});
         }
     }
 
