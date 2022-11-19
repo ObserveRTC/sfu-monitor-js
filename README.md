@@ -102,24 +102,6 @@ const monitor = createMediasoupMonitor({
 });
 ```
 
-NOTE: by default the MediasoupMonitor can distinguish WebRtcTransport, and PipeTransport, but in case you use PlainTransport you need to define your own getTransportType through config like:
-
-```javascript
-const getTransportType: TransportTypeFunction = (transport: Transport) => {
-    if (transport instanceof WebRtcTransport) return "webrtc-transport";
-    if (transport instanceof PlainTransport) return "plain-transport";
-    if (transport instanceof PipeTransport) return "pipe-transport";
-    return "direct-transport";
-}
-const monitor = createMediasoupMonitor({
-    collectingPeriodInMs: 5000,
-    mediasoup,
-    mediasoupCollector: {
-        getTransportType,
-    }
-});
-```
-
 ### Integrate other type of SFUs
 
 To have a custom integration you could use `AuxCollector` as follows:

@@ -17,9 +17,18 @@ const logger = createLogger(`MediasoupRouter`);
 export type TransportTypeFunction = (transport: MediasoupTransport) => MediasoupTransportType;
 
 const defaultGetTransportType: TransportTypeFunction = (transport) => {
-    if (transport?.iceState) return "webrtc-transport";
-    if (transport?.tuple) return "pipe-transport";
-    return "direct-transport";
+    const transportConstructor = transport.constructor.name;
+    switch (transportConstructor) {
+        case "WebRtcTransport":
+        case "PlainTransport":
+        case "PipeTransport":
+        case "DirectTransport":
+            return transportConstructor as MediasoupTransportType;
+        default:
+            logger.warn(`Cannot infer transport type from transport constructor: ${transportConstructor}`);
+            return "WebRtcTransport";
+            
+    }
 };
 
 export type MediasoupRouterCollectorConfig = {
