@@ -44,6 +44,8 @@ export function makeStatsWriterRelayer({
     return result;
 }
 
+const DEFAULT_WORKER_ID = 4583;
+const DEFAULT_ROUTER_ID = uuidv4();
 const DEFAULT_TRANSPORT_ID = uuidv4();
 const DEFAULT_PRODUCER_ID = uuidv4();
 const DEFAULT_CONSUMER_ID = uuidv4();
@@ -271,4 +273,141 @@ export function createWebRtcTransport(): ProvidedTransport {
     const stats = createWebRtcTransportStats();
     const transport = createTransport(stats);
     return transport;
+}
+
+export interface ProvidedRouter extends Types.MediasoupRouter {
+    createWebRtcTransport(stats?: any): ProvidedTransport;
+    createPlainTransport(stats?: any): ProvidedTransport;
+    createDirectTransport(stats?: any): ProvidedTransport;
+    createPipeTransport(stats?: any): ProvidedTransport;
+    close(): void;
+}
+
+export function createRouter(): ProvidedRouter {
+    const emitter = new EventEmitter();
+    const result: ProvidedRouter = {
+        id: DEFAULT_ROUTER_ID,
+        observer: {
+            on: (eventType: Types.MediasoupRouterEventTypes, listener: Types.MediasoupRouterListener) => {
+                emitter.on(eventType, listener);
+            },
+            once: (eventType: "close", listener: Types.MediasoupCloseListener) => {
+                emitter.once(eventType, listener);
+            },
+            removeListener: (
+                eventType: Types.MediasoupRouterEventTypes,
+                listener: Types.MediasoupRouterListener
+            ) => {
+                emitter.removeListener(eventType, listener);
+            },
+        },
+        createWebRtcTransport: (stats?: any) => {
+            const stats_: Types.MediasoupWebRtcTransportStats = {
+                ...(stats || {}),
+                type: "webrtc-transport",
+            };
+            const result = createTransport(stats_);
+            emitter.emit("newtransport", result);
+            return result;
+        },
+        createPlainTransport: (stats?: any) => {
+            const stats_: Types.MediasoupWebRtcTransportStats = {
+                ...(stats || {}),
+                type: "plain-rtp-transport",
+            };
+            const result = createTransport(stats_);
+            emitter.emit("newtransport", result);
+            return result;
+        },
+        createDirectTransport: (stats?: any) => {
+            const stats_: Types.MediasoupWebRtcTransportStats = {
+                ...(stats || {}),
+                type: "direct-transport",
+            };
+            const result = createTransport(stats_);
+            emitter.emit("newtransport", result);
+            return result;
+        },
+        createPipeTransport: (stats?: any) => {
+            const stats_: Types.MediasoupWebRtcTransportStats = {
+                ...(stats || {}),
+                type: "pipe-transport",
+            };
+            const result = createTransport(stats_);
+            emitter.emit("newtransport", result);
+            return result;
+        },
+        close: () => {
+            emitter.emit("close");
+        },
+    };
+    return result;
+}
+
+export interface ProvidedWorker extends Types.MediasoupWorker {
+    createRouter(stats?: any): ProvidedRouter;
+    close(): void;
+}
+
+export function createWorker(): ProvidedWorker {
+    const emitter = new EventEmitter();
+    const result: ProvidedWorker = {
+        pid: DEFAULT_WORKER_ID,
+        observer: {
+            on: (eventType: Types.MediasoupWorkerEventTypes, listener: Types.MediasoupWorkerListener) => {
+                emitter.on(eventType, listener);
+            },
+            once: (eventType: "close", listener: Types.MediasoupCloseListener) => {
+                emitter.once(eventType, listener);
+            },
+            removeListener: (
+                eventType: Types.MediasoupWorkerEventTypes,
+                listener: Types.MediasoupWorkerListener
+            ) => {
+                emitter.removeListener(eventType, listener);
+            },
+        },
+        createRouter: () => {
+            const result = createRouter();
+            emitter.emit("newrouter", result);
+            return result;
+        },
+        close: () => {
+            emitter.emit("close");
+        },
+    };
+    return result;
+}
+
+
+export interface ProvidedMediasoup extends Types.MediasoupSurrogate {
+    createWorker(): ProvidedWorker;
+    close(): void;
+}
+
+export function createMediasoupSurrogate(): ProvidedMediasoup {
+    const emitter = new EventEmitter();
+    const result: ProvidedMediasoup = {
+        version: "3.6.10",
+        observer: {
+            on: (eventType: Types.MediasoupSurrogateEventTypes, listener: Types.MediasoupSurrogateListener) => {
+                emitter.on(eventType, listener);
+            },
+            removeListener: (
+                eventType: Types.MediasoupSurrogateEventTypes,
+                listener: Types.MediasoupSurrogateListener
+            ) => {
+                emitter.removeListener(eventType, listener);
+            },
+        },
+        createWorker: () => {
+            const result = createWorker();
+            emitter.emit("newworker", result);
+            return result;
+        },
+        close: () => {
+            emitter.emit("close");
+        },
+    };
+    return result;
 }

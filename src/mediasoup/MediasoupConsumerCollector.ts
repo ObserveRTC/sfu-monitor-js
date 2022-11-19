@@ -17,7 +17,7 @@ export type MediasoupConsumerCollectorConfig = {
      *
      * DEFAULT: undefined, which means it will not poll measurements
      */
-    pollStats?: () => boolean;
+    pollStats?: (consumerId: string) => boolean;
 
     /**
      * Add arbitrary data to the inboundRtpEntry
@@ -33,7 +33,7 @@ const supplyDefaultConfig = () => {
 const NO_REPORT_SSRC = 0xdeadbeef;
 
 export class MediasoupConsumerCollector implements Collector {
-    public readonly id = uuidv4();
+    public readonly id;
     private _parent: Collectors;
     private _closed = false;
     private _config: MediasoupConsumerCollectorConfig;
@@ -42,14 +42,12 @@ export class MediasoupConsumerCollector implements Collector {
     private _internal: boolean;
     private _ssrcToPadIds = new Map<number, string>();
     private _consumer: MediasoupConsumer;
-    private _correspondCollector?: Collector;
     public constructor(
         parent: Collectors,
         consumer: MediasoupConsumer,
         transportId: string,
         internal: boolean,
         config?: MediasoupConsumerCollectorConfig,
-        correspondCollector?: Collector
     ) {
         this.id = `mediasoup-consumer-${consumer.id}`;
         this._parent = parent;
@@ -57,7 +55,6 @@ export class MediasoupConsumerCollector implements Collector {
         this._transportId = transportId;
         this._internal = internal;
         this._config = Object.assign(supplyDefaultConfig(), config);
-        this._correspondCollector = correspondCollector;
 
         const consumerId = this._consumer.id;
         this._consumer.observer.once("close", () => {
@@ -105,7 +102,7 @@ export class MediasoupConsumerCollector implements Collector {
             logger.warn(`Attempted to collect from a closed collector.`);
             return;
         }
-        if (this._correspondCollector && this._correspondCollector.closed) {
+        if (this._parent && this._parent.closed) {
             // if the corresponded collector is closed we need to close ourselves too
             this.close();
             return;
@@ -114,7 +111,7 @@ export class MediasoupConsumerCollector implements Collector {
             logger.debug(`No StatsWriter added to (${this.id})`);
             return;
         }
-        if (this._config.pollStats === undefined || this._config.pollStats() === false) {
+        if (this._config.pollStats === undefined || this._config.pollStats(this._consumer.id) === false) {
             return await this._collectWithoutStats();
         }
         const polledStats = await this._consumer.getStats();
@@ -179,6 +176,9 @@ export class MediasoupConsumerCollector implements Collector {
         if (this._closed) {
             logger.info(`Attempted to close twice`);
             return;
+        }
+        for (const padId of this._ssrcToPadIds.values()) {
+            this._statsWriter?.removeOutboundRtpPad(padId);
         }
         this._closed = true;
         this._parent.remove(this.id);

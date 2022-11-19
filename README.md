@@ -90,7 +90,10 @@ const monitor = createMediasoupMonitor({
     collectingPeriodInMs: 5000,
     mediasoup,
     mediasoupCollector: {
-        pollTransportStats: () => true,
+        pollWebRtcTransportStats: () => true,
+        pollPlainRtpTransportStats: () => true,
+        pollPipeTransportStats: () => true,
+        pollDirectTransportStats: () => true,
         pollProducerStats: () => true,
         pollConsumerStats: () => true,
         pollDataProducerStats: () => true,

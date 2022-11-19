@@ -15,7 +15,7 @@ export type MediasoupDataConsumerCollectorConfig = {
      *
      * DEFAULT: undefined, which means it will not poll measurements
      */
-    pollStats?: () => boolean;
+    pollStats?: (dataConsumerId: string) => boolean;
 
     /**
      * Add arbitrary data to the inboundRtpEntry
@@ -38,14 +38,12 @@ export class MediasoupDataConsumerCollector implements Collector {
     private _internal: boolean;
     private _ssrcToPadIds = new Map<number, string>();
     private _dataConsumer: MediasoupDataConsumer;
-    private _correspondCollector?: Collector;
     public constructor(
         parent: Collectors,
         dataConsumer: MediasoupDataConsumer,
         transportId: string,
         internal: boolean,
         config?: MediasoupDataConsumerCollectorConfig,
-        correspondCollector?: Collector
     ) {
         this.id = `mediasoup-dataConsumer-${dataConsumer.id}`;
         this._parent = parent;
@@ -53,7 +51,6 @@ export class MediasoupDataConsumerCollector implements Collector {
         this._transportId = transportId;
         this._internal = internal;
         this._config = Object.assign(supplyDefaultConfig(), config);
-        this._correspondCollector = correspondCollector;
 
         const dataConsumerId = this._dataConsumer.id;
         this._dataConsumer.observer.once("close", () => {
@@ -93,7 +90,7 @@ export class MediasoupDataConsumerCollector implements Collector {
             logger.warn(`Attempted to collect from a closed collector.`);
             return;
         }
-        if (this._correspondCollector && this._correspondCollector.closed) {
+        if (this._parent && this._parent.closed) {
             // if the corresponded collector is closed we need to close ourselves too
             this.close();
             return;
@@ -102,7 +99,7 @@ export class MediasoupDataConsumerCollector implements Collector {
             logger.debug(`No StatsWriter added to (${this.id})`);
             return;
         }
-        if (this._config.pollStats === undefined || this._config.pollStats() === false) {
+        if (this._config.pollStats === undefined || this._config.pollStats(this._dataConsumer.id) === false) {
             return await this._collectWithoutStats();
         }
         const transportId = this._transportId;
@@ -138,6 +135,7 @@ export class MediasoupDataConsumerCollector implements Collector {
             logger.info(`Attempted to close twice`);
             return;
         }
+        this._statsWriter?.removeSctpChannel(this._dataConsumer.id);
         this._closed = true;
         this._parent.remove(this.id);
     }

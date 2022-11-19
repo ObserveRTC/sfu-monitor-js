@@ -1,5 +1,5 @@
 import { StatsWriter } from "../../src/entries/StatsStorage";
-import { MediasoupProducerCollector, MediasoupProducerCollectorConfig } from "../../src/mediasoup/MediasoupProducerCollector";
+import { MediasoupDataConsumerCollector, MediasoupDataConsumerCollectorConfig } from "../../src/mediasoup/MediasoupDataConsumerCollector";
 import * as Generator from "../helpers/MediasoupTypesGenerator";
 import { Collectors } from "../../src/Collectors";
 import { Collector } from "../../src/Collector";
@@ -21,19 +21,19 @@ const createCollectors: (closed?: boolean) => Collectors = (closed = false) => {
     };
 };
 
-describe("MediasoupProducerCollector", () => {
+describe("MediasoupDataConsumerCollector", () => {
     describe("GetStats interaction tests", () => {
         const statsWriter = makeStatsWriterRelayer({
-            updateInboundRtpPad: () => {},
-            removeInboundRtpPad: () => {},
+            updateSctpChannel: () => {},
+            removeSctpChannel: () => {},
         });
-        const setup = (config: MediasoupProducerCollectorConfig) => {
+        const setup = (config: MediasoupDataConsumerCollectorConfig) => {
             const collectors = createCollectors();
             const transport = Generator.createWebRtcTransport();
-            const producer = transport.produce();
-            const collector = new MediasoupProducerCollector(
+            const dataConsumer = transport.consumeData();
+            const collector = new MediasoupDataConsumerCollector(
                 collectors,
-                producer,
+                dataConsumer,
                 transport.id,
                 false,
                 config,
@@ -41,33 +41,33 @@ describe("MediasoupProducerCollector", () => {
             collector.setStatsWriter(statsWriter);
             return {
                 collector,
-                producer,
+                dataConsumer,
                 statsWriter,
             }
         }
 
-        it("Given collector on producer, collector.collect method invokes producer getStats", (done) => {
-            const config: MediasoupProducerCollectorConfig = {
+        it("Given collector on dataConsumer, collector.collect method invokes dataConsumer getStats", (done) => {
+            const config: MediasoupDataConsumerCollectorConfig = {
                 pollStats: () => true,
             }
-            const { producer, collector } = setup(config);
-            const _getStats = producer.getStats;
+            const { dataConsumer, collector } = setup(config);
+            const _getStats = dataConsumer.getStats;
     
-            producer.getStats = async () => {
+            dataConsumer.getStats = async () => {
                 done();
                 return _getStats();
             }
             collector.collect();
         });
     
-        it("Given collector on producer, collector.collect method does not invoke producer getStats because the pollStats method return false", async () => {
-            const config: MediasoupProducerCollectorConfig = {
+        it("Given collector on dataConsumer, collector.collect method does not invoke dataConsumer getStats because the pollStats method return false", async () => {
+            const config: MediasoupDataConsumerCollectorConfig = {
                 pollStats: () => false,
             }
-            const { producer, collector } = setup(config);
-            const _getStats = producer.getStats;
+            const { dataConsumer, collector } = setup(config);
+            const _getStats = dataConsumer.getStats;
             let invoked = false;
-            producer.getStats = async () => {
+            dataConsumer.getStats = async () => {
                 invoked = true;
                 return _getStats();
             }
@@ -78,12 +78,12 @@ describe("MediasoupProducerCollector", () => {
 
     describe("statsWriter interaction tests", () => {
         const collectors = createCollectors();
-        const setup = (config: MediasoupProducerCollectorConfig, statsWriter: StatsWriter) => {
+        const setup = (config: MediasoupDataConsumerCollectorConfig, statsWriter: StatsWriter) => {
             const transport = Generator.createWebRtcTransport();
-            const producer = transport.produce();
-            const collector = new MediasoupProducerCollector(
+            const dataConsumer = transport.consumeData();
+            const collector = new MediasoupDataConsumerCollector(
                 collectors,
-                producer,
+                dataConsumer,
                 transport.id,
                 false,
                 config,
@@ -91,40 +91,40 @@ describe("MediasoupProducerCollector", () => {
             collector.setStatsWriter(statsWriter);
             return {
                 collector,
-                producer,
+                dataConsumer,
                 statsWriter,
             }
         }
 
-        it("Given collector on producer, collector.collect method update inboundRtpPad", done => {
-            const config: MediasoupProducerCollectorConfig = {
+        it("Given collector on dataConsumer, collector.collect method update updateSctpChannel", done => {
+            const config: MediasoupDataConsumerCollectorConfig = {
                 pollStats: () => true,
             }
             const statsWriter = makeStatsWriterRelayer({
-                updateInboundRtpPad: () => done(),
+                updateSctpChannel: () => done(),
             });
             const { collector } = setup(config, statsWriter);
             collector.collect();
         });
 
-        it("Given collector on producer, collector.collect method update inboundRtpPad even if pollStats is false", done => {
-            const config: MediasoupProducerCollectorConfig = {
+        it("Given collector on dataConsumer, collector.collect method update updateSctpChannel even if pollStats is false", done => {
+            const config: MediasoupDataConsumerCollectorConfig = {
                 pollStats: () => false,
             }
             const statsWriter = makeStatsWriterRelayer({
-                updateInboundRtpPad: () => done(),
+                updateSctpChannel: () => done(),
             });
             const { collector } = setup(config, statsWriter);
             collector.collect();
         });
 
-        it("Given collector on producer, removeInboundRtpPad is invoked if the collector is closed", done => {
-            const config: MediasoupProducerCollectorConfig = {
+        it("Given collector on dataConsumer, removeSctpChannel is invoked if the collector is closed", done => {
+            const config: MediasoupDataConsumerCollectorConfig = {
                 pollStats: () => false,
             }
             const statsWriter = makeStatsWriterRelayer({
-                updateInboundRtpPad: () => {},
-                removeInboundRtpPad: () => done(),
+                updateSctpChannel: () => {},
+                removeSctpChannel: () => done(),
             });
             const { collector } = setup(config, statsWriter);
             collector.collect().then(() => collector.close());
@@ -134,20 +134,20 @@ describe("MediasoupProducerCollector", () => {
     describe("parent collectors tests", () => {
         const setup = (collectors: Collectors) => {
             const transport = Generator.createWebRtcTransport();
-            const producer = transport.produce();
-            const collector = new MediasoupProducerCollector(
+            const dataConsumer = transport.consumeData();
+            const collector = new MediasoupDataConsumerCollector(
                 collectors,
-                producer,
+                dataConsumer,
                 transport.id,
                 false,
             );
             collector.setStatsWriter(makeStatsWriterRelayer({
-                updateInboundRtpPad: () => {},
-                removeInboundRtpPad: () => {},
+                updateSctpChannel: () => {},
+                removeSctpChannel: () => {},
             }));
             return {
                 collector,
-                producer,
+                dataConsumer,
             }
         }
         it("Parent collectors remove method is called when a child collector is closed", done => {
@@ -164,11 +164,11 @@ describe("MediasoupProducerCollector", () => {
             collector.collect();
         });
 
-        it("When producer is closed, collector closes itself", done => {
+        it("When dataConsumer is closed, collector closes itself", done => {
             const parent = createCollectors(true);
-            const { collector, producer } = setup(parent);
+            const { collector, dataConsumer } = setup(parent);
             collector.close = () => done();
-            producer.close();
+            dataConsumer.close();
         });
     });
 });

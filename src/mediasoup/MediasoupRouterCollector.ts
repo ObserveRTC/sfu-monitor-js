@@ -29,39 +29,60 @@ export type MediasoupRouterCollectorConfig = {
     getTransportType?: TransportTypeFunction;
 
     /**
-     * Indicate if we want to poll the transport stats
+     * Indicate if we want to poll the webrtc transport stats
      *
      * DEFAULT: false,
      */
-    pollTransportStats?: () => boolean;
+    pollWebRtcTransportStats?: (transportId: string) => boolean;
+
+    /**
+     * Indicate if we want to poll the plain rtp transport stats
+     *
+     * DEFAULT: false,
+     */
+    pollPlainRtpTransportStats?: (transportId: string) => boolean;
+
+    /**
+     * Indicate if we want to poll the pipe transport stats
+     *
+     * DEFAULT: false,
+     */
+    pollPipeTransportStats?: (transportId: string) => boolean;
+
+    /**
+     * Indicate if we want to poll the direct transport stats
+     *
+     * DEFAULT: false,
+     */
+    pollDirectTransportStats?: (transportId: string) => boolean;
 
     /**
      * Indicate if we want to poll the producer stats
      *
      * DEFAULT: false,
      */
-    pollProducerStats?: () => boolean;
+    pollProducerStats?: (producerId: string) => boolean;
 
     /**
      * Indicate if we want to poll the consumer stats
      *
      * DEFAULT: false,
      */
-    pollConsumerStats?: () => boolean;
+    pollConsumerStats?: (consumerId: string) => boolean;
 
     /**
      * Indicate if we want to poll the dataProducer stats
      *
      * DEFAULT: false,
      */
-    pollDataProducerStats?: () => boolean;
+    pollDataProducerStats?: (dataProducerId: string) => boolean;
 
     /**
      * Indicate if we want to poll the data consumer stats
      *
      * DEFAULT: false,
      */
-    pollDataConsumerStats?: () => boolean;
+    pollDataConsumerStats?: (dataConsumerId: string) => boolean;
 
     /**
      * Add custom arbitrary data to the transport entries

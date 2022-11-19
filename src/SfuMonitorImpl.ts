@@ -19,6 +19,7 @@ const supplyDefaultConfig = () => {
         // samplingPeriodInMs: 5000,
         // sendingPeriodInMs: 10000,
         sampler: supplySamplerDefaultConfig(),
+        tickingTimeInMs: 1000,
     };
     return defaultConfig;
 };
@@ -215,7 +216,7 @@ export class SfuMonitorImpl implements SfuMonitor {
         if (!collectingPeriodInMs && !samplingPeriodInMs && !sendingPeriodInMs) {
             return;
         }
-        const result = new Timer();
+        const result = new Timer(this._config.tickingTimeInMs);
         if (collectingPeriodInMs && 0 < collectingPeriodInMs) {
             result.add({
                 type: "collect",

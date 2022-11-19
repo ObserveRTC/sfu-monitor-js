@@ -13,6 +13,14 @@ export type SfuMonitorConfig = {
      * Sets the maximum number of listeners for event emitters
      */
     maxListeners?: number;
+    
+    /**
+     * Set the ticking time of the timer invokes processes for collecting, sampling, and sending.
+     * 
+     * DEFAULT: 1000
+     */
+    tickingTimeInMs?: number;
+
     /**
      * By setting it, the observer calls the added statsCollectors periodically
      * and pulls the stats.

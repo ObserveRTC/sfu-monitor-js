@@ -25,39 +25,60 @@ const logger = createLogger(`MediasoupTransport`);
 
 export type MediasoupTransportCollectorConfig = {
     /**
-     * Indicate if we want to poll the transport stats
+     * Indicate if we want to poll the webrtc transport stats
      *
      * DEFAULT: false,
      */
-    pollTransportStats?: () => boolean;
+    pollWebRtcTransportStats?: (transportId: string) => boolean;
+
+    /**
+     * Indicate if we want to poll the plain rtp transport stats
+     *
+     * DEFAULT: false,
+     */
+    pollPlainRtpTransportStats?: (transportId: string) => boolean;
+
+    /**
+     * Indicate if we want to poll the pipe transport stats
+     *
+     * DEFAULT: false,
+     */
+    pollPipeTransportStats?: (transportId: string) => boolean;
+
+    /**
+     * Indicate if we want to poll the direct transport stats
+     *
+     * DEFAULT: false,
+     */
+    pollDirectTransportStats?: (transportId: string) => boolean;
 
     /**
      * Indicate if we want to poll the producer stats
      *
      * DEFAULT: false,
      */
-    pollProducerStats?: () => boolean;
+    pollProducerStats?: (producerId: string) => boolean;
 
     /**
      * Indicate if we want to poll the consumer stats
      *
      * DEFAULT: false,
      */
-    pollConsumerStats?: () => boolean;
+    pollConsumerStats?: (consumerId: string) => boolean;
 
     /**
      * Indicate if we want to poll the dataProducer stats
      *
      * DEFAULT: false,
      */
-    pollDataProducerStats?: () => boolean;
+    pollDataProducerStats?: (dataProducerId: string) => boolean;
 
     /**
      * Indicate if we want to poll the data consumer stats
      *
      * DEFAULT: false,
      */
-    pollDataConsumerStats?: () => boolean;
+    pollDataConsumerStats?: (dataConsumerId: string) => boolean;
 
     /**
      * Add custom arbitrary data to the transport entries
@@ -152,6 +173,7 @@ export class MediasoupTransportCollector implements Collector {
                 this._internal,
                 producerCollectorConfig
             );
+            producerCollector.setStatsWriter(this._statsWriter);
             this._parent.add(producerCollector);
         };
         this._transport.observer.on("newdataproducer", result);
@@ -164,19 +186,20 @@ export class MediasoupTransportCollector implements Collector {
                 logger.warn(`StatsWriter is undefined, thus cannot create corresponded collectors`);
                 return;
             }
-            const producerCollectorConfig: MediasoupProducerCollectorConfig = {
+            const dataProducerCollectorConfig: MediasoupProducerCollectorConfig = {
                 pollStats: this._config.pollProducerStats,
                 appendix: this._config.inboundRtpApppendix,
             };
 
-            const producerCollector = new MediasoupProducerCollector(
+            const dataProducerCollector = new MediasoupProducerCollector(
                 collectorsFacade,
                 producer,
                 this._transport.id,
                 this._internal,
-                producerCollectorConfig
+                dataProducerCollectorConfig
             );
-            this._parent.add(producerCollector);
+            dataProducerCollector.setStatsWriter(this._statsWriter);
+            this._parent.add(dataProducerCollector);
         };
         this._transport.observer.on("newproducer", result);
         return result;
@@ -213,20 +236,20 @@ export class MediasoupTransportCollector implements Collector {
                 logger.warn(`StatsWriter is undefined, thus cannot create corresponded collectors`);
                 return;
             }
-            const consumerCollectorConfig: MediasoupDataConsumerCollectorConfig = {
+            const dataConsumerCollectorConfig: MediasoupDataConsumerCollectorConfig = {
                 pollStats: this._config.pollDataConsumerStats,
                 appendix: this._config.sctpChannelAppendix,
             };
 
-            const consumerCollector = new MediasoupDataConsumerCollector(
+            const dataConsumerCollector = new MediasoupDataConsumerCollector(
                 collectorsFacade,
                 consumer,
                 this._transport.id,
                 this._internal,
-                consumerCollectorConfig
+                dataConsumerCollectorConfig
             );
-            consumerCollector.setStatsWriter(this._statsWriter);
-            this._parent.add(consumerCollector);
+            dataConsumerCollector.setStatsWriter(this._statsWriter);
+            this._parent.add(dataConsumerCollector);
         };
         this._transport.observer.on("newdataconsumer", result);
         return result;
@@ -278,84 +301,108 @@ export class MediasoupTransportCollector implements Collector {
             logger.debug(`No StatsWriter added to (${this.id})`);
             return;
         }
-        if (this._config.pollTransportStats === undefined || this._config.pollTransportStats() === false) {
+        switch (this._config.transportType) {
+            case "WebRtcTransport":
+            case "webrtc-transport":
+                await this._collectFromWebRtcTransport();
+                break;
+            case "PipeTransport":
+            case "pipe-transport":
+                await this._collectFromPipeTransport();
+                break;
+            case "PlainTransport":
+            case "plain-rtp-transport":
+                await this._collectFromPlainRtpTransport();
+                break;
+            case "DirectTransport":
+            case "direct-transport":
+                await this._collectFromDirectTransport();
+                break;
+        }
+    }
+
+    private async _collectFromWebRtcTransport() {
+        if (this._config.pollWebRtcTransportStats === undefined || this._config.pollWebRtcTransportStats(this._transport.id) === false) {
             return await this._collectWithoutStats();
         }
         const transportId = this._transport.id;
         const polledStats = await this._transport.getStats();
         for (const msStats of polledStats) {
             let transportStats: SfuTransport | undefined;
-            if (this._config.transportType === "webrtc-transport" || this._config.transportType === "WebRtcTransport") {
-                const stats = msStats as MediasoupWebRtcTransportStats;
-                const {
-                    localIp: localAddress,
-                    protocol,
-                    localPort,
-                    remoteIp: remoteAddress,
-                    remotePort,
-                } = stats.iceSelectedTuple ?? {};
-                transportStats = {
-                    transportId,
-                    noReport: false,
-                    dtlsState: stats.dtlsState,
-                    iceState: stats.iceState,
-                    sctpState: stats.sctpState,
-                    iceRole: stats.iceRole,
-                    localAddress,
-                    localPort,
-                    protocol,
-                    remoteAddress,
-                    remotePort,
-                    rtpBytesReceived: stats.rtpBytesReceived,
-                    rtpBytesSent: stats.rtpBytesSent,
-                    // rtpPacketsReceived: stats.rtpPacketsReceived,
-                    // rtpPacketsSent: stats.rtpPacketsSent,
-                    // rtpPacketsLost: stats.rtpPacketsLost,
-                    rtxBytesReceived: stats.rtxBytesReceived,
-                    rtxBytesSent: stats.rtxBytesSent,
-                    // rtxPacketsReceived: stats.rtxPacketsReceived,
-                    // rtxPacketsSent: stats.rtxPacketsSent,
-                    // rtxPacketsLost: stats.rtxPacketsLost,
-                    // rtxPacketsDiscarded: stats.rtxPacketsDiscarded,
-                    // sctpBytesReceived: stats.sctpBytesReceived,
-                    // sctpBytesSent: stats.sctpBytesSent,
-                    // sctpPacketsReceived: stats.sctpPacketsReceived,
-                    // sctpPacketsSent: stats.sctpPacketsSent,
-                };
-            } else if (this._config.transportType === "plain-rtp-transport" || this._config.transportType === "PlainTransport") {
-                const stats = msStats as MediasoupPlainTransport;
-                const {
-                    localIp: localAddress,
-                    protocol,
-                    localPort,
-                    remoteIp: remoteAddress,
-                    remotePort,
-                } = stats.tuple ?? {};
-                transportStats = {
-                    transportId,
-                    noReport: false,
-                    localAddress,
-                    localPort,
-                    protocol,
-                    remoteAddress,
-                    remotePort,
-                    rtpBytesReceived: stats.rtpBytesReceived,
-                    rtpBytesSent: stats.rtpBytesSent,
-                    rtxBytesReceived: stats.rtxBytesReceived,
-                    rtxBytesSent: stats.rtxBytesSent,
-                };
-            } else if (this._config.transportType === "direct-transport" || this._config.transportType === "DirectTransport") {
-                const stats = msStats as MediasoupDirectTransport;
-                transportStats = {
-                    transportId,
-                    noReport: false,
-                    rtpBytesReceived: stats.rtpBytesReceived,
-                    rtpBytesSent: stats.rtpBytesSent,
-                    rtxBytesReceived: stats.rtxBytesReceived,
-                    rtxBytesSent: stats.rtxBytesSent,
-                };
-            } else if (this._config.transportType === "pipe-transport" || this._config.transportType === "PipeTransport") {
-                const stats = msStats as MediasoupPipeTransport;
+            const stats = msStats as MediasoupWebRtcTransportStats;
+            const {
+                localIp: localAddress,
+                protocol,
+                localPort,
+                remoteIp: remoteAddress,
+                remotePort,
+            } = stats.iceSelectedTuple ?? {};
+            transportStats = {
+                transportId,
+                noReport: false,
+                dtlsState: stats.dtlsState,
+                iceState: stats.iceState,
+                sctpState: stats.sctpState,
+                iceRole: stats.iceRole,
+                localAddress,
+                localPort,
+                protocol,
+                remoteAddress,
+                remotePort,
+                rtpBytesReceived: stats.rtpBytesReceived,
+                rtpBytesSent: stats.rtpBytesSent,
+                // rtpPacketsReceived: stats.rtpPacketsReceived,
+                // rtpPacketsSent: stats.rtpPacketsSent,
+                // rtpPacketsLost: stats.rtpPacketsLost,
+                rtxBytesReceived: stats.rtxBytesReceived,
+                rtxBytesSent: stats.rtxBytesSent,
+                // rtxPacketsReceived: stats.rtxPacketsReceived,
+                // rtxPacketsSent: stats.rtxPacketsSent,
+                // rtxPacketsLost: stats.rtxPacketsLost,
+                // rtxPacketsDiscarded: stats.rtxPacketsDiscarded,
+                // sctpBytesReceived: stats.sctpBytesReceived,
+                // sctpBytesSent: stats.sctpBytesSent,
+                // sctpPacketsReceived: stats.sctpPacketsReceived,
+                // sctpPacketsSent: stats.sctpPacketsSent,
+            };
+            if (transportStats) {
+                this._statsWriter?.updateTransport(transportStats, this._config.transportAppendix ?? {});
+            }
+        }
+    }
+
+    private async _collectFromDirectTransport() {
+        if (this._config.pollDirectTransportStats === undefined || this._config.pollDirectTransportStats(this._transport.id) === false) {
+            return await this._collectWithoutStats();
+        }
+        const transportId = this._transport.id;
+        const polledStats = await this._transport.getStats();
+        for (const msStats of polledStats) {
+            let transportStats: SfuTransport | undefined;
+            const stats = msStats as MediasoupDirectTransport;
+            transportStats = {
+                transportId,
+                noReport: false,
+                rtpBytesReceived: stats.rtpBytesReceived,
+                rtpBytesSent: stats.rtpBytesSent,
+                rtxBytesReceived: stats.rtxBytesReceived,
+                rtxBytesSent: stats.rtxBytesSent,
+            };
+            if (transportStats) {
+                this._statsWriter?.updateTransport(transportStats, this._config.transportAppendix ?? {});
+            }
+        }
+    }
+
+    private async _collectFromPipeTransport() {
+        if (this._config.pollPipeTransportStats === undefined || this._config.pollPipeTransportStats(this._transport.id) === false) {
+            return await this._collectWithoutStats();
+        }
+        const transportId = this._transport.id;
+        const polledStats = await this._transport.getStats();
+        for (const msStats of polledStats) {
+            let transportStats: SfuTransport | undefined;
+            const stats = msStats as MediasoupPipeTransport;
                 const {
                     localIp: localAddress,
                     protocol,
@@ -377,12 +424,47 @@ export class MediasoupTransportCollector implements Collector {
                     rtxBytesReceived: stats.rtxBytesReceived,
                     rtxBytesSent: stats.rtxBytesSent,
                 };
-            }
             if (transportStats) {
                 this._statsWriter?.updateTransport(transportStats, this._config.transportAppendix ?? {});
             }
         }
     }
+
+    private async _collectFromPlainRtpTransport() {
+        if (this._config.pollPlainRtpTransportStats === undefined || this._config.pollPlainRtpTransportStats(this._transport.id) === false) {
+            return await this._collectWithoutStats();
+        }
+        const transportId = this._transport.id;
+        const polledStats = await this._transport.getStats();
+        for (const msStats of polledStats) {
+            let transportStats: SfuTransport | undefined;
+            const stats = msStats as MediasoupPlainTransport;
+                const {
+                    localIp: localAddress,
+                    protocol,
+                    localPort,
+                    remoteIp: remoteAddress,
+                    remotePort,
+                } = stats.tuple ?? {};
+                transportStats = {
+                    transportId,
+                    noReport: false,
+                    localAddress,
+                    localPort,
+                    protocol,
+                    remoteAddress,
+                    remotePort,
+                    rtpBytesReceived: stats.rtpBytesReceived,
+                    rtpBytesSent: stats.rtpBytesSent,
+                    rtxBytesReceived: stats.rtxBytesReceived,
+                    rtxBytesSent: stats.rtxBytesSent,
+                };
+            if (transportStats) {
+                this._statsWriter?.updateTransport(transportStats, this._config.transportAppendix ?? {});
+            }
+        }
+    }
+
     public get closed(): boolean {
         return this._closed;
     }
@@ -394,6 +476,7 @@ export class MediasoupTransportCollector implements Collector {
         }
         this._closed = true;
         this._parent.remove(this.id);
+        this._statsWriter?.removeTransport(this._transport.id);
         this._transport.observer.removeListener("newconsumer", this._newConsumerListener);
         this._transport.observer.removeListener("newproducer", this._newProducerListener);
         this._transport.observer.removeListener("newdataconsumer", this._newDataConsumerListener);
