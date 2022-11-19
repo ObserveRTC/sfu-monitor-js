@@ -2,8 +2,6 @@ export { AuxCollector } from "./AuxCollector";
 export type { AuxCollectorConfig } from "./AuxCollector";
 
 export { TransportTypeFunction } from "./mediasoup/MediasoupRouterCollector";
-export { MediasoupCollector } from "./mediasoup/MediasoupCollector";
-export type { MediasoupCollectorConfig } from "./mediasoup/MediasoupCollector";
 
 export type { SenderConfig } from "./Sender";
 export type { SamplerConfig } from "./Sampler";

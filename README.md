@@ -90,14 +90,14 @@ const monitor = createMediasoupMonitor({
     collectingPeriodInMs: 5000,
     mediasoup,
     mediasoupCollector: {
-        pollWebRtcTransportStats: () => true,
-        pollPlainRtpTransportStats: () => true,
-        pollPipeTransportStats: () => true,
-        pollDirectTransportStats: () => true,
-        pollProducerStats: () => true,
-        pollConsumerStats: () => true,
-        pollDataProducerStats: () => true,
-        pollDataConsumerStats: () => true,
+        pollWebRtcTransportStats: (transportId) => true,
+        pollPlainRtpTransportStats: (transportId) => true,
+        pollPipeTransportStats: (transportId) => true,
+        pollDirectTransportStats: (transportId) => true,
+        pollProducerStats: (producerId) => true,
+        pollConsumerStats: (consumerId) => true,
+        pollDataProducerStats: (dataProducerId) => true,
+        pollDataConsumerStats: (dataProducerId) => true,
     }
 });
 ```
