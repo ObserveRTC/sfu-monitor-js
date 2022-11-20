@@ -40,3 +40,14 @@ export function createSfuMonitor(config?: SfuMonitorConfig): SfuMonitor {
 export function createMediasoupMonitor(config?: MediasoupMonitorConfig): MediasoupMonitor {
     return MediasoupMonitor.create(config);
 }
+
+import { setLevel as setLoggersLevel } from "./utils/logger";
+import { LogLevelDesc } from "loglevel";
+/**
+ * Sets the level of logging of the module
+ *
+ * possible values are: "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "SILENT"
+ */
+export function setLogLevel(level: LogLevelDesc) {
+    setLoggersLevel(level);
+}

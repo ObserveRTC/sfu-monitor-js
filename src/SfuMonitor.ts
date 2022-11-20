@@ -4,8 +4,6 @@ import { SamplerConfig } from "./Sampler";
 import { SamplesSentCallback, SenderConfig } from "./Sender";
 import { StatsReader } from "./entries/StatsStorage";
 import { AccumulatorConfig } from "./Accumulator";
-import { setLevel as setLoggersLevel } from "./utils/logger";
-import { LogLevelDesc } from "loglevel";
 import { Collectors, CollectorsConfig } from "./Collectors";
 
 export type SfuMonitorConfig = {
@@ -144,11 +142,3 @@ export interface SfuMonitor {
     close(): void;
 }
 
-/**
- * Sets the level of logging of the module
- *
- * possible values are: "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "SILENT"
- */
-export function setLogLevel(level: LogLevelDesc) {
-    setLoggersLevel(level);
-}
