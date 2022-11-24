@@ -82,7 +82,7 @@ export class SfuMonitorImpl implements SfuMonitor {
         this._sampler.addExtensionStats(stats);
     }
 
-    addCustomSfuEvent(event: CustomSfuEvent): void {
+    public addCustomSfuEvent(event: CustomSfuEvent): void {
         this._sampler.addSfuCustomEvent(event);
     }
 
@@ -220,7 +220,7 @@ export class SfuMonitorImpl implements SfuMonitor {
         if (collectingPeriodInMs && 0 < collectingPeriodInMs) {
             result.add({
                 type: "collect",
-                process: this.collect.bind(this),
+                asyncProcess: this.collect.bind(this),
                 fixedDelayInMs: collectingPeriodInMs,
                 context: "Collect Stats",
             });

@@ -47,6 +47,7 @@ export class Timer {
             logger.warn(`Action has no process or asyncProcess to be invoked cannot be added to the timer`);
             return "Unknown";
         }
+        logger.debug(`Action is added`, action);
         const id: string = uuidv4();
         const now = Date.now();
         const storedAction: StoredAction = {
