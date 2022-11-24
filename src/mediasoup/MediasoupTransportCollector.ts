@@ -144,7 +144,7 @@ export class MediasoupTransportCollector implements Collector {
     }
 
     public setStatsWriter(value: StatsWriter | null) {
-        if (this._statsWriter) {
+        if (this._statsWriter && value !== null) {
             logger.warn(`StatsWriter has already been set`);
             return;
         }
@@ -298,7 +298,7 @@ export class MediasoupTransportCollector implements Collector {
             return;
         }
         if (!this._statsWriter) {
-            logger.debug(`No StatsWriter added to (${this.id})`);
+            logger.warn(`No StatsWriter added to (${this.id})`);
             return;
         }
         switch (this._config.transportType) {

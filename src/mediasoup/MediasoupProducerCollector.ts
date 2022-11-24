@@ -63,7 +63,7 @@ export class MediasoupProducerCollector implements Collector {
     }
 
     public setStatsWriter(value: StatsWriter | null) {
-        if (this._statsWriter) {
+        if (this._statsWriter && value !== null) {
             logger.warn(`StatsWriter has already been set`);
             return;
         }
