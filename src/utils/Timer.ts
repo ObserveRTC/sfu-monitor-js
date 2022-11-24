@@ -28,7 +28,6 @@ export class Timer {
     private _sending: Map<string, StoredAction> = new Map();
     private _sampling: Map<string, StoredAction> = new Map();
     private _tickInMs: number;
-    private _maxTimeoutInMs: number;
     
     public constructor(tickInMs?: number, maxTimeoutInMs?: number) {
         if (tickInMs === undefined) {
