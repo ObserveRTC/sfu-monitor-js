@@ -72,7 +72,7 @@ export class MediasoupDataConsumerCollector implements Collector {
         }
     }
 
-    private async _collectWithoutStats(): Promise<void> {
+    private _collectWithoutStats(): void {
         this._statsWriter?.updateSctpChannel(
             {
                 transportId: this._transportId,
@@ -81,7 +81,7 @@ export class MediasoupDataConsumerCollector implements Collector {
                 noReport: true,
                 internal: this._internal,
             },
-            {}
+            this._config.appendix ?? {}
         );
     }
 
@@ -100,10 +100,15 @@ export class MediasoupDataConsumerCollector implements Collector {
             return;
         }
         if (this._config.pollStats === undefined || this._config.pollStats(this._dataConsumer.id) === false) {
-            return await this._collectWithoutStats();
+            this._collectWithoutStats();
+            return;
         }
         const transportId = this._transportId;
         const polledStats = await this._dataConsumer.getStats();
+        if (polledStats.length < 1) {
+            this._collectWithoutStats();
+            return;
+        }
         for (const stats of polledStats) {
             const sctpChannel: SfuSctpChannel = {
                 transportId,

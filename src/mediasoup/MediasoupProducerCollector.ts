@@ -74,7 +74,7 @@ export class MediasoupProducerCollector implements Collector {
         }
     }
 
-    private async _collectWithoutStats(): Promise<void> {
+    private _collectWithoutStats(): void {
         let padId = this._ssrcToPadIds.get(NO_REPORT_SSRC);
         if (!padId) {
             padId = uuidv4();
@@ -90,7 +90,7 @@ export class MediasoupProducerCollector implements Collector {
                 noReport: true,
                 internal: this._internal,
             },
-            {}
+            this._config.appendix ?? {}
         );
     }
 
@@ -105,14 +105,19 @@ export class MediasoupProducerCollector implements Collector {
             return;
         }
         if (!this._statsWriter) {
-            logger.debug(`No StatsWriter added to (${this.id})`);
+            logger.warn(`No StatsWriter added to (${this.id})`);
             return;
         }
         if (this._config.pollStats === undefined || this._config.pollStats(this._producer.id) === false) {
-            return await this._collectWithoutStats();
+            this._collectWithoutStats();
+            return;
         }
         const transportId = this._transportId;
         const polledStats = await this._producer.getStats();
+        if (polledStats.length < 1) {
+            this._collectWithoutStats();
+            return;
+        }
         for (const stats of polledStats) {
             const ssrc = stats.ssrc;
             // if (type === msStats.type) continue;

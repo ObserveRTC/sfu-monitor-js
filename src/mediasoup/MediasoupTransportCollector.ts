@@ -255,14 +255,14 @@ export class MediasoupTransportCollector implements Collector {
         return result;
     }
 
-    private async _collectWithoutStats(): Promise<void> {
+    private _collectWithoutStats(): void {
         this._statsWriter?.updateTransport(
             {
                 transportId: this._transport.id,
                 internal: this._internal,
                 noReport: true,
             },
-            {}
+            this._config.transportAppendix ?? {}
         );
     }
 
@@ -323,10 +323,15 @@ export class MediasoupTransportCollector implements Collector {
 
     private async _collectFromWebRtcTransport() {
         if (this._config.pollWebRtcTransportStats === undefined || this._config.pollWebRtcTransportStats(this._transport.id) === false) {
-            return await this._collectWithoutStats();
+            this._collectWithoutStats();
+            return;
         }
         const transportId = this._transport.id;
         const polledStats = await this._transport.getStats();
+        if (polledStats.length < 1) {
+            this._collectWithoutStats();
+            return;
+        }
         for (const msStats of polledStats) {
             const stats = msStats as MediasoupWebRtcTransportStats;
             const {
@@ -370,10 +375,15 @@ export class MediasoupTransportCollector implements Collector {
 
     private async _collectFromDirectTransport() {
         if (this._config.pollDirectTransportStats === undefined || this._config.pollDirectTransportStats(this._transport.id) === false) {
-            return await this._collectWithoutStats();
+            this._collectWithoutStats();
+            return;
         }
         const transportId = this._transport.id;
         const polledStats = await this._transport.getStats();
+        if (polledStats.length < 1) {
+            this._collectWithoutStats();
+            return;
+        }
         for (const msStats of polledStats) {
             const stats = msStats as MediasoupDirectTransport;
             const transportStats: SfuTransport = {
@@ -390,10 +400,15 @@ export class MediasoupTransportCollector implements Collector {
 
     private async _collectFromPipeTransport() {
         if (this._config.pollPipeTransportStats === undefined || this._config.pollPipeTransportStats(this._transport.id) === false) {
-            return await this._collectWithoutStats();
+            this._collectWithoutStats();
+            return;
         }
         const transportId = this._transport.id;
         const polledStats = await this._transport.getStats();
+        if (polledStats.length < 1) {
+            this._collectWithoutStats();
+            return;
+        }
         for (const msStats of polledStats) {
             const stats = msStats as MediasoupPipeTransport;
             const {
@@ -423,10 +438,15 @@ export class MediasoupTransportCollector implements Collector {
 
     private async _collectFromPlainRtpTransport() {
         if (this._config.pollPlainRtpTransportStats === undefined || this._config.pollPlainRtpTransportStats(this._transport.id) === false) {
-            return await this._collectWithoutStats();
+            this._collectWithoutStats();
+            return;
         }
         const transportId = this._transport.id;
         const polledStats = await this._transport.getStats();
+        if (polledStats.length < 1) {
+            this._collectWithoutStats();
+            return;
+        }
         for (const msStats of polledStats) {
             const stats = msStats as MediasoupPlainTransport;
             const {

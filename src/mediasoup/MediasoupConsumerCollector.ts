@@ -76,7 +76,7 @@ export class MediasoupConsumerCollector implements Collector {
         }
     }
 
-    private async _collectWithoutStats(): Promise<void> {
+    private _collectWithoutStats(): void {
         let padId = this._ssrcToPadIds.get(NO_REPORT_SSRC);
         if (!padId) {
             padId = uuidv4();
@@ -93,7 +93,7 @@ export class MediasoupConsumerCollector implements Collector {
                 noReport: true,
                 internal: this._internal,
             },
-            {}
+            this._config.appendix ?? {}
         );
     }
 
@@ -108,13 +108,18 @@ export class MediasoupConsumerCollector implements Collector {
             return;
         }
         if (!this._statsWriter) {
-            logger.debug(`No StatsWriter added to (${this.id})`);
+            logger.warn(`No StatsWriter added to (${this.id})`);
             return;
         }
         if (this._config.pollStats === undefined || this._config.pollStats(this._consumer.id) === false) {
-            return await this._collectWithoutStats();
+            this._collectWithoutStats();
+            return;
         }
         const polledStats = await this._consumer.getStats();
+        if (polledStats.length < 1) {
+            this._collectWithoutStats();
+            return;
+        }
         for (const stats of polledStats) {
             const ssrc = stats.ssrc;
             if ("outbound-rtp" !== stats.type) continue;
