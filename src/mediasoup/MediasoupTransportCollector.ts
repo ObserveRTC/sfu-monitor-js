@@ -127,7 +127,7 @@ export class MediasoupTransportCollector implements Collector {
         this._parent = parent;
         this._transport = transport;
         this._config = config;
-        this._internal = this._config.transportType === "pipe-transport";
+        this._internal = this._config.transportType === "pipe-transport" || this._config.transportType === "PipeTransport";
 
         const transportId = this._transport.id;
         this._transport.observer.once("close", () => {
