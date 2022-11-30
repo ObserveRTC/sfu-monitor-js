@@ -21,6 +21,7 @@ export type { MediasoupMonitorConfig, MediasoupMonitor } from "./MediasoupMonito
 export type { MediasoupTransportType } from "./mediasoup/MediasoupTypes";
 
 export type { ExtensionStat } from "@observertc/schemas";
+export type { CustomSfuEvent } from "@observertc/schemas";
 
 import { MediasoupMonitor, MediasoupMonitorConfig } from "./MediasoupMonitor";
 import { SfuMonitor, SfuMonitorConfig } from "./SfuMonitor";

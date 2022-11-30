@@ -92,16 +92,19 @@ export class CollectorsImpl implements Collectors {
 
     async collect(): Promise<boolean> {
         let result = true;
+        const collectorIds: string[] = [];
         const promiseFetcher = PromiseFetcher.builder()
             .withBatchSize(this._config.batchSize ?? 0)
             .withPace(this._config.maxBatchPaceInMs ?? 0, this._config.maxBatchPaceInMs ?? 0)
-            .onCatchedError((err) => {
-                logger.warn(`Error occurred while collecting`, err);
+            .onCatchedError((err, index) => {
+                const collectorId = index < collectorIds.length ? collectorIds[index] : undefined;
+                logger.warn(`Error occurred while collecting for ${collectorId}`, err);
                 result = false;
             });
         for (const collector of Array.from(this._collectors.values())) {
             promiseFetcher.withPromiseSuppliers(async () => {
                 logger.debug(`Collect on ${collector.id} PromiseFetched`);
+                collectorIds.push(collector.id);
                 return await collector.collect();
             });
         }
