@@ -1,67 +1,82 @@
-import { ExtensionStat } from "@observertc/schemas"
+import { CustomSfuEvent, ExtensionStat } from "@observertc/schemas";
 import { EventsRegister } from "./EventsRelayer";
 import { SamplerConfig } from "./Sampler";
-import { SenderConfig } from "./Sender";
+import { SamplesSentCallback, SenderConfig } from "./Sender";
 import { StatsReader } from "./entries/StatsStorage";
 import { AccumulatorConfig } from "./Accumulator";
-import { setLevel as setLoggersLevel } from "./utils/logger";
-import { LogLevelDesc } from "loglevel";
-import { SfuMonitorImpl } from "./SfuMonitorImpl";
-import { Collector } from "./Collector";
+import { Collectors, CollectorsConfig } from "./Collectors";
 
 export type SfuMonitorConfig = {
     /**
      * Sets the maximum number of listeners for event emitters
      */
     maxListeners?: number;
+    
+    /**
+     * Set the ticking time of the timer invokes processes for collecting, sampling, and sending.
+     * 
+     * DEFAULT: 1000
+     */
+    tickingTimeInMs?: number;
+
     /**
      * By setting it, the observer calls the added statsCollectors periodically
      * and pulls the stats.
-     * 
+     *
      * DEFAULT: undefined
      */
     collectingPeriodInMs?: number;
     /**
      * By setting it, the observer make samples periodically.
-     * 
+     *
      * DEFAULT: undefined
      */
     samplingPeriodInMs?: number;
     /**
      * By setting it, the observer sends the samples periodically.
-     * 
+     *
      * DEFAULT: undefined
      */
     sendingPeriodInMs?: number;
 
     /**
      * By setting it stats items and entries are deleted if they are not updated.
-     * 
+     *
      * DEFAULT: undefined
      */
     statsExpirationTimeInMs?: number;
 
     /**
+     * Config related to collecting stats
+     */
+    collectors?: CollectorsConfig;
+
+    /**
      * Sampling Component Related configurations
-     * 
+     *
      */
     sampler?: SamplerConfig;
 
     /**
      * Sending Component Related congurations
-     * 
+     *
      * default: undefined, means no sample is sent
      */
     sender?: SenderConfig;
 
     /**
-     * If the sender component is configured, 
+     * If the sender component is configured,
      * accumulator sets the buffer between sampling and sending.
      */
-    accumulator?: AccumulatorConfig,
+    accumulator?: AccumulatorConfig;
 };
 
 export interface SfuMonitor {
+    /**
+     * Access to the collectors the monitor has
+     */
+    readonly collectors: Collectors;
+
     /**
      * Access to the collected stats
      */
@@ -78,34 +93,26 @@ export interface SfuMonitor {
     readonly connected: boolean;
     /**
      * Adds an arbitrary stats object will be sent to the backend observer
-     * @param stats 
+     * @param stats
      */
     addExtensionStats(stats: ExtensionStat): void;
 
     /**
-     * Add a stats collector to the monitor
-     * 
-     * @param collector 
+     * Adds a custom defined event (SFU_CLIENT_JOINED, SFU_CLIENT_MUTED, etc.)
+     * @param event
      */
-    addStatsCollector(collector: Collector): void;
-
-    /**
-     * Remove a stats collector from the monitor
-     * 
-     * @param collectorId 
-     */
-    removeStatsCollector(collectorId: string): void;
+    addCustomSfuEvent(event: CustomSfuEvent): void;
 
     /**
      * Connects the Monitor to an observer
-     * 
-     * @param config 
+     *
+     * @param config
      */
     connect(config: SenderConfig): void;
 
     /**
      * Mark all of the created samples with a given string
-     * @param marker 
+     * @param marker
      */
     setMarker(marker: string): void;
 
@@ -117,13 +124,13 @@ export interface SfuMonitor {
     /**
      * Make client sample from a collected stats
      */
-    sample(): Promise<void>;
-    
+    sample(): void;
+
     /**
      * Send samples
      */
-    send(): Promise<void>; 
-    
+    send(callback?: SamplesSentCallback): void;
+
     /**
      * Indicate if the SfuObserver is closed or not
      */
@@ -135,19 +142,3 @@ export interface SfuMonitor {
     close(): void;
 }
 
- /**
- * Sets the level of logging of the module
- * 
- * possible values are: "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "SILENT"
- */
-export function setLogLevel(level: LogLevelDesc) {
-    setLoggersLevel(level);
-}
-
-/**
- * Create an SfuMonitor
- * @param config config for the monitor
- */
-export function create(config?: SfuMonitorConfig): SfuMonitor {
-    return SfuMonitorImpl.create(config);
-}

@@ -2,13 +2,13 @@ import { Codec } from "./Codec";
 
 export type JsonCodecConfig = {
     space?: number;
-}
+};
 
 type JsonCodecConstructorConfig = JsonCodecConfig;
 
 const defaultConfig: JsonCodecConstructorConfig = {
     space: undefined,
-}
+};
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export class JsonCodec implements Codec<any, string> {
     public static create(config?: JsonCodecConfig): JsonCodec {

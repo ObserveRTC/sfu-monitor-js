@@ -1,5 +1,3 @@
 describe("WebsocketTransport", () => {
-    it ("Your test suite must contain at least one test", () => {
-
-    })
+    it("Your test suite must contain at least one test", () => {});
 });

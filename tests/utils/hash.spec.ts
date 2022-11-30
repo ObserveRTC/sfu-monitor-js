@@ -27,17 +27,19 @@ describe("hash", () => {
             expect(hashedObj).not.toBe(source);
         });
         it("When function is hashed Then its not the same", () => {
-            const source = function (): string { return "something"; }
+            const source = function (): string {
+                return "something";
+            };
             const hashedObj = hash(source);
             expect(hashedObj).not.toBe(source);
         });
         it("When boolean is hashed Then its not the same", () => {
-            const source = false
+            const source = false;
             const hashedObj = hash(source);
             expect(hashedObj).not.toBe(source);
         });
         it("When object is hashed Then its not the same", () => {
-            const source = { foo: "bar" }
+            const source = { foo: "bar" };
             const hashedObj = hash(source);
             expect(hashedObj).not.toBe(source);
         });
@@ -86,24 +88,24 @@ describe("hash", () => {
             expect(left).toBe(right);
         });
         it("When two objects with different keys and values are hashed Then they are different", () => {
-            const left = hash({ foo: "bar"});
-            const right = hash({ bar: "foo"});
+            const left = hash({ foo: "bar" });
+            const right = hash({ bar: "foo" });
             expect(left).not.toBe(right);
         });
         it("When two equal objects are hashed Then they are different", () => {
-            const left = hash({ foo: "bar"});
-            const right = hash({ foo: "bar"});
+            const left = hash({ foo: "bar" });
+            const right = hash({ foo: "bar" });
             expect(left).toBe(right);
         });
         it("When two objects with different values are hashed Then they are different", () => {
-            const left = hash({ foo: "bar"});
-            const right = hash({ foo: "bar2"});
+            const left = hash({ foo: "bar" });
+            const right = hash({ foo: "bar2" });
             expect(left).not.toBe(right);
         });
 
         it("When two embedded objects with different values are hashed Then they are different", () => {
-            const left = hash({ foo: { bar: { foo: "bar"}}});
-            const right = hash({ foo: { bar: { foo: "bar2"}}});
+            const left = hash({ foo: { bar: { foo: "bar" } } });
+            const right = hash({ foo: { bar: { foo: "bar2" } } });
             expect(left).not.toBe(right);
         });
     });

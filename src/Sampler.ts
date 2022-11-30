@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { StatsReader } from "./entries/StatsStorage";
 import { isValidUuid } from "./utils/validators";
-import { SfuSample, SfuExtensionStats } from "@observertc/schemas";
+import { SfuSample, SfuExtensionStats, CustomSfuEvent } from "@observertc/schemas";
 import { createLogger } from "./utils/logger";
 
 const logger = createLogger(`Sampler`);
@@ -9,22 +9,22 @@ const logger = createLogger(`Sampler`);
 export type SamplerConfig = {
     /**
      * The identifier of the SFU.
-     * 
+     *
      * DEFAULT: a generated unique value
      */
     sfuId?: string;
 
     /**
      * Indicate if the sampler only sample stats updated since the last sampling.
-     * 
+     *
      * DEFAULT: true
      */
     incrementalSampling?: boolean;
-}
+};
 
 type SamplerConstructorConfig = SamplerConfig & {
-    sfuId: string,
-}
+    sfuId: string;
+};
 
 export const supplyDefaultConfig = () => {
     const defaultConfig: SamplerConstructorConfig = {
@@ -32,8 +32,7 @@ export const supplyDefaultConfig = () => {
         incrementalSampling: true,
     };
     return defaultConfig;
-}
-
+};
 
 interface Builder {
     withConfig(value?: SamplerConfig): Builder;
@@ -53,8 +52,8 @@ export class Sampler {
                 const result = new Sampler(appliedConfig);
                 logger.debug(`Created`, appliedConfig);
                 return result;
-            }
-        }
+            },
+        };
         return result;
     }
 
@@ -62,9 +61,10 @@ export class Sampler {
         const appliedConfig = Object.assign(supplyDefaultConfig(), config);
         return new Sampler(appliedConfig);
     }
-    
+
     // all of the following fields until empty line must be reset after sampled
     private _extensionStats?: SfuExtensionStats[];
+    private _customEvents?: CustomSfuEvent[];
     private _statsReader?: StatsReader;
     // private _peerConnections: Map<string, PeerConnectionEntry> = new Map();
     private _sampled?: number;
@@ -92,6 +92,11 @@ export class Sampler {
         this._extensionStats.push(stats);
     }
 
+    addSfuCustomEvent(event: CustomSfuEvent) {
+        if (!this._customEvents) this._customEvents = [];
+        this._customEvents.push(event);
+    }
+
     public setMarker(marker: string): void {
         this._marker = marker;
     }
@@ -99,7 +104,7 @@ export class Sampler {
     public close(): void {
         if (this._closed) {
             logger.warn(`Attempted to close the Sampler twice`);
-            return; 
+            return;
         }
         this._closed = true;
         logger.info(`Closed`);
@@ -122,6 +127,10 @@ export class Sampler {
         if (this._extensionStats) {
             sfuSample.extensionStats = this._extensionStats;
             this._extensionStats = undefined;
+        }
+        if (this._customEvents) {
+            sfuSample.customSfuEvents = this._customEvents;
+            this._customEvents = undefined;
         }
         if (!this._statsReader) {
             logger.warn(`No StatsProvider has been assigned to Sampler`);

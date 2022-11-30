@@ -1,7 +1,51 @@
 import EventEmitter from "events";
 import * as Types from "../../src/mediasoup/MediasoupTypes";
 import { v4 as uuidv4 } from "uuid";
+import { SfuInboundRtpPad, SfuOutboundRtpPad, SfuSctpChannel, SfuTransport } from "@observertc/schemas";
+import { StatsWriter } from "../../src/entries/StatsStorage";
 
+export function makeStatsWriterRelayer({
+    removeTransport,
+    updateTransport,
+    removeInboundRtpPad,
+    updateInboundRtpPad,
+    removeOutboundRtpPad,
+    updateOutboundRtpPad,
+    removeSctpChannel,
+    updateSctpChannel,
+}: {
+    removeTransport?: (transportId: string) => void;
+    updateTransport?: (stats: SfuTransport) => void;
+    removeInboundRtpPad?: (rtpPadId: string) => void;
+    updateInboundRtpPad?: (stats: SfuInboundRtpPad) => void;
+    removeOutboundRtpPad?: (rtpPadId: string) => void;
+    updateOutboundRtpPad?: (stats: SfuOutboundRtpPad) => void;
+    removeSctpChannel?: (sctpStreamId: string) => void;
+    updateSctpChannel?: (stats: SfuSctpChannel) => void;
+}) {
+    const errorHandler = (methodName: string) => {
+        return () => {
+            throw new Error(`${methodName} is called and handler has not been provided`);
+        };
+    };
+    const result: StatsWriter = {
+        removeTransport: removeTransport ?? errorHandler("removeTransport"),
+        updateTransport: updateTransport ?? errorHandler("updateTransport"),
+
+        removeInboundRtpPad: removeInboundRtpPad ?? errorHandler("removeInboundRtpPad"),
+        updateInboundRtpPad: updateInboundRtpPad ?? errorHandler("updateInboundRtpPad"),
+
+        removeOutboundRtpPad: removeOutboundRtpPad ?? errorHandler("removeOutboundRtpPad"),
+        updateOutboundRtpPad: updateOutboundRtpPad ?? errorHandler("updateOutboundRtpPad"),
+
+        removeSctpChannel: removeSctpChannel ?? errorHandler("removeSctpChannel"),
+        updateSctpChannel: updateSctpChannel ?? errorHandler("updateSctpChannel"),
+    };
+    return result;
+}
+
+const DEFAULT_WORKER_ID = 4583;
+const DEFAULT_ROUTER_ID = uuidv4();
 const DEFAULT_TRANSPORT_ID = uuidv4();
 const DEFAULT_PRODUCER_ID = uuidv4();
 const DEFAULT_CONSUMER_ID = uuidv4();
@@ -21,7 +65,7 @@ export function generateIntegerBetween(min = 0, max = 1000): number {
     return result;
 }
 
-export function generateFrom<T>(...params: T[]): T{
+export function generateFrom<T>(...params: T[]): T {
     if (!params) {
         throw new Error(`Cannot generate random items from an empty array`);
     }
@@ -29,13 +73,12 @@ export function generateFrom<T>(...params: T[]): T{
     return result;
 }
 
-
 export function createProducerStats(stats?: any): Types.MediasoupProducerStats {
     const result: Types.MediasoupProducerStats = {
         ssrc: DEFAULT_PRODUCER_SSRC,
         type: "inbound-rtp",
         ...(stats || {}),
-    }
+    };
     return result;
 }
 export interface ProvidedProducer extends Types.MediasoupProducer {
@@ -55,11 +98,11 @@ export function createProducer(stats?: any): ProvidedProducer {
         observer: {
             once: (eventType: "close", listener: Types.MediasoupCloseListener) => {
                 emitter.once(eventType, listener);
-            }
+            },
         },
         close: () => {
             emitter.emit("close");
-        }
+        },
     };
     return result;
 }
@@ -69,7 +112,7 @@ export function createConsumerStats(stats?: any): Types.MediasoupConsumerStats {
         ssrc: DEFAULT_CONSUMER_SSRC,
         type: "outbound-rtp",
         ...(stats || {}),
-    }
+    };
     return result;
 }
 export interface ProvidedConsumer extends Types.MediasoupConsumer {
@@ -91,22 +134,21 @@ export function createConsumer(stats?: any): ProvidedConsumer {
         observer: {
             once: (eventType: "close", listener: Types.MediasoupCloseListener) => {
                 emitter.once(eventType, listener);
-            }
+            },
         },
         close: () => {
             emitter.emit("close");
-        }
+        },
     };
     return result;
 }
-
 
 export function createDataProducerStats(stats?: any): Types.MediasoupDataProducerStats {
     const result: Types.MediasoupDataProducerStats = {
         ssrc: generateIntegerBetween(11111111, 9999999999),
         type: "data-producer",
         ...(stats || {}),
-    }
+    };
     return result;
 }
 export interface ProvidedDataProducer extends Types.MediasoupDataProducer {
@@ -123,22 +165,21 @@ export function createDataProducer(stats?: any): ProvidedDataProducer {
         observer: {
             once: (eventType: "close", listener: Types.MediasoupCloseListener) => {
                 emitter.once(eventType, listener);
-            }
+            },
         },
         close: () => {
             emitter.emit("close");
-        }
+        },
     };
     return result;
 }
-
 
 export function createDataConsumerStats(stats?: any): Types.MediasoupDataConsumerStats {
     const result: Types.MediasoupDataConsumerStats = {
         ssrc: generateIntegerBetween(11111111, 9999999999),
         type: "outbound-rtp",
         ...(stats || {}),
-    }
+    };
     return result;
 }
 export interface ProvidedDataConsumer extends Types.MediasoupDataConsumer {
@@ -156,11 +197,11 @@ export function createDataConsumer(stats?: any): ProvidedDataConsumer {
         observer: {
             once: (eventType: "close", listener: Types.MediasoupCloseListener) => {
                 emitter.once(eventType, listener);
-            }
+            },
         },
         close: () => {
             emitter.emit("close");
-        }
+        },
     };
     return result;
 }
@@ -169,17 +210,17 @@ export function createWebRtcTransportStats(stats?: any): Types.MediasoupWebRtcTr
     const result: Types.MediasoupWebRtcTransportStats = {
         type: "webrtc-transport",
         ...(stats || {}),
-    }
+    };
     return result;
 }
 export interface ProvidedTransport extends Types.MediasoupTransport {
-    produce(stats?: Types.MediasoupProducerStats): ProvidedProducer,
-    consume(stats?: Types.MediasoupConsumerStats): ProvidedConsumer,
-    produceData(stats?: Types.MediasoupDataProducerStats): ProvidedDataProducer,
-    consumeData(stats?: Types.MediasoupDataConsumerStats): ProvidedDataConsumer,
+    produce(stats?: Types.MediasoupProducerStats): ProvidedProducer;
+    consume(stats?: Types.MediasoupConsumerStats): ProvidedConsumer;
+    produceData(stats?: Types.MediasoupDataProducerStats): ProvidedDataProducer;
+    consumeData(stats?: Types.MediasoupDataConsumerStats): ProvidedDataConsumer;
     close(): void;
 }
-export function createTransport(stats: Types.MediasoupTransportStatsType ): ProvidedTransport {
+export function createTransport(stats: Types.MediasoupTransportStatsType): ProvidedTransport {
     const emitter = new EventEmitter();
     const kind = generateFrom<"audio" | "video">("audio", "video");
     const result: ProvidedTransport = {
@@ -194,9 +235,12 @@ export function createTransport(stats: Types.MediasoupTransportStatsType ): Prov
             once: (eventType: "close", listener: Types.MediasoupCloseListener) => {
                 emitter.once(eventType, listener);
             },
-            removeListener: (eventType: Types.MediasoupTransportEventTypes, listener: Types.MediasoupTransportListener) => {
+            removeListener: (
+                eventType: Types.MediasoupTransportEventTypes,
+                listener: Types.MediasoupTransportListener
+            ) => {
                 emitter.removeListener(eventType, listener);
-            }
+            },
         },
         produce: (stats?: Types.MediasoupProducerStats) => {
             const producer = createProducer(stats);
@@ -220,7 +264,7 @@ export function createTransport(stats: Types.MediasoupTransportStatsType ): Prov
         },
         close: () => {
             emitter.emit("close");
-        }
+        },
     };
     return result;
 }
@@ -229,4 +273,141 @@ export function createWebRtcTransport(): ProvidedTransport {
     const stats = createWebRtcTransportStats();
     const transport = createTransport(stats);
     return transport;
+}
+
+export interface ProvidedRouter extends Types.MediasoupRouter {
+    createWebRtcTransport(stats?: any): ProvidedTransport;
+    createPlainTransport(stats?: any): ProvidedTransport;
+    createDirectTransport(stats?: any): ProvidedTransport;
+    createPipeTransport(stats?: any): ProvidedTransport;
+    close(): void;
+}
+
+export function createRouter(): ProvidedRouter {
+    const emitter = new EventEmitter();
+    const result: ProvidedRouter = {
+        id: DEFAULT_ROUTER_ID,
+        observer: {
+            on: (eventType: Types.MediasoupRouterEventTypes, listener: Types.MediasoupRouterListener) => {
+                emitter.on(eventType, listener);
+            },
+            once: (eventType: "close", listener: Types.MediasoupCloseListener) => {
+                emitter.once(eventType, listener);
+            },
+            removeListener: (
+                eventType: Types.MediasoupRouterEventTypes,
+                listener: Types.MediasoupRouterListener
+            ) => {
+                emitter.removeListener(eventType, listener);
+            },
+        },
+        createWebRtcTransport: (stats?: any) => {
+            const stats_: Types.MediasoupWebRtcTransportStats = {
+                ...(stats || {}),
+                type: "webrtc-transport",
+            };
+            const result = createTransport(stats_);
+            emitter.emit("newtransport", result);
+            return result;
+        },
+        createPlainTransport: (stats?: any) => {
+            const stats_: Types.MediasoupWebRtcTransportStats = {
+                ...(stats || {}),
+                type: "plain-rtp-transport",
+            };
+            const result = createTransport(stats_);
+            emitter.emit("newtransport", result);
+            return result;
+        },
+        createDirectTransport: (stats?: any) => {
+            const stats_: Types.MediasoupWebRtcTransportStats = {
+                ...(stats || {}),
+                type: "direct-transport",
+            };
+            const result = createTransport(stats_);
+            emitter.emit("newtransport", result);
+            return result;
+        },
+        createPipeTransport: (stats?: any) => {
+            const stats_: Types.MediasoupWebRtcTransportStats = {
+                ...(stats || {}),
+                type: "pipe-transport",
+            };
+            const result = createTransport(stats_);
+            emitter.emit("newtransport", result);
+            return result;
+        },
+        close: () => {
+            emitter.emit("close");
+        },
+    };
+    return result;
+}
+
+export interface ProvidedWorker extends Types.MediasoupWorker {
+    createRouter(stats?: any): ProvidedRouter;
+    close(): void;
+}
+
+export function createWorker(): ProvidedWorker {
+    const emitter = new EventEmitter();
+    const result: ProvidedWorker = {
+        pid: DEFAULT_WORKER_ID,
+        observer: {
+            on: (eventType: Types.MediasoupWorkerEventTypes, listener: Types.MediasoupWorkerListener) => {
+                emitter.on(eventType, listener);
+            },
+            once: (eventType: "close", listener: Types.MediasoupCloseListener) => {
+                emitter.once(eventType, listener);
+            },
+            removeListener: (
+                eventType: Types.MediasoupWorkerEventTypes,
+                listener: Types.MediasoupWorkerListener
+            ) => {
+                emitter.removeListener(eventType, listener);
+            },
+        },
+        createRouter: () => {
+            const result = createRouter();
+            emitter.emit("newrouter", result);
+            return result;
+        },
+        close: () => {
+            emitter.emit("close");
+        },
+    };
+    return result;
+}
+
+
+export interface ProvidedMediasoup extends Types.MediasoupSurrogate {
+    createWorker(): ProvidedWorker;
+    close(): void;
+}
+
+export function createMediasoupSurrogate(): ProvidedMediasoup {
+    const emitter = new EventEmitter();
+    const result: ProvidedMediasoup = {
+        version: "3.6.10",
+        observer: {
+            on: (eventType: Types.MediasoupSurrogateEventTypes, listener: Types.MediasoupSurrogateListener) => {
+                emitter.on(eventType, listener);
+            },
+            removeListener: (
+                eventType: Types.MediasoupSurrogateEventTypes,
+                listener: Types.MediasoupSurrogateListener
+            ) => {
+                emitter.removeListener(eventType, listener);
+            },
+        },
+        createWorker: () => {
+            const result = createWorker();
+            emitter.emit("newworker", result);
+            return result;
+        },
+        close: () => {
+            emitter.emit("close");
+        },
+    };
+    return result;
 }

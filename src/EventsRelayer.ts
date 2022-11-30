@@ -1,9 +1,8 @@
 import { EventEmitter } from "events";
-import { SfuSample } from "@observertc/schemas"
+import { SfuSample } from "@observertc/schemas";
 type StatsCollectedListener = () => void;
 type SampleCreatedListener = (clientSample: SfuSample) => void;
 type SampleSentListener = () => void;
-
 
 export interface EventsRegister {
     onStatsCollected(listener: StatsCollectedListener): EventsRegister;
@@ -33,7 +32,7 @@ const ON_SENDER_DISCONNECTED_EVENT_NAME = "onSenderDisconnected";
 
 export class EventsRelayer implements EventsRegister, EventsEmitter {
     public static create(): EventsRelayer {
-        return new EventsRelayer()
+        return new EventsRelayer();
     }
     private _emitter: EventEmitter;
     private constructor() {
@@ -44,7 +43,7 @@ export class EventsRelayer implements EventsRegister, EventsEmitter {
         this._emitter.on(ON_STATS_COLLECTED_EVENT_NAME, listener);
         return this;
     }
-    
+
     emitStatsCollected(): void {
         this._emitter.emit(ON_STATS_COLLECTED_EVENT_NAME);
     }
@@ -72,7 +71,7 @@ export class EventsRelayer implements EventsRegister, EventsEmitter {
         this._emitter.on(ON_SAMPLES_SENT_EVENT_NAME, listener);
         return this;
     }
-    
+
     emitSamplesSent(): void {
         this._emitter.emit(ON_SAMPLES_SENT_EVENT_NAME);
     }
@@ -86,7 +85,7 @@ export class EventsRelayer implements EventsRegister, EventsEmitter {
         this._emitter.on(ON_SENDER_DISCONNECTED_EVENT_NAME, listener);
         return this;
     }
-    
+
     emitSenderDisconnected(): void {
         this._emitter.emit(ON_SENDER_DISCONNECTED_EVENT_NAME);
     }
@@ -95,5 +94,4 @@ export class EventsRelayer implements EventsRegister, EventsEmitter {
         this._emitter.off(ON_SENDER_DISCONNECTED_EVENT_NAME, listener);
         return this;
     }
-
 }

@@ -1,13 +1,13 @@
 import { FacadedCodec } from "../../src/codecs/FacadedCodec";
 
 describe("FacadedCodec", () => {
-    it('encodes / decodes correctly', () => {
+    it("encodes / decodes correctly", () => {
         const codec = FacadedCodec.wrap<string, number>({
             encode: (data: string) => Number.parseInt(data),
             decode: (data: number) => `${data}`,
         }).then<boolean>({
             encode: (data: number) => data % 2 === 0,
-            decode: (data: boolean) => data ? 1 : 0,
+            decode: (data: boolean) => (data ? 1 : 0),
         });
 
         expect(codec.encode("5")).toBe(false);

@@ -1,4 +1,4 @@
-import { Samples } from "@observertc/schemas"
+import { Samples } from "@observertc/schemas";
 import { Codec, CodecConfig, createCodec } from "./codecs/Codec";
 import { RestTransport, RestTransportConfig } from "./transports/RestTransport";
 import { Transport, TransportConfig } from "./transports/Transport";
@@ -11,15 +11,18 @@ const logger = createLogger(`Sender`);
 const ON_ERROR_EVENT_NAME = "onError";
 const ON_CLOSED_EVENT_NAME = "onClosed";
 
+/*eslint-disable @typescript-eslint/no-explicit-any */
+export type SamplesSentCallback = (err?: any) => void;
+
 export type SenderConfig = {
     /**
-     * Configure the codec used to transport samples or receieve 
+     * Configure the codec used to transport samples or receieve
      * feedback from the server.
-     * 
+     *
      * Possible values: json, protobuf
-     * 
+     *
      * DEFAULT: json
-     * 
+     *
      */
     format?: CodecConfig;
     /**
@@ -31,18 +34,18 @@ export type SenderConfig = {
      * Configuration to setup a REST api transport method for the samples.
      */
     rest?: RestTransportConfig;
-}
+};
 
 type SenderConstructConfig = SenderConfig & {
-    transport: TransportConfig,
-}
+    transport: TransportConfig;
+};
 
 const supplyDefaultConfig = () => {
     const defaultConfig: SenderConstructConfig = {
-        transport: {}
+        transport: {},
     };
     return defaultConfig;
-}
+};
 
 function createTransport(config: TransportConfig): Transport {
     if (config.websocket) {
@@ -65,7 +68,7 @@ export class Sender {
     private _config: SenderConstructConfig;
     private _codec: Codec<Samples, Uint8Array>;
     private _emitter: EventEmitter = new EventEmitter();
-    private _transport: Transport
+    private _transport: Transport;
     private constructor(config: SenderConstructConfig) {
         this._config = config;
         this._codec = createCodec<Samples>(this._config.format);
@@ -73,27 +76,33 @@ export class Sender {
             websocket: config.websocket,
             rest: config.rest,
         }).setFormat(this._config.format ?? "json");
-        
     }
 
     public get closed() {
         return this._closed;
     }
 
-    public send(samples: Samples): void {
+    public send(samples: Samples, callback?: SamplesSentCallback): void {
         if (this._closed) {
             throw new Error(`Cannot use an already closed Sender`);
         }
         const message = this._codec.encode(samples);
-        
+
         // --- for observer decoding tests ---
         // const messageInBase64 = require("js-base64").Base64.fromUint8Array(message);
         // logger.info({
         //     original: JSON.stringify(samples),
         //     messageInBase64
         // });
-        this._transport.send(message).catch(err => {
+        this._transport.send(message).then(() => {
+            if (!this._closed && callback) {
+                callback();
+            }
+        }).catch((err) => {
             if (!this._closed) {
+                if (callback) {
+                    callback(err);
+                }
                 this._close(err);
             }
         });
@@ -153,15 +162,12 @@ export class Sender {
             this._closed = true;
             logger.info(`Closed`);
         }
-        
+
         if (err) {
             this._emitter.emit(ON_ERROR_EVENT_NAME, err);
         } else {
             this._emitter.emit(ON_CLOSED_EVENT_NAME);
         }
-        [
-            ON_CLOSED_EVENT_NAME,
-            ON_ERROR_EVENT_NAME
-        ].forEach(eventType => this._emitter.removeAllListeners(eventType));
+        [ON_CLOSED_EVENT_NAME, ON_ERROR_EVENT_NAME].forEach((eventType) => this._emitter.removeAllListeners(eventType));
     }
 }

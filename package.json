@@ -1,6 +1,6 @@
 {
   "name": "@observertc/sfu-monitor-js",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "ObserveRTC SFU Integration Core Library",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -11,12 +11,9 @@
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
     "preversion": "npm run lint",
-    "format": "prettier --write \"src/**/*.ts\"",
     "lint": "./node_modules/.bin/eslint -c .eslintrc.js src/*",
     "build": "tsc",
-    "test": "jest --config jest.config.js --runInBand",
-    "version": "npm run format && git add -A src",
-    "postversion": "git push && git push --tags"
+    "test": "jest --config jest.config.js --runInBand"
   },
   "keywords": [
     "webrtc",
@@ -28,11 +25,10 @@
   "author": "Balazs Kreith",
   "license": "Apache-2.0",
   "dependencies": {
-    "@observertc/schemas": "^2.1.9",
+    "@observertc/schemas": "^2.2.0",
     "@types/events": "^3.0.0",
     "@types/uuid": "^8.3.4",
     "@types/ws": "^8.5.3",
-    "bowser": "^2.11.0",
     "js-base64": "^3.7.2",
     "js-sha256": "^0.9.0",
     "loglevel": "^1.8.0",

@@ -1,21 +1,20 @@
-import { SfuSample, Samples } from "@observertc/schemas"
+import { SfuSample, Samples } from "@observertc/schemas";
 
 export type AccumulatorConfig = {
     maxSfuSamples?: number;
     forwardIfEmpty?: boolean;
-}
-
+};
 
 const supplyDefaultConfig = () => {
     const result: AccumulatorConfig = {
         forwardIfEmpty: false,
     };
     return result;
-}
+};
 
 export type SamplesListener = (samples?: Samples) => void;
 
-export class Accumulator  {
+export class Accumulator {
     public static create(config?: AccumulatorConfig) {
         const appliedConfig = Object.assign(supplyDefaultConfig(), config);
         return new Accumulator(appliedConfig);
@@ -44,7 +43,7 @@ export class Accumulator  {
         }
         const buffer = this._buffer;
         this._buffer = [];
-        buffer.forEach(samples => {
+        buffer.forEach((samples) => {
             // samples.clientSamples = [];
             consumer(samples);
         });
@@ -63,9 +62,9 @@ export class Accumulator  {
         }
     }
 
-    private _buffering() : void {
+    private _buffering(): void {
         if (this._empty) return;
-        this._buffer.push(this._samples)
+        this._buffer.push(this._samples);
         this._samples = {};
         this._empty = true;
     }

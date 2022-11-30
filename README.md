@@ -1,19 +1,19 @@
-Javascript library to monitor Selective Forwarding Units (SFU)
----
+## Javascript library to monitor Selective Forwarding Units (SFU)
 
 `@observertc/sfu-monitor-js` is javascript library to monitor your SFU and integrate with ObserveRTC.
 
 Table of Contents:
- * [Quick Start](#quick-start)
-    * [Integrate Mediasoup](#integrate-mediasoup)
-    * [Integrate other type of SFUs](#integrate-other-type-of-sfus)
- * [Sfu Monitor Storage](#sfu-monitor-storage)
- * [Configurations](#configurations)
- * [API docs](#api-docs)
- * [NPM package](#npm-package)
- * [Schemas](#schemas)
- * [Getting Involved](#getting-involved)
- * [License](#license)
+
+-   [Quick Start](#quick-start)
+    -   [Integrate Mediasoup](#integrate-mediasoup)
+    -   [Integrate other type of SFUs](#integrate-other-type-of-sfus)
+-   [Sfu Monitor Storage](#sfu-monitor-storage)
+-   [Configurations](#configurations)
+-   [API docs](#api-docs)
+-   [NPM package](#npm-package)
+-   [Schemas](#schemas)
+-   [Getting Involved](#getting-involved)
+-   [License](#license)
 
 ## Qucik Start
 
@@ -35,37 +35,72 @@ const config = {
     sendingPeriodInMs: 10000,
     sender: {
         websocket: {
-            urls: ["ws://localhost:7080/samples/myServiceId/myMediaUnitId"]
-        }
-    }
+            urls: ["ws://localhost:7080/samples/myServiceId/myMediaUnitId"],
+        },
+    },
 };
 const monitor = SfuMonitor.create(config);
 ```
 
-A monitor does three things: 
-    1. Collect Stats
-    2. Make sample based on the collected stats
-    3. Send the sample to the [observer](https://github.com/ObserveRTC/observer)
+A monitor does three things: 1. Collect Stats 2. Make sample based on the collected stats 3. Send the sample to the [observer](https://github.com/ObserveRTC/observer)
 
 ### Integrate Mediasoup
 
 To integrate [mediasoup:3^](https://mediasoup.org/documentation/v3/) you can use the built-in MediasoupCollector.
 
 ```javascript
-import { MediasoupCollector } from "@observertc/sfu-monitor-js";
+import mediasoup from "mediasoup";
+import { createMediasoupMonitor } from "@observertc/sfu-monitor-js";
 
-// you should use the previously created monitor object
-const collector = MediasoupCollector.create();
-monitor.addStatsCollector(collector);
-
-// ... somewhere in your code, where you use the mediasoup router to create transports
-const transport = router.createWebRtcTransport(options);
-collector.watchWebRtcTransport(transport, {
-    pollStats: true
+const monitor = createMediasoupMonitor({
+    collectingPeriodInMs: 5000,
+    mediasoup,
 });
 ```
 
-Note, the `pollStats` is set to true. This will order the collector to call the  `getStats` method on every Consumers, Producers, DataProducers, DataConsumers added to the Transport.
+With this configuration the monitor automatically add and remove mediasoup objects. 
+
+```javascript
+monitor.events.onStatsCollected(() => {
+    const storage = monitor.storage
+    console.log(`Mediasoup SFU has ${storage.getNumberOfInboundRtpPads()} incoming RTP stream`);
+    console.log(`Mediasoup SFU has ${storage.getNumberOfOutboundRtpPads()} outgoing RTP stream`);
+    console.log(`Mediasoup SFU has ${storage.getNumberOfAudioSinks()} audio consumers`);
+    console.log(`Mediasoup SFU has ${storage.getNumberOfVideoSinks()} video consumers`);
+    console.log(`Mediasoup SFU has ${storage.getNumberOfMediaSinks()} consumers`);
+    console.log(`Mediasoup SFU has ${storage.getNumberOfAudioStreams()} audio producers`);
+    console.log(`Mediasoup SFU has ${storage.getNumberOfVideoStreams()} video producers`);
+    console.log(`Mediasoup SFU has ${storage.getNumberOfMediaStreams()} producers`);
+    console.log(`Mediasoup SFU has ${storage.getNumberOfTransports()} transports`);
+
+    for (const audioSink of storage.audioSinks()) {
+        console.log(`audio consumer ${audioSink.id} belongs to transport ${audioSink.getTransport()?.id} has the following outbound RTP stats`);
+        for (const outboundRtp of audioSink.outboundRtpPads()) {
+            console.log(`RTP Pad: ${outboundRtp.id}`, outboundRtp.stats);
+        }
+    }
+});
+```
+
+By default it does not call `getStats` as it turned out to be performance intensive in some cases. 
+If you want the collector to call the getStats on objects you can change the configuration like:
+
+```javascript
+const monitor = createMediasoupMonitor({
+    collectingPeriodInMs: 5000,
+    mediasoup,
+    mediasoupCollector: {
+        pollWebRtcTransportStats: (transportId) => true,
+        pollPlainRtpTransportStats: (transportId) => true,
+        pollPipeTransportStats: (transportId) => true,
+        pollDirectTransportStats: (transportId) => true,
+        pollProducerStats: (producerId) => true,
+        pollConsumerStats: (consumerId) => true,
+        pollDataProducerStats: (dataProducerId) => true,
+        pollDataConsumerStats: (dataProducerId) => true,
+    }
+});
+```
 
 ### Integrate other type of SFUs
 
@@ -102,42 +137,50 @@ collector.removeSctpStreamSupplier("channelId");
 
 Sfu Monitor collects measurements about the following components:
 
- * **Transport**: Represent a network transport connection between an SFU and an external endpoint
- * **Inbound RTP Pad**: Represents an ingress point for RTP sessions to the SFU.
- * **Outbound RTP Pad**: Represents an eggress point for RTP sessions from the SFU.
- * **Media Stream**: Represent a group of inbound RTP pads belong to the same outbound media track
- * **Media Sink**: Represent a group of outbound RTP pads belong to the same inbound media track
- * **SCTP Channel**: Represent an SCTP session
+-   **Transport**: Represent a network transport connection between an SFU and an external endpoint
+-   **Inbound RTP Pad**: Represents an ingress point for RTP sessions to the SFU.
+-   **Outbound RTP Pad**: Represents an eggress point for RTP sessions from the SFU.
+-   **Media Stream**: Represent a group of inbound RTP pads belong to the same outbound media track
+-   **Media Sink**: Represent a group of outbound RTP pads belong to the same inbound media track
+-   **SCTP Channel**: Represent an SCTP session
 
 Sfu Monitor Storage provided entries can be used to navigate from one collected components to another.
 
 ![Storage Navigations](puml/navigation.png)
 
 Entries:
- * [Transport](#transport-entries)
- * [Inbound RTP](#inbound-rtp-entries)
- * [Outbound RTP](#outbound-rtp-entries)
- * [Media Stream](#media-stream-entries)
- * [Media Sink](#media-sink-entries)
- * [SCTP Channel](#sctp-channel-entries)
- 
+
+-   [Transport](#transport-entries)
+-   [Inbound RTP](#inbound-rtp-entries)
+-   [Outbound RTP](#outbound-rtp-entries)
+-   [Media Stream](#media-stream-entries)
+-   [Media Sink](#media-sink-entries)
+-   [SCTP Channel](#sctp-channel-entries)
 
 ### Transport Entries
 
 ```javascript
 const storage = monitor.storage;
 for (const transport of storage.transports()) {
-
     console.log(`Transport (${transport.id}) stats:`, transport.stats);
 
     for (const inboundRtpPad of transport.inboundRtpPads()) {
-        console.log(`Inbound Rtp Pad (${inboundRtpPad.id}) belongs to transport (${transport.id}) stats:`, inboundRtpPad.stats);
+        console.log(
+            `Inbound Rtp Pad (${inboundRtpPad.id}) belongs to transport (${transport.id}) stats:`,
+            inboundRtpPad.stats
+        );
     }
     for (const outboundRtpPad of transport.outboundRtpPads()) {
-        console.log(`Outbound Rtp Pad (${outboundRtpPad.id}) belongs to transport (${transport.id}) stats:`, outboundRtpPad.stats);
+        console.log(
+            `Outbound Rtp Pad (${outboundRtpPad.id}) belongs to transport (${transport.id}) stats:`,
+            outboundRtpPad.stats
+        );
     }
     for (const sctpChannel of transport.sctpChannels()) {
-        console.log(`SCTP channel (${sctpChannel.id}) belongs to transport (${transport.id}) stats:`, sctpChannel.stats);
+        console.log(
+            `SCTP channel (${sctpChannel.id}) belongs to transport (${transport.id}) stats:`,
+            sctpChannel.stats
+        );
     }
     for (const mediaSink of transport.mediaSinks()) {
         console.log(`Transport (${transport.id}) has a ${mediaSink.kind} 
@@ -180,12 +223,14 @@ for (const outboundRtpPad of storage.outboundRtpPads()) {
 
 ```javascript
 for (const mediaStream of storage.mediaStreams()) {
-
     // the transport the media stream belongs to
     const transport = mediaStream.getTransport();
 
     for (const inboundRtpPad of mediaStream.inboundRtpPads()) {
-        console.log(`Inbound Rtp Pad (${inboundRtpPad.id}) belongs to media stream (${mediaStream.id}) stats:`, inboundRtpPad.stats);
+        console.log(
+            `Inbound Rtp Pad (${inboundRtpPad.id}) belongs to media stream (${mediaStream.id}) stats:`,
+            inboundRtpPad.stats
+        );
     }
     for (const mediaSink of mediaStream.mediaSinks()) {
         console.log(`Media stream (${mediaStream.id}) has a ${mediaSink.kind} 
@@ -205,7 +250,10 @@ for (const mediaSink of storage.mediaSinks()) {
     const mediaStream = mediaSink.getMediaSink();
 
     for (const outboundRtpPad of mediaSink.outboundRtpPads()) {
-        console.log(`Outbound Rtp Pad (${outboundRtpPad.id}) belongs to media stream (${mediaSink.id}) stats:`, outboundRtpPad.stats);
+        console.log(
+            `Outbound Rtp Pad (${outboundRtpPad.id}) belongs to media stream (${mediaSink.id}) stats:`,
+            outboundRtpPad.stats
+        );
     }
 }
 ```
@@ -226,52 +274,52 @@ const config = {
     /**
      * By setting it, the monitor calls the added statsCollectors periodically
      * and polls the stats.
-     * 
+     *
      * DEFAULT: undefined
      */
     collectingPeriodInMs: 5000,
     /**
      * By setting it, the monitor make samples periodically.
-     * 
+     *
      * DEFAULT: undefined
      */
     samplingPeriodInMs: 10000,
 
     /**
      * By setting it stats items and entries are deleted if they are not updated.
-     * 
+     *
      * DEFAULT: undefined
      */
     statsExpirationTimeInMs: 60000,
 
     /**
      * Sampling Component Related configurations
-     * 
+     *
      */
     sampler: {
             /**
          * The identifier of the SFU.
-         * 
+         *
          * DEFAULT: a generated unique value
          */
         sfuId: "sfuId",
 
         /**
          * Indicate if the sampler only sample stats updated since the last sampling.
-         * 
+         *
          * DEFAULT: true
          */
         incrementalSampling: true,
     },
     sender: {
         /**
-         * Configure the codec used to transport samples or receieve 
+         * Configure the codec used to transport samples or receieve
          * feedback from the server.
-         * 
+         *
          * Possible values: json, protobuf
-         * 
+         *
          * DEFAULT: json
-         * 
+         *
          */
         format: "json",
         /**
@@ -279,12 +327,12 @@ const config = {
          */
         websocket: {
             /**
-             * The target urls the websocket is opened for 
+             * The target urls the websocket is opened for
              */
             urls: ["ws://localhost:7080/samples/myServiceId/myMediaUnitId"],
             /**
              * The maximum number of try to connect to the server
-             * 
+             *
              * DEFAULT: 3
              */
             maxRetry: 1,
@@ -300,12 +348,12 @@ const config = {
          */
         rest: {
             /**
-             * The target url the websocket is opened for 
+             * The target url the websocket is opened for
              */
             urls: ["http://localhost:7080/rest/samples/myServiceId/myMediaUnitId"];
             /**
              * The maximum number of try to connect to the server
-             * 
+             *
              * DEFAULT: 3
              */
             maxRetry: 1,
@@ -313,7 +361,6 @@ const config = {
     }
 };
 ```
-
 
 ## API docs
 
@@ -329,11 +376,10 @@ https://github.com/observertc/schemas
 
 ## Getting Involved
 
-Sfu-monitor is made with the intention to provide an open-source monitoring solution for 
-WebRTC developers. We develop new features and maintaining the current 
-product with the help of the community. If you are interested in getting involved 
+Sfu-monitor is made with the intention to provide an open-source monitoring solution for
+WebRTC developers. We develop new features and maintaining the current
+product with the help of the community. If you are interested in getting involved
 please read our [contribution](CONTRIBUTING.md) guideline.
-
 
 ## License
 

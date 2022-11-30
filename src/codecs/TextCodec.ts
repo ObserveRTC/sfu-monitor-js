@@ -1,10 +1,21 @@
 import { Codec } from "./Codec";
 
 /*eslint-disable  @typescript-eslint/ban-types*/
-type EncodingType = 'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'ucs-2' | 'base64' | 'base64url' | 'latin1' | 'binary' | 'hex';
+type EncodingType =
+    | "ascii"
+    | "utf8"
+    | "utf-8"
+    | "utf16le"
+    | "ucs2"
+    | "ucs-2"
+    | "base64"
+    | "base64url"
+    | "latin1"
+    | "binary"
+    | "hex";
 export type TextCodecConfig = {
     textEncoding?: EncodingType;
-}
+};
 
 type TextCodecConstructorConfig = TextCodecConfig & {
     textEncoding: EncodingType;
@@ -12,7 +23,7 @@ type TextCodecConstructorConfig = TextCodecConfig & {
 
 const defaultConfig: TextCodecConstructorConfig = {
     textEncoding: "utf-8",
-}
+};
 
 export class TextCodec implements Codec<string, Uint8Array> {
     public static create(config?: TextCodecConstructorConfig): TextCodec {
