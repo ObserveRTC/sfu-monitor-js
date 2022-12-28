@@ -1,3 +1,11 @@
+# 1.1.1
+
+ * Fix problem of setting statswriter twice
+ * Add MonitorMetrics for self checking purposes
+ * Set default statsExpirationTimeTo 60s
+ * Set package version to 1.1.1
+ * Fix schema version to 2.2.0
+
 # 1.1.0
 
 * use schema 2.2.0
