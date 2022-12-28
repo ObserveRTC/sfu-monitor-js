@@ -366,6 +366,11 @@ const config = {
 
 https://observertc.github.io/sfu-monitor-js/interfaces/SfuMonitor.html
 
+Generate docs:
+```
+typedoc --out docs ./src
+```
+
 ## NPM package
 
 https://www.npmjs.com/package/@observertc/sfu-monitor-js

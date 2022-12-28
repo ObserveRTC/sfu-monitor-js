@@ -1,354 +1,148 @@
-<!DOCTYPE html>
-<html class="default">
-    <head>
-        <meta charset="utf-8" />
-        <meta http-equiv="x-ua-compatible" content="IE=edge" />
-        <title>@observertc/sfu-observer-js</title>
-        <meta name="description" content="Documentation for @observertc/sfu-observer-js" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="assets/style.css" />
-        <link rel="stylesheet" href="assets/highlight.css" />
-        <script async src="assets/search.js" id="search-script"></script>
-    </head>
-    <body>
-        <script>
-            document.body.classList.add(localStorage.getItem("tsd-theme") || "os");
-        </script>
-        <header>
-            <div class="tsd-page-toolbar">
-                <div class="container">
-                    <div class="table-wrap">
-                        <div class="table-cell" id="tsd-search" data-base=".">
-                            <div class="field">
-                                <label for="tsd-search-field" class="tsd-widget search no-caption">Search</label
-                                ><input type="text" id="tsd-search-field" />
-                            </div>
-                            <ul class="results">
-                                <li class="state loading">Preparing search index...</li>
-                                <li class="state failure">The search index is not available</li>
-                            </ul>
-                            <a href="index.html" class="title">@observertc/sfu-observer-js</a>
-                        </div>
-                        <div class="table-cell" id="tsd-widgets">
-                            <div id="tsd-filter">
-                                <a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
-                                <div class="tsd-filter-group">
-                                    <div class="tsd-select" id="tsd-filter-visibility">
-                                        <span class="tsd-select-label">All</span>
-                                        <ul class="tsd-select-list">
-                                            <li data-value="public">Public</li>
-                                            <li data-value="protected">Public/Protected</li>
-                                            <li data-value="private" class="selected">All</li>
-                                        </ul>
-                                    </div>
-                                    <input type="checkbox" id="tsd-filter-inherited" checked /><label
-                                        class="tsd-widget"
-                                        for="tsd-filter-inherited"
-                                        >Inherited</label
-                                    ><input type="checkbox" id="tsd-filter-externals" checked /><label
-                                        class="tsd-widget"
-                                        for="tsd-filter-externals"
-                                        >Externals</label
-                                    >
-                                </div>
-                            </div>
-                            <a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="tsd-page-title">
-                <div class="container"><h1>@observertc/sfu-observer-js</h1></div>
-            </div>
-        </header>
-        <div class="container container-main">
-            <div class="row">
-                <div class="col-8 col-content">
-                    <div class="tsd-panel tsd-typography">
-                        <a
-                            href="#observertc-client-integration-core-library"
-                            id="observertc-client-integration-core-library"
-                            style="color: inherit; text-decoration: none"
-                        >
-                            <h2>ObserveRTC Client Integration Core Library</h2>
-                        </a>
+<!DOCTYPE html><html class="default"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>@observertc/sfu-monitor-js</title><meta name="description" content="Documentation for @observertc/sfu-monitor-js"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><script async src="assets/search.js" id="search-script"></script></head><body><script>document.body.classList.add(localStorage.getItem("tsd-theme") || "os")</script><header><div class="tsd-page-toolbar"><div class="container"><div class="table-wrap"><div class="table-cell" id="tsd-search" data-base="."><div class="field"><label for="tsd-search-field" class="tsd-widget search no-caption">Search</label><input type="text" id="tsd-search-field"/></div><ul class="results"><li class="state loading">Preparing search index...</li><li class="state failure">The search index is not available</li></ul><a href="index.html" class="title">@observertc/sfu-monitor-js</a></div><div class="table-cell" id="tsd-widgets"><div id="tsd-filter"><a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a><div class="tsd-filter-group"><div class="tsd-select" id="tsd-filter-visibility"><span class="tsd-select-label">All</span><ul class="tsd-select-list"><li data-value="public">Public</li><li data-value="protected">Public/Protected</li><li data-value="private" class="selected">All</li></ul></div> <input type="checkbox" id="tsd-filter-inherited" checked/><label class="tsd-widget" for="tsd-filter-inherited">Inherited</label><input type="checkbox" id="tsd-filter-externals" checked/><label class="tsd-widget" for="tsd-filter-externals">Externals</label></div></div><a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a></div></div></div></div><div class="tsd-page-title"><div class="container"><h1>@observertc/sfu-monitor-js</h1></div></div></header><div class="container container-main"><div class="row"><div class="col-8 col-content"><div class="tsd-panel tsd-typography">
+<a href="#javascript-library-to-monitor-selective-forwarding-units-sfu" id="javascript-library-to-monitor-selective-forwarding-units-sfu" style="color: inherit; text-decoration: none;">
+  <h2>Javascript library to monitor Selective Forwarding Units (SFU)</h2>
+</a>
+<p><code>@observertc/sfu-monitor-js</code> is javascript library to monitor your SFU and integrate with ObserveRTC.</p>
+<p>Table of Contents:</p>
+<ul>
+<li><a href="#quick-start">Quick Start</a><ul>
+<li><a href="#integrate-mediasoup">Integrate Mediasoup</a></li>
+<li><a href="#integrate-other-type-of-sfus">Integrate other type of SFUs</a></li>
+</ul>
+</li>
+<li><a href="#sfu-monitor-storage">Sfu Monitor Storage</a></li>
+<li><a href="#configurations">Configurations</a></li>
+<li><a href="#api-docs">API docs</a></li>
+<li><a href="#npm-package">NPM package</a></li>
+<li><a href="#schemas">Schemas</a></li>
+<li><a href="#getting-involved">Getting Involved</a></li>
+<li><a href="#license">License</a></li>
+</ul>
 
-                        <a
-                            href="#-under-development-no-stable-version-is-available-at-the-moment-"
-                            id="-under-development-no-stable-version-is-available-at-the-moment-"
-                            style="color: inherit; text-decoration: none"
-                        >
-                            <h1>!!! UNDER DEVELOPMENT, NO STABLE VERSION IS AVAILABLE AT THE MOMENT! !!!</h1>
-                        </a>
-                        <p>@observertc/sfu-observer-js is an SFU side library for observertc integration.</p>
-                        <p>Table of Contents:</p>
-                        <ul>
-                            <li><a href="#api-docs">API docs</a></li>
-                            <li>
-                                <a href="#quick-start">Quick Start</a>
-                                <ul>
-                                    <li><a href="#collect-stats-from-mediasoup">Collect stats from mediasoup</a></li>
-                                    <li><a href="#collect-stats-from-other-sfus">Collect stats from other SFUs</a></li>
-                                    <li><a href="#sample-and-send">Sample and Send</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="#use-collected-stats">Use collected stats</a></li>
-                            <li><a href="#configurations">Configurations</a></li>
-                            <li><a href="#contributions">Contributions</a></li>
-                            <li><a href="#license">License</a></li>
-                        </ul>
+<a href="#qucik-start" id="qucik-start" style="color: inherit; text-decoration: none;">
+  <h2>Qucik Start</h2>
+</a>
+<p>Install the library by using NPM:</p>
+<pre><code><span class="hl-0">npm</span><span class="hl-1"> </span><span class="hl-0">i</span><span class="hl-1"> @</span><span class="hl-0">observertc</span><span class="hl-1">/</span><span class="hl-0">sfu</span><span class="hl-1">-</span><span class="hl-0">monitor</span><span class="hl-1">-</span><span class="hl-0">js</span>
+</code></pre>
+<p>Once the library is installed, you need to integrate it.
+The first step is to setup a monitor in your application.</p>
+<pre><code class="language-javascript"><span class="hl-2">import</span><span class="hl-1"> { </span><span class="hl-0">SfuMonitor</span><span class="hl-1"> } </span><span class="hl-2">from</span><span class="hl-1"> </span><span class="hl-3">&quot;@observertc/sfu-monitor-js&quot;</span><span class="hl-1">;</span><br/><span class="hl-4">// see full config in Configuration section</span><br/><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">config</span><span class="hl-1"> = {</span><br/><span class="hl-1">    </span><span class="hl-0">collectingPeriodInMs:</span><span class="hl-1"> </span><span class="hl-7">5000</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-0">samplingPeriodInMs:</span><span class="hl-1"> </span><span class="hl-7">10000</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-0">sendingPeriodInMs:</span><span class="hl-1"> </span><span class="hl-7">10000</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-0">sender:</span><span class="hl-1"> {</span><br/><span class="hl-1">        </span><span class="hl-0">websocket:</span><span class="hl-1"> {</span><br/><span class="hl-1">            </span><span class="hl-0">urls:</span><span class="hl-1"> [</span><span class="hl-3">&quot;ws://localhost:7080/samples/myServiceId/myMediaUnitId&quot;</span><span class="hl-1">],</span><br/><span class="hl-1">        },</span><br/><span class="hl-1">    },</span><br/><span class="hl-1">};</span><br/><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">monitor</span><span class="hl-1"> = </span><span class="hl-0">SfuMonitor</span><span class="hl-1">.</span><span class="hl-8">create</span><span class="hl-1">(</span><span class="hl-0">config</span><span class="hl-1">);</span>
+</code></pre>
+<p>A monitor does three things: 1. Collect Stats 2. Make sample based on the collected stats 3. Send the sample to the <a href="https://github.com/ObserveRTC/observer">observer</a></p>
 
-                        <a href="#api-docs" id="api-docs" style="color: inherit; text-decoration: none">
-                            <h2>API docs</h2>
-                        </a>
-
-                        <a href="#qucik-start" id="qucik-start" style="color: inherit; text-decoration: none">
-                            <h2>Qucik Start</h2>
-                        </a>
-                        <pre><code><span class="hl-0">npm</span><span class="hl-1"> </span><span class="hl-0">i</span><span class="hl-1"> @</span><span class="hl-0">observertc</span><span class="hl-1">/</span><span class="hl-0">sfu</span><span class="hl-1">-</span><span class="hl-0">observer</span><span class="hl-1">-</span><span class="hl-0">js</span>
+<a href="#integrate-mediasoup" id="integrate-mediasoup" style="color: inherit; text-decoration: none;">
+  <h3>Integrate Mediasoup</h3>
+</a>
+<p>To integrate <a href="https://mediasoup.org/documentation/v3/">mediasoup:3^</a> you can use the built-in MediasoupCollector.</p>
+<pre><code class="language-javascript"><span class="hl-2">import</span><span class="hl-1"> </span><span class="hl-0">mediasoup</span><span class="hl-1"> </span><span class="hl-2">from</span><span class="hl-1"> </span><span class="hl-3">&quot;mediasoup&quot;</span><span class="hl-1">;</span><br/><span class="hl-2">import</span><span class="hl-1"> { </span><span class="hl-0">createMediasoupMonitor</span><span class="hl-1"> } </span><span class="hl-2">from</span><span class="hl-1"> </span><span class="hl-3">&quot;@observertc/sfu-monitor-js&quot;</span><span class="hl-1">;</span><br/><br/><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">monitor</span><span class="hl-1"> = </span><span class="hl-8">createMediasoupMonitor</span><span class="hl-1">({</span><br/><span class="hl-1">    </span><span class="hl-0">collectingPeriodInMs:</span><span class="hl-1"> </span><span class="hl-7">5000</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-0">mediasoup</span><span class="hl-1">,</span><br/><span class="hl-1">});</span>
+</code></pre>
+<p>With this configuration the monitor automatically add and remove mediasoup objects. </p>
+<pre><code class="language-javascript"><span class="hl-0">monitor</span><span class="hl-1">.</span><span class="hl-0">events</span><span class="hl-1">.</span><span class="hl-8">onStatsCollected</span><span class="hl-1">(() </span><span class="hl-5">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">    </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">storage</span><span class="hl-1"> = </span><span class="hl-0">monitor</span><span class="hl-1">.</span><span class="hl-0">storage</span><br/><span class="hl-1">    </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><span class="hl-3">`Mediasoup SFU has </span><span class="hl-5">${</span><span class="hl-0">storage</span><span class="hl-9">.</span><span class="hl-8">getNumberOfInboundRtpPads</span><span class="hl-9">()</span><span class="hl-5">}</span><span class="hl-3"> incoming RTP stream`</span><span class="hl-1">);</span><br/><span class="hl-1">    </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><span class="hl-3">`Mediasoup SFU has </span><span class="hl-5">${</span><span class="hl-0">storage</span><span class="hl-9">.</span><span class="hl-8">getNumberOfOutboundRtpPads</span><span class="hl-9">()</span><span class="hl-5">}</span><span class="hl-3"> outgoing RTP stream`</span><span class="hl-1">);</span><br/><span class="hl-1">    </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><span class="hl-3">`Mediasoup SFU has </span><span class="hl-5">${</span><span class="hl-0">storage</span><span class="hl-9">.</span><span class="hl-8">getNumberOfAudioSinks</span><span class="hl-9">()</span><span class="hl-5">}</span><span class="hl-3"> audio consumers`</span><span class="hl-1">);</span><br/><span class="hl-1">    </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><span class="hl-3">`Mediasoup SFU has </span><span class="hl-5">${</span><span class="hl-0">storage</span><span class="hl-9">.</span><span class="hl-8">getNumberOfVideoSinks</span><span class="hl-9">()</span><span class="hl-5">}</span><span class="hl-3"> video consumers`</span><span class="hl-1">);</span><br/><span class="hl-1">    </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><span class="hl-3">`Mediasoup SFU has </span><span class="hl-5">${</span><span class="hl-0">storage</span><span class="hl-9">.</span><span class="hl-8">getNumberOfMediaSinks</span><span class="hl-9">()</span><span class="hl-5">}</span><span class="hl-3"> consumers`</span><span class="hl-1">);</span><br/><span class="hl-1">    </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><span class="hl-3">`Mediasoup SFU has </span><span class="hl-5">${</span><span class="hl-0">storage</span><span class="hl-9">.</span><span class="hl-8">getNumberOfAudioStreams</span><span class="hl-9">()</span><span class="hl-5">}</span><span class="hl-3"> audio producers`</span><span class="hl-1">);</span><br/><span class="hl-1">    </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><span class="hl-3">`Mediasoup SFU has </span><span class="hl-5">${</span><span class="hl-0">storage</span><span class="hl-9">.</span><span class="hl-8">getNumberOfVideoStreams</span><span class="hl-9">()</span><span class="hl-5">}</span><span class="hl-3"> video producers`</span><span class="hl-1">);</span><br/><span class="hl-1">    </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><span class="hl-3">`Mediasoup SFU has </span><span class="hl-5">${</span><span class="hl-0">storage</span><span class="hl-9">.</span><span class="hl-8">getNumberOfMediaStreams</span><span class="hl-9">()</span><span class="hl-5">}</span><span class="hl-3"> producers`</span><span class="hl-1">);</span><br/><span class="hl-1">    </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><span class="hl-3">`Mediasoup SFU has </span><span class="hl-5">${</span><span class="hl-0">storage</span><span class="hl-9">.</span><span class="hl-8">getNumberOfTransports</span><span class="hl-9">()</span><span class="hl-5">}</span><span class="hl-3"> transports`</span><span class="hl-1">);</span><br/><br/><span class="hl-1">    </span><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">audioSink</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">storage</span><span class="hl-1">.</span><span class="hl-8">audioSinks</span><span class="hl-1">()) {</span><br/><span class="hl-1">        </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><span class="hl-3">`audio consumer </span><span class="hl-5">${</span><span class="hl-0">audioSink</span><span class="hl-9">.</span><span class="hl-0">id</span><span class="hl-5">}</span><span class="hl-3"> belongs to transport </span><span class="hl-5">${</span><span class="hl-0">audioSink</span><span class="hl-9">.</span><span class="hl-8">getTransport</span><span class="hl-9">()?.</span><span class="hl-0">id</span><span class="hl-5">}</span><span class="hl-3"> has the following outbound RTP stats`</span><span class="hl-1">);</span><br/><span class="hl-1">        </span><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">outboundRtp</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">audioSink</span><span class="hl-1">.</span><span class="hl-8">outboundRtpPads</span><span class="hl-1">()) {</span><br/><span class="hl-1">            </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><span class="hl-3">`RTP Pad: </span><span class="hl-5">${</span><span class="hl-0">outboundRtp</span><span class="hl-9">.</span><span class="hl-0">id</span><span class="hl-5">}</span><span class="hl-3">`</span><span class="hl-1">, </span><span class="hl-0">outboundRtp</span><span class="hl-1">.</span><span class="hl-0">stats</span><span class="hl-1">);</span><br/><span class="hl-1">        }</span><br/><span class="hl-1">    }</span><br/><span class="hl-1">});</span>
+</code></pre>
+<p>By default it does not call <code>getStats</code> as it turned out to be performance intensive in some cases. 
+If you want the collector to call the getStats on objects you can change the configuration like:</p>
+<pre><code class="language-javascript"><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">monitor</span><span class="hl-1"> = </span><span class="hl-8">createMediasoupMonitor</span><span class="hl-1">({</span><br/><span class="hl-1">    </span><span class="hl-0">collectingPeriodInMs:</span><span class="hl-1"> </span><span class="hl-7">5000</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-0">mediasoup</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-0">mediasoupCollector:</span><span class="hl-1"> {</span><br/><span class="hl-1">        </span><span class="hl-8">pollWebRtcTransportStats</span><span class="hl-0">:</span><span class="hl-1"> (</span><span class="hl-0">transportId</span><span class="hl-1">) </span><span class="hl-5">=&gt;</span><span class="hl-1"> </span><span class="hl-5">true</span><span class="hl-1">,</span><br/><span class="hl-1">        </span><span class="hl-8">pollPlainRtpTransportStats</span><span class="hl-0">:</span><span class="hl-1"> (</span><span class="hl-0">transportId</span><span class="hl-1">) </span><span class="hl-5">=&gt;</span><span class="hl-1"> </span><span class="hl-5">true</span><span class="hl-1">,</span><br/><span class="hl-1">        </span><span class="hl-8">pollPipeTransportStats</span><span class="hl-0">:</span><span class="hl-1"> (</span><span class="hl-0">transportId</span><span class="hl-1">) </span><span class="hl-5">=&gt;</span><span class="hl-1"> </span><span class="hl-5">true</span><span class="hl-1">,</span><br/><span class="hl-1">        </span><span class="hl-8">pollDirectTransportStats</span><span class="hl-0">:</span><span class="hl-1"> (</span><span class="hl-0">transportId</span><span class="hl-1">) </span><span class="hl-5">=&gt;</span><span class="hl-1"> </span><span class="hl-5">true</span><span class="hl-1">,</span><br/><span class="hl-1">        </span><span class="hl-8">pollProducerStats</span><span class="hl-0">:</span><span class="hl-1"> (</span><span class="hl-0">producerId</span><span class="hl-1">) </span><span class="hl-5">=&gt;</span><span class="hl-1"> </span><span class="hl-5">true</span><span class="hl-1">,</span><br/><span class="hl-1">        </span><span class="hl-8">pollConsumerStats</span><span class="hl-0">:</span><span class="hl-1"> (</span><span class="hl-0">consumerId</span><span class="hl-1">) </span><span class="hl-5">=&gt;</span><span class="hl-1"> </span><span class="hl-5">true</span><span class="hl-1">,</span><br/><span class="hl-1">        </span><span class="hl-8">pollDataProducerStats</span><span class="hl-0">:</span><span class="hl-1"> (</span><span class="hl-0">dataProducerId</span><span class="hl-1">) </span><span class="hl-5">=&gt;</span><span class="hl-1"> </span><span class="hl-5">true</span><span class="hl-1">,</span><br/><span class="hl-1">        </span><span class="hl-8">pollDataConsumerStats</span><span class="hl-0">:</span><span class="hl-1"> (</span><span class="hl-0">dataProducerId</span><span class="hl-1">) </span><span class="hl-5">=&gt;</span><span class="hl-1"> </span><span class="hl-5">true</span><span class="hl-1">,</span><br/><span class="hl-1">    }</span><br/><span class="hl-1">});</span>
 </code></pre>
 
-                        <a
-                            href="#collect-stats-from-mediasoup"
-                            id="collect-stats-from-mediasoup"
-                            style="color: inherit; text-decoration: none"
-                        >
-                            <h3>Collect stats from mediasoup</h3>
-                        </a>
-                        <p>If you use <a href="">mediasoup:3.x.y</a> you can use the built-in integration.</p>
-                        <pre><code class="language-javascript"><span class="hl-2">import</span><span class="hl-1"> { </span><span class="hl-0">SfuObserver</span><span class="hl-1">, </span><span class="hl-0">MediasoupCollector</span><span class="hl-1"> } </span><span class="hl-2">from</span><span class="hl-1"> </span><span class="hl-3">&quot;@observertc/sfu-observer-js&quot;</span><span class="hl-1">;</span><br/><span class="hl-4">// see full config in Configuration section</span><br/><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">config</span><span class="hl-1"> = {</span><br/><span class="hl-1">    </span><span class="hl-0">collectingPeriodInMs:</span><span class="hl-1"> </span><span class="hl-7">5000</span><span class="hl-1">,</span><br/><span class="hl-1">};</span><br/><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">observer</span><span class="hl-1"> = </span><span class="hl-0">SfuObserver</span><span class="hl-1">.</span><span class="hl-8">create</span><span class="hl-1">(</span><span class="hl-0">config</span><span class="hl-1">);</span><br/><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">collector</span><span class="hl-1"> = </span><span class="hl-0">MediasoupCollector</span><span class="hl-1">.</span><span class="hl-8">create</span><span class="hl-1">();</span><br/><span class="hl-0">observer</span><span class="hl-1">.</span><span class="hl-8">addStatsCollector</span><span class="hl-1">(</span><span class="hl-0">collector</span><span class="hl-1">);</span><br/><br/><span class="hl-4">// ... somewhere in your code</span><br/><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">transport</span><span class="hl-1"> = </span><span class="hl-0">router</span><span class="hl-1">.</span><span class="hl-8">createWebRtcTransport</span><span class="hl-1">(</span><span class="hl-0">options</span><span class="hl-1">);</span><br/><span class="hl-0">collector</span><span class="hl-1">.</span><span class="hl-8">watchWebRtcTransport</span><span class="hl-1">(</span><span class="hl-0">transport</span><span class="hl-1">);</span>
+<a href="#integrate-other-type-of-sfus" id="integrate-other-type-of-sfus" style="color: inherit; text-decoration: none;">
+  <h3>Integrate other type of SFUs</h3>
+</a>
+<p>To have a custom integration you could use <code>AuxCollector</code> as follows:</p>
+<pre><code class="language-javascript"><span class="hl-2">import</span><span class="hl-1"> { </span><span class="hl-0">AuxCollector</span><span class="hl-1"> } </span><span class="hl-2">from</span><span class="hl-1"> </span><span class="hl-3">&quot;@observertc/sfu-monitor-js&quot;</span><span class="hl-1">;</span><br/><br/><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">collector</span><span class="hl-1"> = </span><span class="hl-0">AuxCollector</span><span class="hl-1">.</span><span class="hl-8">create</span><span class="hl-1">();</span><br/><span class="hl-0">monitor</span><span class="hl-1">.</span><span class="hl-8">addStatsCollector</span><span class="hl-1">(</span><span class="hl-0">collector</span><span class="hl-1">);</span><br/><br/><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">transportId</span><span class="hl-1"> = </span><span class="hl-3">&quot;myUniqueGeneratedTransportId&quot;</span><br/><span class="hl-0">collector</span><span class="hl-1">.</span><span class="hl-8">addTransportStatsSupplier</span><span class="hl-1">(</span><span class="hl-0">transportId</span><span class="hl-1">, </span><span class="hl-5">async</span><span class="hl-1"> () </span><span class="hl-5">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">    </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">stats</span><span class="hl-1">: </span><span class="hl-10">SfuTransport</span><span class="hl-1"> = {</span><br/><br/><span class="hl-1">    };</span><br/><span class="hl-1">    </span><span class="hl-2">return</span><span class="hl-1"> </span><span class="hl-0">stats</span><span class="hl-1">;</span><br/><span class="hl-1">});</span><br/><span class="hl-4">// when you want to remove it:</span><br/><span class="hl-0">collector</span><span class="hl-1">.</span><span class="hl-8">removeTransportStatsSupplier</span><span class="hl-1">(</span><span class="hl-0">transportId</span><span class="hl-1">);</span><br/><br/><span class="hl-4">// similarly:</span><br/><span class="hl-0">collector</span><span class="hl-1">.</span><span class="hl-8">addInboundRtpPadStatsSupplier</span><span class="hl-1">(</span><span class="hl-3">&quot;padId&quot;</span><span class="hl-1">, ...);</span><br/><span class="hl-0">collector</span><span class="hl-1">.</span><span class="hl-8">removeInboundRtpPadStatsSupplier</span><span class="hl-1">(</span><span class="hl-3">&quot;padId&quot;</span><span class="hl-1">);</span><br/><br/><span class="hl-0">collector</span><span class="hl-1">.</span><span class="hl-8">addOutboundRtpPadStatsSupplier</span><span class="hl-1">(</span><span class="hl-3">&quot;padId&quot;</span><span class="hl-1">, ...);</span><br/><span class="hl-0">collector</span><span class="hl-1">.</span><span class="hl-8">removeOutboundRtpPadStatsSupplier</span><span class="hl-1">(</span><span class="hl-3">&quot;padId&quot;</span><span class="hl-1">);</span><br/><br/><span class="hl-0">collector</span><span class="hl-1">.</span><span class="hl-8">addSctpStreamStatsSupplier</span><span class="hl-1">(</span><span class="hl-3">&quot;channelId&quot;</span><span class="hl-1">, ...);</span><br/><span class="hl-0">collector</span><span class="hl-1">.</span><span class="hl-8">removeSctpStreamSupplier</span><span class="hl-1">(</span><span class="hl-3">&quot;channelId&quot;</span><span class="hl-1">);</span>
 </code></pre>
 
-                        <a
-                            href="#collect-stats-from-other-sfus"
-                            id="collect-stats-from-other-sfus"
-                            style="color: inherit; text-decoration: none"
-                        >
-                            <h3>Collect stats from other SFUs</h3>
-                        </a>
-                        <p>You can write a stats collector by using <code>AuxCollector</code>.</p>
-                        <pre><code class="language-javascript"><span class="hl-2">import</span><span class="hl-1"> { </span><span class="hl-0">SfuObserver</span><span class="hl-1">, </span><span class="hl-0">AuxCollector</span><span class="hl-1"> } </span><span class="hl-2">from</span><span class="hl-1"> </span><span class="hl-3">&quot;@observertc/sfu-observer-js&quot;</span><span class="hl-1">;</span><br/><span class="hl-4">// see full config in Configuration section</span><br/><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">config</span><span class="hl-1"> = {</span><br/><span class="hl-1">    </span><span class="hl-0">collectingPeriodInMs:</span><span class="hl-1"> </span><span class="hl-7">5000</span><span class="hl-1">,</span><br/><span class="hl-1">};</span><br/><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">observer</span><span class="hl-1"> = </span><span class="hl-0">SfuObserver</span><span class="hl-1">.</span><span class="hl-8">create</span><span class="hl-1">(</span><span class="hl-0">config</span><span class="hl-1">);</span><br/><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">collector</span><span class="hl-1"> = </span><span class="hl-0">AuxCollector</span><span class="hl-1">.</span><span class="hl-8">create</span><span class="hl-1">();</span><br/><span class="hl-0">observer</span><span class="hl-1">.</span><span class="hl-8">addStatsCollector</span><span class="hl-1">(</span><span class="hl-0">collector</span><span class="hl-1">);</span><br/><br/><span class="hl-0">collector</span><span class="hl-1">.</span><span class="hl-8">addTransportStatsSupplier</span><span class="hl-1">(</span><span class="hl-3">&quot;transportId&quot;</span><span class="hl-1">, </span><span class="hl-5">async</span><span class="hl-1"> () </span><span class="hl-5">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">    </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">stats</span><span class="hl-1">: </span><span class="hl-9">SfuTransport</span><span class="hl-1"> = {</span><br/><br/><span class="hl-1">    };</span><br/><span class="hl-1">    </span><span class="hl-2">return</span><span class="hl-1"> </span><span class="hl-0">stats</span><span class="hl-1">;</span><br/><span class="hl-1">});</span><br/><span class="hl-0">collector</span><span class="hl-1">.</span><span class="hl-8">removeTransportStatsSupplier</span><span class="hl-1">(</span><span class="hl-3">&quot;transportId&quot;</span><span class="hl-1">);</span><br/><br/><span class="hl-4">// similarly:</span><br/><span class="hl-0">collector</span><span class="hl-1">.</span><span class="hl-8">addInboundRtpPadStatsSupplier</span><span class="hl-1">(</span><span class="hl-3">&quot;padId&quot;</span><span class="hl-1">, ...);</span><br/><span class="hl-0">collector</span><span class="hl-1">.</span><span class="hl-8">removeInboundRtpPadStatsSupplier</span><span class="hl-1">(</span><span class="hl-3">&quot;padId&quot;</span><span class="hl-1">);</span><br/><br/><span class="hl-0">collector</span><span class="hl-1">.</span><span class="hl-8">addOutboundRtpPadStatsSupplier</span><span class="hl-1">(</span><span class="hl-3">&quot;padId&quot;</span><span class="hl-1">, ...);</span><br/><span class="hl-0">collector</span><span class="hl-1">.</span><span class="hl-8">removeOutboundRtpPadStatsSupplier</span><span class="hl-1">(</span><span class="hl-3">&quot;padId&quot;</span><span class="hl-1">);</span><br/><br/><span class="hl-0">collector</span><span class="hl-1">.</span><span class="hl-8">addSctpStreamStatsSupplier</span><span class="hl-1">(</span><span class="hl-3">&quot;channelId&quot;</span><span class="hl-1">, ...);</span><br/><span class="hl-0">collector</span><span class="hl-1">.</span><span class="hl-8">removeSctpStreamSupplier</span><span class="hl-1">(</span><span class="hl-3">&quot;channelId&quot;</span><span class="hl-1">);</span>
+<a href="#sfu-monitor-storage" id="sfu-monitor-storage" style="color: inherit; text-decoration: none;">
+  <h2>Sfu Monitor Storage</h2>
+</a>
+<p>Sfu Monitor collects measurements about the following components:</p>
+<ul>
+<li><strong>Transport</strong>: Represent a network transport connection between an SFU and an external endpoint</li>
+<li><strong>Inbound RTP Pad</strong>: Represents an ingress point for RTP sessions to the SFU.</li>
+<li><strong>Outbound RTP Pad</strong>: Represents an eggress point for RTP sessions from the SFU.</li>
+<li><strong>Media Stream</strong>: Represent a group of inbound RTP pads belong to the same outbound media track</li>
+<li><strong>Media Sink</strong>: Represent a group of outbound RTP pads belong to the same inbound media track</li>
+<li><strong>SCTP Channel</strong>: Represent an SCTP session</li>
+</ul>
+<p>Sfu Monitor Storage provided entries can be used to navigate from one collected components to another.</p>
+<p><img src="puml/navigation.png" alt="Storage Navigations"></p>
+<p>Entries:</p>
+<ul>
+<li><a href="#transport-entries">Transport</a></li>
+<li><a href="#inbound-rtp-entries">Inbound RTP</a></li>
+<li><a href="#outbound-rtp-entries">Outbound RTP</a></li>
+<li><a href="#media-stream-entries">Media Stream</a></li>
+<li><a href="#media-sink-entries">Media Sink</a></li>
+<li><a href="#sctp-channel-entries">SCTP Channel</a></li>
+</ul>
+
+<a href="#transport-entries" id="transport-entries" style="color: inherit; text-decoration: none;">
+  <h3>Transport Entries</h3>
+</a>
+<pre><code class="language-javascript"><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">storage</span><span class="hl-1"> = </span><span class="hl-0">monitor</span><span class="hl-1">.</span><span class="hl-0">storage</span><span class="hl-1">;</span><br/><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">transport</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">storage</span><span class="hl-1">.</span><span class="hl-8">transports</span><span class="hl-1">()) {</span><br/><span class="hl-1">    </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><span class="hl-3">`Transport (</span><span class="hl-5">${</span><span class="hl-0">transport</span><span class="hl-9">.</span><span class="hl-0">id</span><span class="hl-5">}</span><span class="hl-3">) stats:`</span><span class="hl-1">, </span><span class="hl-0">transport</span><span class="hl-1">.</span><span class="hl-0">stats</span><span class="hl-1">);</span><br/><br/><span class="hl-1">    </span><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">inboundRtpPad</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">transport</span><span class="hl-1">.</span><span class="hl-8">inboundRtpPads</span><span class="hl-1">()) {</span><br/><span class="hl-1">        </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><br/><span class="hl-1">            </span><span class="hl-3">`Inbound Rtp Pad (</span><span class="hl-5">${</span><span class="hl-0">inboundRtpPad</span><span class="hl-9">.</span><span class="hl-0">id</span><span class="hl-5">}</span><span class="hl-3">) belongs to transport (</span><span class="hl-5">${</span><span class="hl-0">transport</span><span class="hl-9">.</span><span class="hl-0">id</span><span class="hl-5">}</span><span class="hl-3">) stats:`</span><span class="hl-1">,</span><br/><span class="hl-1">            </span><span class="hl-0">inboundRtpPad</span><span class="hl-1">.</span><span class="hl-0">stats</span><br/><span class="hl-1">        );</span><br/><span class="hl-1">    }</span><br/><span class="hl-1">    </span><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">outboundRtpPad</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">transport</span><span class="hl-1">.</span><span class="hl-8">outboundRtpPads</span><span class="hl-1">()) {</span><br/><span class="hl-1">        </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><br/><span class="hl-1">            </span><span class="hl-3">`Outbound Rtp Pad (</span><span class="hl-5">${</span><span class="hl-0">outboundRtpPad</span><span class="hl-9">.</span><span class="hl-0">id</span><span class="hl-5">}</span><span class="hl-3">) belongs to transport (</span><span class="hl-5">${</span><span class="hl-0">transport</span><span class="hl-9">.</span><span class="hl-0">id</span><span class="hl-5">}</span><span class="hl-3">) stats:`</span><span class="hl-1">,</span><br/><span class="hl-1">            </span><span class="hl-0">outboundRtpPad</span><span class="hl-1">.</span><span class="hl-0">stats</span><br/><span class="hl-1">        );</span><br/><span class="hl-1">    }</span><br/><span class="hl-1">    </span><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">sctpChannel</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">transport</span><span class="hl-1">.</span><span class="hl-8">sctpChannels</span><span class="hl-1">()) {</span><br/><span class="hl-1">        </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><br/><span class="hl-1">            </span><span class="hl-3">`SCTP channel (</span><span class="hl-5">${</span><span class="hl-0">sctpChannel</span><span class="hl-9">.</span><span class="hl-0">id</span><span class="hl-5">}</span><span class="hl-3">) belongs to transport (</span><span class="hl-5">${</span><span class="hl-0">transport</span><span class="hl-9">.</span><span class="hl-0">id</span><span class="hl-5">}</span><span class="hl-3">) stats:`</span><span class="hl-1">,</span><br/><span class="hl-1">            </span><span class="hl-0">sctpChannel</span><span class="hl-1">.</span><span class="hl-0">stats</span><br/><span class="hl-1">        );</span><br/><span class="hl-1">    }</span><br/><span class="hl-1">    </span><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">mediaSink</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">transport</span><span class="hl-1">.</span><span class="hl-8">mediaSinks</span><span class="hl-1">()) {</span><br/><span class="hl-1">        </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><span class="hl-3">`Transport (</span><span class="hl-5">${</span><span class="hl-0">transport</span><span class="hl-9">.</span><span class="hl-0">id</span><span class="hl-5">}</span><span class="hl-3">) has a </span><span class="hl-5">${</span><span class="hl-0">mediaSink</span><span class="hl-9">.</span><span class="hl-0">kind</span><span class="hl-5">}</span><span class="hl-3"> </span><br/><span class="hl-3">            sink having </span><span class="hl-5">${</span><span class="hl-0">mediaSink</span><span class="hl-9">.</span><span class="hl-8">getNumberOfOutboundRtpPads</span><span class="hl-9">()</span><span class="hl-5">}</span><span class="hl-3"> outbound Rtp pads`</span><span class="hl-1">);</span><br/><span class="hl-1">    }</span><br/><span class="hl-1">    </span><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">mediaStream</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">transport</span><span class="hl-1">.</span><span class="hl-8">mediaStreams</span><span class="hl-1">()) {</span><br/><span class="hl-1">        </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><span class="hl-3">`Transport (</span><span class="hl-5">${</span><span class="hl-0">transport</span><span class="hl-9">.</span><span class="hl-0">id</span><span class="hl-5">}</span><span class="hl-3">) has a </span><span class="hl-5">${</span><span class="hl-0">mediaStream</span><span class="hl-9">.</span><span class="hl-0">kind</span><span class="hl-5">}</span><span class="hl-3"> </span><br/><span class="hl-3">            sink having </span><span class="hl-5">${</span><span class="hl-0">mediaStream</span><span class="hl-9">.</span><span class="hl-8">getNumberOfInboundRtpPads</span><span class="hl-9">()</span><span class="hl-5">}</span><span class="hl-3"> inbound Rtp pads`</span><span class="hl-1">);</span><br/><span class="hl-1">    }</span><br/><span class="hl-1">}</span>
 </code></pre>
 
-                        <a
-                            href="#use-collected-stats"
-                            id="use-collected-stats"
-                            style="color: inherit; text-decoration: none"
-                        >
-                            <h2>Use collected stats</h2>
-                        </a>
-                        <pre><code class="language-javascript"><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">sfuTransportEntry</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">observer</span><span class="hl-1">.</span><span class="hl-0">stats</span><span class="hl-1">.</span><span class="hl-8">transports</span><span class="hl-1">()) {</span><br/><span class="hl-1">    </span><span class="hl-4">// use SfuTransportEntry</span><br/><span class="hl-1">}</span><br/><br/><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">sfuInboundRtpPadEntry</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">observer</span><span class="hl-1">.</span><span class="hl-0">stats</span><span class="hl-1">.</span><span class="hl-8">inboundRtpPads</span><span class="hl-1">()) {</span><br/><span class="hl-1">    </span><span class="hl-4">// use SfuInboundRtpPadEntry</span><br/><span class="hl-1">}</span><br/><br/><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">sfuOutboundRtpPadEntry</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">observer</span><span class="hl-1">.</span><span class="hl-0">stats</span><span class="hl-1">.</span><span class="hl-8">outboundRtpPads</span><span class="hl-1">()) {</span><br/><span class="hl-1">    </span><span class="hl-4">// use SfuInboundRtpPadEntry</span><br/><span class="hl-1">}</span><br/><br/><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">sctpChannelEntry</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">observer</span><span class="hl-1">.</span><span class="hl-0">stats</span><span class="hl-1">.</span><span class="hl-8">sctpChannels</span><span class="hl-1">()) {</span><br/><span class="hl-1">    </span><span class="hl-4">// use SctpChannelEntry</span><br/><span class="hl-1">}</span><br/><br/><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">mediaStreamEntry</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">observer</span><span class="hl-1">.</span><span class="hl-0">stats</span><span class="hl-1">.</span><span class="hl-8">mediaStreams</span><span class="hl-1">()) {</span><br/><span class="hl-1">    </span><span class="hl-4">// use MediaStreamEntry</span><br/><span class="hl-1">}</span><br/><br/><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">mediaStreamEntry</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">observer</span><span class="hl-1">.</span><span class="hl-0">stats</span><span class="hl-1">.</span><span class="hl-8">audioStreams</span><span class="hl-1">()) {</span><br/><span class="hl-1">    </span><span class="hl-4">// use MediaStreamEntry</span><br/><span class="hl-1">}</span><br/><br/><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">mediaStreamEntry</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">observer</span><span class="hl-1">.</span><span class="hl-0">stats</span><span class="hl-1">.</span><span class="hl-8">videoStreams</span><span class="hl-1">()) {</span><br/><span class="hl-1">    </span><span class="hl-4">// use MediaStreamEntry</span><br/><span class="hl-1">}</span><br/><br/><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">mediaSinkEntry</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">observer</span><span class="hl-1">.</span><span class="hl-0">stats</span><span class="hl-1">.</span><span class="hl-8">mediaSinks</span><span class="hl-1">()) {</span><br/><span class="hl-1">    </span><span class="hl-4">// use MediaSinkEntry</span><br/><span class="hl-1">}</span><br/><br/><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">mediaSinkEntry</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">observer</span><span class="hl-1">.</span><span class="hl-0">stats</span><span class="hl-1">.</span><span class="hl-8">audioSinks</span><span class="hl-1">()) {</span><br/><span class="hl-1">    </span><span class="hl-4">// use MediaSinkEntry</span><br/><span class="hl-1">}</span><br/><br/><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">mediaSinkEntry</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">observer</span><span class="hl-1">.</span><span class="hl-0">stats</span><span class="hl-1">.</span><span class="hl-8">videoSinks</span><span class="hl-1">()) {</span><br/><span class="hl-1">    </span><span class="hl-4">// use MediaSinkEntry</span><br/><span class="hl-1">}</span>
-</code></pre>
-                        <p>
-                            With <code>observer.stats</code> you accessing so called Entries. The interface for the
-                            entries visualized in the picture below:
-                        </p>
-                        <p><img src="puml/navigation.png" alt="Entry Navigations" /></p>
-                        <p>
-                            The collected stats from any integration is stored and updated in the observer object. The
-                            list of collected types are the following:
-                        </p>
-                        <ul>
-                            <li>
-                                <a href="https://www.npmjs.com/package/@observertc/schemas#SfuTransport">SfuTransport</a
-                                >: A Transport level measurements provide data exchange for many inbound, outbound rtp
-                                pads, and sctp channels.
-                            </li>
-                            <li>
-                                <a href="https://www.npmjs.com/package/@observertc/schemas#SfuInboundRtpPad"
-                                    >SfuInboundRtpPad</a
-                                >: Inbound Rtp Pad provided measurements. This is related to a client side provided
-                                <a href="https://www.npmjs.com/package/@observertc/schemas#OutboundAudioTrack"
-                                    >OutboundAudioTrack</a
-                                >, or
-                                <a href="https://www.npmjs.com/package/@observertc/schemas#OutboundVideoTrack"
-                                    >OutboundVideoTrack</a
-                                >
-                                measurements.
-                            </li>
-                            <li>
-                                <a href="https://www.npmjs.com/package/@observertc/schemas#SfuOutboundRtpPad"
-                                    >SfuOutboundRtpPad</a
-                                >: Outbound Rtp Pad (each pad relates to one ssrc) provided measurements. This is
-                                related to a client side provided
-                                <a href="https://www.npmjs.com/package/@observertc/schemas#InboundAudioTrack"
-                                    >InboundAudioTrack</a
-                                >, or
-                                <a href="https://www.npmjs.com/package/@observertc/schemas#InboundVideoTrack"
-                                    >InboundVideoTrack</a
-                                >
-                                measurements.
-                            </li>
-                            <li>
-                                <a href="https://www.npmjs.com/package/@observertc/schemas#SfuSctpChannel"
-                                    >SfuSctpChannel</a
-                                >: SCTP channel provided measurements
-                            </li>
-                        </ul>
-                        <p>Additionally the observer groups the collected stats into the following entities:</p>
-                        <ul>
-                            <li>
-                                <strong>MediaStream</strong>: a group of InboundRtpPad belongs to the same streamed
-                                media traffic. For example a simulcast media typically creates several SSRCs to stream
-                                the same media in different spatial or temporal aspective. Thos RTP sessions belong to
-                                the same media stream.
-                            </li>
-                            <li>
-                                <strong>MediaSink</strong> A group of OutboundRtpPad sinks out media stream traffic to
-                                (typically) a client endpoint or to another SFU.
-                            </li>
-                        </ul>
-
-                        <a href="#sample-and-send" id="sample-and-send" style="color: inherit; text-decoration: none">
-                            <h3>Sample and Send</h3>
-                        </a>
-                        <p>UNDER DEVELOPMENT</p>
-
-                        <a href="#configurations" id="configurations" style="color: inherit; text-decoration: none">
-                            <h2>Configurations</h2>
-                        </a>
-                        <pre><code class="language-javascript"><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">config</span><span class="hl-1"> = {</span><br/><span class="hl-1">    </span><span class="hl-4">/**</span><br/><span class="hl-4">     * By setting it, the observer calls the added statsCollectors periodically</span><br/><span class="hl-4">     * and pulls the stats.</span><br/><span class="hl-4">     * </span><br/><span class="hl-4">     * DEFAULT: undefined</span><br/><span class="hl-4">     */</span><br/><span class="hl-1">    </span><span class="hl-0">collectingPeriodInMs:</span><span class="hl-1"> </span><span class="hl-7">5000</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-4">/**</span><br/><span class="hl-4">     * By setting it, the observer make samples periodically.</span><br/><span class="hl-4">     * </span><br/><span class="hl-4">     * DEFAULT: undefined</span><br/><span class="hl-4">     */</span><br/><span class="hl-1">    </span><span class="hl-0">samplingPeriodInMs:</span><span class="hl-1"> </span><span class="hl-7">10000</span><span class="hl-1">,</span><br/><br/><span class="hl-1">    </span><span class="hl-4">/**</span><br/><span class="hl-4">     * By setting it stats items and entries are deleted if they are not updated.</span><br/><span class="hl-4">     * </span><br/><span class="hl-4">     * DEFAULT: undefined</span><br/><span class="hl-4">     */</span><br/><span class="hl-1">    </span><span class="hl-0">statsExpirationTimeInMs:</span><span class="hl-1"> </span><span class="hl-7">60000</span><span class="hl-1">,</span><br/><br/><span class="hl-1">    </span><span class="hl-4">/**</span><br/><span class="hl-4">     * Sampling Component Related configurations</span><br/><span class="hl-4">     * </span><br/><span class="hl-4">     */</span><br/><span class="hl-1">    </span><span class="hl-0">sampler:</span><span class="hl-1"> {</span><br/><span class="hl-1">            </span><span class="hl-4">/**</span><br/><span class="hl-4">         * The identifier of the SFU.</span><br/><span class="hl-4">         * </span><br/><span class="hl-4">         * DEFAULT: a generated unique value</span><br/><span class="hl-4">         */</span><br/><span class="hl-1">        </span><span class="hl-0">sfuId:</span><span class="hl-1"> </span><span class="hl-3">&quot;sfuId&quot;</span><span class="hl-1">,</span><br/><br/><span class="hl-1">        </span><span class="hl-4">/**</span><br/><span class="hl-4">         * Indicate if the sampler only sample stats updated since the last sampling.</span><br/><span class="hl-4">         * </span><br/><span class="hl-4">         * DEFAULT: true</span><br/><span class="hl-4">         */</span><br/><span class="hl-1">        </span><span class="hl-0">incrementalSampling:</span><span class="hl-1"> </span><span class="hl-5">true</span><span class="hl-1">,</span><br/><span class="hl-1">    },</span><br/><span class="hl-1">};</span>
+<a href="#inbound-rtp-entries" id="inbound-rtp-entries" style="color: inherit; text-decoration: none;">
+  <h3>Inbound RTP Entries</h3>
+</a>
+<pre><code class="language-javascript"><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">inboundRtpPad</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">storage</span><span class="hl-1">.</span><span class="hl-8">inboundRtpPads</span><span class="hl-1">()) {</span><br/><span class="hl-1">    </span><span class="hl-4">// the transport the inbound rtp pad belongs to</span><br/><span class="hl-1">    </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">transport</span><span class="hl-1"> = </span><span class="hl-0">inboundRtpPad</span><span class="hl-1">.</span><span class="hl-8">getTransport</span><span class="hl-1">();</span><br/><span class="hl-1">    </span><span class="hl-4">// the media stream the inbound rtp pad belongs to</span><br/><span class="hl-1">    </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">mediaStream</span><span class="hl-1"> = </span><span class="hl-0">inboundRtpPad</span><span class="hl-1">.</span><span class="hl-8">getMediaStream</span><span class="hl-1">();</span><br/><span class="hl-1">}</span>
 </code></pre>
 
-                        <a href="#contributions" id="contributions" style="color: inherit; text-decoration: none">
-                            <h2>Contributions</h2>
-                        </a>
-                        <p>Open a PR</p>
+<a href="#outbound-rtp-entries" id="outbound-rtp-entries" style="color: inherit; text-decoration: none;">
+  <h3>Outbound RTP Entries</h3>
+</a>
+<pre><code class="language-javascript"><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">outboundRtpPad</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">storage</span><span class="hl-1">.</span><span class="hl-8">outboundRtpPads</span><span class="hl-1">()) {</span><br/><span class="hl-1">    </span><span class="hl-4">// the transport the outbound rtp pad belongs to</span><br/><span class="hl-1">    </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">transport</span><span class="hl-1"> = </span><span class="hl-0">outboundRtpPad</span><span class="hl-1">.</span><span class="hl-8">getTransport</span><span class="hl-1">();</span><br/><br/><span class="hl-1">    </span><span class="hl-4">// the media stream the outbound rtp pad belongs to</span><br/><span class="hl-1">    </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">mediaStream</span><span class="hl-1"> = </span><span class="hl-0">outboundRtpPad</span><span class="hl-1">.</span><span class="hl-8">getMediaStream</span><span class="hl-1">();</span><br/><br/><span class="hl-1">    </span><span class="hl-4">// the media sink the outbound rtp pad belongs to</span><br/><span class="hl-1">    </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">mediaSInk</span><span class="hl-1"> = </span><span class="hl-0">outboundRtpPad</span><span class="hl-1">.</span><span class="hl-8">getMediaSink</span><span class="hl-1">();</span><br/><span class="hl-1">}</span>
+</code></pre>
 
-                        <a href="#license" id="license" style="color: inherit; text-decoration: none">
-                            <h2>License</h2>
-                        </a>
-                        <p>Apache-2.0</p>
-                    </div>
-                </div>
-                <div class="col-4 col-menu menu-sticky-wrap menu-highlight">
-                    <nav class="tsd-navigation primary">
-                        <ul>
-                            <li class="current"><a href="modules.html">Exports</a></li>
-                        </ul>
-                    </nav>
-                    <nav class="tsd-navigation secondary menu-sticky">
-                        <ul>
-                            <li class="tsd-kind-class">
-                                <a href="classes/AuxCollector.html" class="tsd-kind-icon">Aux<wbr />Collector</a>
-                            </li>
-                            <li class="tsd-kind-class">
-                                <a href="classes/MediasoupCollector.html" class="tsd-kind-icon"
-                                    >Mediasoup<wbr />Collector</a
-                                >
-                            </li>
-                            <li class="tsd-kind-interface">
-                                <a href="interfaces/SfuInboundRtpPadEntry.html" class="tsd-kind-icon"
-                                    >Sfu<wbr />Inbound<wbr />Rtp<wbr />Pad<wbr />Entry</a
-                                >
-                            </li>
-                            <li class="tsd-kind-interface">
-                                <a href="interfaces/SfuMediaSinkEntry.html" class="tsd-kind-icon"
-                                    >Sfu<wbr />Media<wbr />Sink<wbr />Entry</a
-                                >
-                            </li>
-                            <li class="tsd-kind-interface">
-                                <a href="interfaces/SfuMediaStreamEntry.html" class="tsd-kind-icon"
-                                    >Sfu<wbr />Media<wbr />Stream<wbr />Entry</a
-                                >
-                            </li>
-                            <li class="tsd-kind-interface">
-                                <a href="interfaces/SfuObserver.html" class="tsd-kind-icon">Sfu<wbr />Observer</a>
-                            </li>
-                            <li class="tsd-kind-interface">
-                                <a href="interfaces/SfuOutboundRtpPadEntry.html" class="tsd-kind-icon"
-                                    >Sfu<wbr />Outbound<wbr />Rtp<wbr />Pad<wbr />Entry</a
-                                >
-                            </li>
-                            <li class="tsd-kind-interface">
-                                <a href="interfaces/SfuSctpChannelEntry.html" class="tsd-kind-icon"
-                                    >Sfu<wbr />Sctp<wbr />Channel<wbr />Entry</a
-                                >
-                            </li>
-                            <li class="tsd-kind-interface">
-                                <a href="interfaces/SfuTransportEntry.html" class="tsd-kind-icon"
-                                    >Sfu<wbr />Transport<wbr />Entry</a
-                                >
-                            </li>
-                            <li class="tsd-kind-interface">
-                                <a href="interfaces/StatsReader.html" class="tsd-kind-icon">Stats<wbr />Reader</a>
-                            </li>
-                            <li class="tsd-kind-type-alias">
-                                <a href="modules.html#AuxCollectorConfig" class="tsd-kind-icon"
-                                    >Aux<wbr />Collector<wbr />Config</a
-                                >
-                            </li>
-                            <li class="tsd-kind-type-alias tsd-is-external">
-                                <a href="modules.html#ExtensionStat" class="tsd-kind-icon">Extension<wbr />Stat</a>
-                            </li>
-                            <li class="tsd-kind-type-alias">
-                                <a href="modules.html#MediasoupCollectorConfig" class="tsd-kind-icon"
-                                    >Mediasoup<wbr />Collector<wbr />Config</a
-                                >
-                            </li>
-                            <li class="tsd-kind-type-alias">
-                                <a href="modules.html#SfuObserverConfig" class="tsd-kind-icon"
-                                    >Sfu<wbr />Observer<wbr />Config</a
-                                >
-                            </li>
-                            <li class="tsd-kind-function">
-                                <a href="modules.html#create" class="tsd-kind-icon">create</a>
-                            </li>
-                            <li class="tsd-kind-function">
-                                <a href="modules.html#setLogLevel" class="tsd-kind-icon">set<wbr />Log<wbr />Level</a>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
-            </div>
-        </div>
-        <footer class="with-border-bottom">
-            <div class="container">
-                <h2>Legend</h2>
-                <div class="tsd-legend-group">
-                    <ul class="tsd-legend">
-                        <li class="tsd-kind-property tsd-parent-kind-interface">
-                            <span class="tsd-kind-icon">Property</span>
-                        </li>
-                        <li class="tsd-kind-method tsd-parent-kind-interface">
-                            <span class="tsd-kind-icon">Method</span>
-                        </li>
-                    </ul>
-                    <ul class="tsd-legend">
-                        <li class="tsd-kind-property tsd-parent-kind-class">
-                            <span class="tsd-kind-icon">Property</span>
-                        </li>
-                        <li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
-                    </ul>
-                    <ul class="tsd-legend">
-                        <li class="tsd-kind-property tsd-parent-kind-class tsd-is-private">
-                            <span class="tsd-kind-icon">Private property</span>
-                        </li>
-                        <li class="tsd-kind-method tsd-parent-kind-class tsd-is-private">
-                            <span class="tsd-kind-icon">Private method</span>
-                        </li>
-                    </ul>
-                    <ul class="tsd-legend">
-                        <li class="tsd-kind-method tsd-parent-kind-class tsd-is-static">
-                            <span class="tsd-kind-icon">Static method</span>
-                        </li>
-                    </ul>
-                </div>
-                <h2>Settings</h2>
-                <p>
-                    Theme
-                    <select id="theme">
-                        <option value="os">OS</option>
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                    </select>
-                </p>
-            </div>
-        </footer>
-        <div class="container tsd-generator">
-            <p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
-        </div>
-        <div class="overlay"></div>
-        <script src="assets/main.js"></script>
-    </body>
-</html>
+<a href="#media-stream-entries" id="media-stream-entries" style="color: inherit; text-decoration: none;">
+  <h3>Media Stream Entries</h3>
+</a>
+<pre><code class="language-javascript"><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">mediaStream</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">storage</span><span class="hl-1">.</span><span class="hl-8">mediaStreams</span><span class="hl-1">()) {</span><br/><span class="hl-1">    </span><span class="hl-4">// the transport the media stream belongs to</span><br/><span class="hl-1">    </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">transport</span><span class="hl-1"> = </span><span class="hl-0">mediaStream</span><span class="hl-1">.</span><span class="hl-8">getTransport</span><span class="hl-1">();</span><br/><br/><span class="hl-1">    </span><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">inboundRtpPad</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">mediaStream</span><span class="hl-1">.</span><span class="hl-8">inboundRtpPads</span><span class="hl-1">()) {</span><br/><span class="hl-1">        </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><br/><span class="hl-1">            </span><span class="hl-3">`Inbound Rtp Pad (</span><span class="hl-5">${</span><span class="hl-0">inboundRtpPad</span><span class="hl-9">.</span><span class="hl-0">id</span><span class="hl-5">}</span><span class="hl-3">) belongs to media stream (</span><span class="hl-5">${</span><span class="hl-0">mediaStream</span><span class="hl-9">.</span><span class="hl-0">id</span><span class="hl-5">}</span><span class="hl-3">) stats:`</span><span class="hl-1">,</span><br/><span class="hl-1">            </span><span class="hl-0">inboundRtpPad</span><span class="hl-1">.</span><span class="hl-0">stats</span><br/><span class="hl-1">        );</span><br/><span class="hl-1">    }</span><br/><span class="hl-1">    </span><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">mediaSink</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">mediaStream</span><span class="hl-1">.</span><span class="hl-8">mediaSinks</span><span class="hl-1">()) {</span><br/><span class="hl-1">        </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><span class="hl-3">`Media stream (</span><span class="hl-5">${</span><span class="hl-0">mediaStream</span><span class="hl-9">.</span><span class="hl-0">id</span><span class="hl-5">}</span><span class="hl-3">) has a </span><span class="hl-5">${</span><span class="hl-0">mediaSink</span><span class="hl-9">.</span><span class="hl-0">kind</span><span class="hl-5">}</span><span class="hl-3"> </span><br/><span class="hl-3">            sink having </span><span class="hl-5">${</span><span class="hl-0">mediaSink</span><span class="hl-9">.</span><span class="hl-8">getNumberOfOutboundRtpPads</span><span class="hl-9">()</span><span class="hl-5">}</span><span class="hl-3"> outbound Rtp pads`</span><span class="hl-1">);</span><br/><span class="hl-1">    }</span><br/><span class="hl-1">}</span>
+</code></pre>
+
+<a href="#media-sink-entries" id="media-sink-entries" style="color: inherit; text-decoration: none;">
+  <h3>Media Sink Entries</h3>
+</a>
+<pre><code class="language-javascript"><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">mediaSink</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">storage</span><span class="hl-1">.</span><span class="hl-8">mediaSinks</span><span class="hl-1">()) {</span><br/><span class="hl-1">    </span><span class="hl-4">// the transport the media stream belongs to</span><br/><span class="hl-1">    </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">transport</span><span class="hl-1"> = </span><span class="hl-0">mediaSink</span><span class="hl-1">.</span><span class="hl-8">getTransport</span><span class="hl-1">();</span><br/><br/><span class="hl-1">    </span><span class="hl-4">// the media stream the media sink belongs to</span><br/><span class="hl-1">    </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">mediaStream</span><span class="hl-1"> = </span><span class="hl-0">mediaSink</span><span class="hl-1">.</span><span class="hl-8">getMediaSink</span><span class="hl-1">();</span><br/><br/><span class="hl-1">    </span><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">outboundRtpPad</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">mediaSink</span><span class="hl-1">.</span><span class="hl-8">outboundRtpPads</span><span class="hl-1">()) {</span><br/><span class="hl-1">        </span><span class="hl-0">console</span><span class="hl-1">.</span><span class="hl-8">log</span><span class="hl-1">(</span><br/><span class="hl-1">            </span><span class="hl-3">`Outbound Rtp Pad (</span><span class="hl-5">${</span><span class="hl-0">outboundRtpPad</span><span class="hl-9">.</span><span class="hl-0">id</span><span class="hl-5">}</span><span class="hl-3">) belongs to media stream (</span><span class="hl-5">${</span><span class="hl-0">mediaSink</span><span class="hl-9">.</span><span class="hl-0">id</span><span class="hl-5">}</span><span class="hl-3">) stats:`</span><span class="hl-1">,</span><br/><span class="hl-1">            </span><span class="hl-0">outboundRtpPad</span><span class="hl-1">.</span><span class="hl-0">stats</span><br/><span class="hl-1">        );</span><br/><span class="hl-1">    }</span><br/><span class="hl-1">}</span>
+</code></pre>
+
+<a href="#sctp-channel-entries" id="sctp-channel-entries" style="color: inherit; text-decoration: none;">
+  <h3>SCTP Channel Entries</h3>
+</a>
+<pre><code class="language-javascript"><span class="hl-2">for</span><span class="hl-1"> (</span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">sctpChannel</span><span class="hl-1"> </span><span class="hl-5">of</span><span class="hl-1"> </span><span class="hl-0">storage</span><span class="hl-1">.</span><span class="hl-8">sctpChannels</span><span class="hl-1">()) {</span><br/><span class="hl-1">    </span><span class="hl-4">// the transport the sctp channel belongs to</span><br/><span class="hl-1">    </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">transport</span><span class="hl-1"> = </span><span class="hl-0">sctpChannel</span><span class="hl-1">.</span><span class="hl-8">getTransport</span><span class="hl-1">();</span><br/><span class="hl-1">}</span>
+</code></pre>
+
+<a href="#configurations" id="configurations" style="color: inherit; text-decoration: none;">
+  <h2>Configurations</h2>
+</a>
+<pre><code class="language-javascript"><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">config</span><span class="hl-1"> = {</span><br/><span class="hl-1">    </span><span class="hl-4">/**</span><br/><span class="hl-4">     * By setting it, the monitor calls the added statsCollectors periodically</span><br/><span class="hl-4">     * and polls the stats.</span><br/><span class="hl-4">     *</span><br/><span class="hl-4">     * DEFAULT: undefined</span><br/><span class="hl-4">     */</span><br/><span class="hl-1">    </span><span class="hl-0">collectingPeriodInMs:</span><span class="hl-1"> </span><span class="hl-7">5000</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-4">/**</span><br/><span class="hl-4">     * By setting it, the monitor make samples periodically.</span><br/><span class="hl-4">     *</span><br/><span class="hl-4">     * DEFAULT: undefined</span><br/><span class="hl-4">     */</span><br/><span class="hl-1">    </span><span class="hl-0">samplingPeriodInMs:</span><span class="hl-1"> </span><span class="hl-7">10000</span><span class="hl-1">,</span><br/><br/><span class="hl-1">    </span><span class="hl-4">/**</span><br/><span class="hl-4">     * By setting it stats items and entries are deleted if they are not updated.</span><br/><span class="hl-4">     *</span><br/><span class="hl-4">     * DEFAULT: 60000</span><br/><span class="hl-4">     */</span><br/><span class="hl-1">    </span><span class="hl-0">statsExpirationTimeInMs:</span><span class="hl-1"> </span><span class="hl-7">60000</span><span class="hl-1">,</span><br/><br/><span class="hl-1">    </span><span class="hl-4">/**</span><br/><span class="hl-4">     * Sampling Component Related configurations</span><br/><span class="hl-4">     *</span><br/><span class="hl-4">     */</span><br/><span class="hl-1">    </span><span class="hl-0">sampler:</span><span class="hl-1"> {</span><br/><span class="hl-1">            </span><span class="hl-4">/**</span><br/><span class="hl-4">         * The identifier of the SFU.</span><br/><span class="hl-4">         *</span><br/><span class="hl-4">         * DEFAULT: a generated unique value</span><br/><span class="hl-4">         */</span><br/><span class="hl-1">        </span><span class="hl-0">sfuId:</span><span class="hl-1"> </span><span class="hl-3">&quot;sfuId&quot;</span><span class="hl-1">,</span><br/><br/><span class="hl-1">        </span><span class="hl-4">/**</span><br/><span class="hl-4">         * Indicate if the sampler only sample stats updated since the last sampling.</span><br/><span class="hl-4">         *</span><br/><span class="hl-4">         * DEFAULT: true</span><br/><span class="hl-4">         */</span><br/><span class="hl-1">        </span><span class="hl-0">incrementalSampling:</span><span class="hl-1"> </span><span class="hl-5">true</span><span class="hl-1">,</span><br/><span class="hl-1">    },</span><br/><span class="hl-1">    </span><span class="hl-0">sender:</span><span class="hl-1"> {</span><br/><span class="hl-1">        </span><span class="hl-4">/**</span><br/><span class="hl-4">         * Configure the codec used to transport samples or receieve</span><br/><span class="hl-4">         * feedback from the server.</span><br/><span class="hl-4">         *</span><br/><span class="hl-4">         * Possible values: json, protobuf</span><br/><span class="hl-4">         *</span><br/><span class="hl-4">         * DEFAULT: json</span><br/><span class="hl-4">         *</span><br/><span class="hl-4">         */</span><br/><span class="hl-1">        </span><span class="hl-0">format:</span><span class="hl-1"> </span><span class="hl-3">&quot;json&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">        </span><span class="hl-4">/**</span><br/><span class="hl-4">         * Websocket configuration to transport the samples</span><br/><span class="hl-4">         */</span><br/><span class="hl-1">        </span><span class="hl-0">websocket:</span><span class="hl-1"> {</span><br/><span class="hl-1">            </span><span class="hl-4">/**</span><br/><span class="hl-4">             * The target urls the websocket is opened for</span><br/><span class="hl-4">             */</span><br/><span class="hl-1">            </span><span class="hl-0">urls:</span><span class="hl-1"> [</span><span class="hl-3">&quot;ws://localhost:7080/samples/myServiceId/myMediaUnitId&quot;</span><span class="hl-1">],</span><br/><span class="hl-1">            </span><span class="hl-4">/**</span><br/><span class="hl-4">             * The maximum number of try to connect to the server</span><br/><span class="hl-4">             *</span><br/><span class="hl-4">             * DEFAULT: 3</span><br/><span class="hl-4">             */</span><br/><span class="hl-1">            </span><span class="hl-0">maxRetry:</span><span class="hl-1"> </span><span class="hl-7">1</span><span class="hl-1">,</span><br/><span class="hl-1">            </span><span class="hl-4">/**</span><br/><span class="hl-4">             * An optional field for additional socket option from ws package</span><br/><span class="hl-4">             */</span><br/><span class="hl-1">            </span><span class="hl-0">socketOptions:</span><span class="hl-1"> {</span><br/><br/><span class="hl-1">            },</span><br/><span class="hl-1">        },</span><br/><span class="hl-1">        </span><span class="hl-4">/**</span><br/><span class="hl-4">         * Configuration to setup a REST api transport method for the samples.</span><br/><span class="hl-4">         */</span><br/><span class="hl-1">        </span><span class="hl-0">rest:</span><span class="hl-1"> {</span><br/><span class="hl-1">            </span><span class="hl-4">/**</span><br/><span class="hl-4">             * The target url the websocket is opened for</span><br/><span class="hl-4">             */</span><br/><span class="hl-1">            </span><span class="hl-0">urls:</span><span class="hl-1"> [</span><span class="hl-3">&quot;http://localhost:7080/rest/samples/myServiceId/myMediaUnitId&quot;</span><span class="hl-1">];</span><br/><span class="hl-1">            </span><span class="hl-4">/**</span><br/><span class="hl-4">             * The maximum number of try to connect to the server</span><br/><span class="hl-4">             *</span><br/><span class="hl-4">             * DEFAULT: 3</span><br/><span class="hl-4">             */</span><br/><span class="hl-1">            </span><span class="hl-0">maxRetry</span><span class="hl-1">: </span><span class="hl-7">1</span><span class="hl-1">,</span><br/><span class="hl-1">        },</span><br/><span class="hl-1">    }</span><br/><span class="hl-1">};</span>
+</code></pre>
+
+<a href="#api-docs" id="api-docs" style="color: inherit; text-decoration: none;">
+  <h2>API docs</h2>
+</a>
+<p><a href="https://observertc.github.io/sfu-monitor-js/interfaces/SfuMonitor.html">https://observertc.github.io/sfu-monitor-js/interfaces/SfuMonitor.html</a></p>
+
+<a href="#npm-package" id="npm-package" style="color: inherit; text-decoration: none;">
+  <h2>NPM package</h2>
+</a>
+<p><a href="https://www.npmjs.com/package/@observertc/sfu-monitor-js">https://www.npmjs.com/package/@observertc/sfu-monitor-js</a></p>
+
+<a href="#schemas" id="schemas" style="color: inherit; text-decoration: none;">
+  <h2>Schemas</h2>
+</a>
+<p><a href="https://github.com/observertc/schemas">https://github.com/observertc/schemas</a></p>
+
+<a href="#getting-involved" id="getting-involved" style="color: inherit; text-decoration: none;">
+  <h2>Getting Involved</h2>
+</a>
+<p>Sfu-monitor is made with the intention to provide an open-source monitoring solution for
+WebRTC developers. We develop new features and maintaining the current
+product with the help of the community. If you are interested in getting involved
+please read our <a href="CONTRIBUTING.md">contribution</a> guideline.</p>
+
+<a href="#license" id="license" style="color: inherit; text-decoration: none;">
+  <h2>License</h2>
+</a>
+<p>Apache-2.0</p>
+</div></div><div class="col-4 col-menu menu-sticky-wrap menu-highlight"><nav class="tsd-navigation primary"><ul><li class="current"><a href="modules.html">Exports</a></li></ul></nav><nav class="tsd-navigation secondary menu-sticky"><ul><li class="tsd-kind-class"><a href="classes/AuxCollector.html" class="tsd-kind-icon">Aux<wbr/>Collector</a></li><li class="tsd-kind-class"><a href="classes/MediasoupMonitor.html" class="tsd-kind-icon">Mediasoup<wbr/>Monitor</a></li><li class="tsd-kind-interface"><a href="interfaces/SfuInboundRtpPadEntry.html" class="tsd-kind-icon">Sfu<wbr/>Inbound<wbr/>Rtp<wbr/>Pad<wbr/>Entry</a></li><li class="tsd-kind-interface"><a href="interfaces/SfuMediaSinkEntry.html" class="tsd-kind-icon">Sfu<wbr/>Media<wbr/>Sink<wbr/>Entry</a></li><li class="tsd-kind-interface"><a href="interfaces/SfuMediaStreamEntry.html" class="tsd-kind-icon">Sfu<wbr/>Media<wbr/>Stream<wbr/>Entry</a></li><li class="tsd-kind-interface"><a href="interfaces/SfuMonitor.html" class="tsd-kind-icon">Sfu<wbr/>Monitor</a></li><li class="tsd-kind-interface"><a href="interfaces/SfuOutboundRtpPadEntry.html" class="tsd-kind-icon">Sfu<wbr/>Outbound<wbr/>Rtp<wbr/>Pad<wbr/>Entry</a></li><li class="tsd-kind-interface"><a href="interfaces/SfuSctpChannelEntry.html" class="tsd-kind-icon">Sfu<wbr/>Sctp<wbr/>Channel<wbr/>Entry</a></li><li class="tsd-kind-interface"><a href="interfaces/SfuTransportEntry.html" class="tsd-kind-icon">Sfu<wbr/>Transport<wbr/>Entry</a></li><li class="tsd-kind-interface"><a href="interfaces/StatsReader.html" class="tsd-kind-icon">Stats<wbr/>Reader</a></li><li class="tsd-kind-type-alias"><a href="modules.html#AuxCollectorConfig" class="tsd-kind-icon">Aux<wbr/>Collector<wbr/>Config</a></li><li class="tsd-kind-type-alias tsd-is-external"><a href="modules.html#CustomSfuEvent" class="tsd-kind-icon">Custom<wbr/>Sfu<wbr/>Event</a></li><li class="tsd-kind-type-alias tsd-is-external"><a href="modules.html#ExtensionStat" class="tsd-kind-icon">Extension<wbr/>Stat</a></li><li class="tsd-kind-type-alias"><a href="modules.html#MediasoupMonitorConfig" class="tsd-kind-icon">Mediasoup<wbr/>Monitor<wbr/>Config</a></li><li class="tsd-kind-type-alias"><a href="modules.html#MediasoupTransportType" class="tsd-kind-icon">Mediasoup<wbr/>Transport<wbr/>Type</a></li><li class="tsd-kind-type-alias"><a href="modules.html#SamplerConfig" class="tsd-kind-icon">Sampler<wbr/>Config</a></li><li class="tsd-kind-type-alias"><a href="modules.html#SenderConfig" class="tsd-kind-icon">Sender<wbr/>Config</a></li><li class="tsd-kind-type-alias"><a href="modules.html#SfuMonitorConfig" class="tsd-kind-icon">Sfu<wbr/>Monitor<wbr/>Config</a></li><li class="tsd-kind-type-alias"><a href="modules.html#TransportTypeFunction" class="tsd-kind-icon">Transport<wbr/>Type<wbr/>Function</a></li><li class="tsd-kind-function"><a href="modules.html#createMediasoupMonitor" class="tsd-kind-icon">create<wbr/>Mediasoup<wbr/>Monitor</a></li><li class="tsd-kind-function"><a href="modules.html#createSfuMonitor" class="tsd-kind-icon">create<wbr/>Sfu<wbr/>Monitor</a></li><li class="tsd-kind-function"><a href="modules.html#setLogLevel" class="tsd-kind-icon">set<wbr/>Log<wbr/>Level</a></li></ul></nav></div></div></div><footer class="with-border-bottom"><div class="container"><h2>Legend</h2><div class="tsd-legend-group"><ul class="tsd-legend"><li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li><li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li></ul><ul class="tsd-legend"><li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li><li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li></ul><ul class="tsd-legend"><li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li><li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li></ul><ul class="tsd-legend"><li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li></ul></div><h2>Settings</h2><p>Theme <select id="theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></p></div></footer><div class="container tsd-generator"><p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></div><div class="overlay"></div><script src="assets/main.js"></script></body></html>
