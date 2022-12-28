@@ -56,6 +56,10 @@ export class CollectorsImpl implements Collectors {
         this._statsWriter = value;
     }
 
+    public get size(): number {
+        return this._collectors.size;
+    }
+
     public get closed() {
         return this._closed;
     }

@@ -40,6 +40,7 @@ import {
     MediasoupSurrogateCollector,
 } from "./mediasoup/MediasoupSurrogateCollector";
 import { SfuMonitorImpl } from "./SfuMonitorImpl";
+import { MonitorMetrics } from "./MonitorMetrics";
 
 const logger = createLogger("MediasoupMonitor");
 
@@ -75,6 +76,10 @@ export class MediasoupMonitor implements SfuMonitor {
 
     public get events(): EventsRegister {
         return this._monitor.events;
+    }
+
+    public get metrics(): MonitorMetrics {
+        return this._monitor.metrics;
     }
 
     public get connected(): boolean {
