@@ -256,6 +256,7 @@ export class SfuMonitorImpl implements SfuMonitor {
     }
 
     private _createMonitorMetrics(): MonitorMetrics {
+        /* eslint-disable @typescript-eslint/no-this-alias */
         const parent = this;
         return new class extends MonitorMetrics {
             public get numberOfStoredEntries(): number {
