@@ -43,7 +43,7 @@ export type SfuMonitorConfig = {
     /**
      * By setting it stats items and entries are deleted if they are not updated.
      *
-     * DEFAULT: undefined
+     * DEFAULT: 60000
      */
     statsExpirationTimeInMs?: number;
 

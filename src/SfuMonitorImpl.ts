@@ -21,6 +21,8 @@ const supplyDefaultConfig = () => {
         // sendingPeriodInMs: 10000,
         sampler: supplySamplerDefaultConfig(),
         tickingTimeInMs: 1000,
+
+        statsExpirationTimeInMs: 60000,
     };
     return defaultConfig;
 };
