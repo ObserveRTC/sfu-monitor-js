@@ -14,7 +14,7 @@ import {
 import { MediasoupWorkerCollector, MediasoupWorkerCollectorConfig } from "./MediasoupWorkerCollector";
 import { Appendix } from "../entries/StatsEntryInterfaces";
 
-const logger = createLogger(`MediasoupWorker`);
+const logger = createLogger(`MediasoupSurrogateCollector`);
 
 export type MediasoupSurrogateCollectorConfig = {
     /**
@@ -127,15 +127,21 @@ export class MediasoupSurrogateCollector implements Collector {
                 logger.warn(`Cannot create corresponded collectors without statswriter`);
                 return;
             }
-            const routerCollectorConfig: MediasoupWorkerCollectorConfig = {
+            const workerCollectorConfig: MediasoupWorkerCollectorConfig = {
                 ...this._config,
             };
-            const routerCollector = new MediasoupWorkerCollector(collectorsFacade, worker, routerCollectorConfig);
-            routerCollector.setStatsWriter(this._statsWriter);
-            this._parent.add(routerCollector);
+            const workerCollector = new MediasoupWorkerCollector(collectorsFacade, worker, workerCollectorConfig);
+            if (workerCollector.hasStatsWriter) {
+                workerCollector.setStatsWriter(this._statsWriter);
+            }
+            this._parent.add(workerCollector);
         };
         mediasoup.observer.on("newworker", this._newWorkerListener);
         logger.debug(`${this.id} is watched`);
+    }
+
+    public get hasStatsWriter(): boolean {
+        return !!this._statsWriter;
     }
 
     public setStatsWriter(value: StatsWriter | null) {

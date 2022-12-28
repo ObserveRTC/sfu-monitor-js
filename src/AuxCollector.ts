@@ -53,6 +53,10 @@ export class AuxCollector implements Collector {
         this.id = config.id ?? uuidv4();
     }
 
+    public get hasStatsWriter(): boolean {
+        return !!this._statsWriter;
+    }
+
     public setStatsWriter(value: StatsWriter | null) {
         if (this._statsWriter) {
             logger.warn(`StatsWriter has already been set`);

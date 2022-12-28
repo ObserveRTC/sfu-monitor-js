@@ -12,7 +12,7 @@ import { Collectors } from "../Collectors";
 import { MediasoupTransportCollector, MediasoupTransportCollectorConfig } from "./MediasoupTransportCollector";
 import { Appendix } from "../entries/StatsEntryInterfaces";
 
-const logger = createLogger(`MediasoupRouter`);
+const logger = createLogger(`MediasoupRouterCollector`);
 
 export type TransportTypeFunction = (transport: MediasoupTransport) => MediasoupTransportType;
 
@@ -161,11 +161,17 @@ export class MediasoupRouterCollector implements Collector {
                 transport,
                 transportCollectorConfig
             );
-            transportCollector.setStatsWriter(this._statsWriter);
+            if (!transportCollector.hasStatsWriter) {
+                transportCollector.setStatsWriter(this._statsWriter);
+            }
             this._parent.add(transportCollector);
         };
         router.observer.on("newtransport", this._newTransportListener);
         logger.debug(`Router ${routerId} is watched`);
+    }
+
+    public get hasStatsWriter(): boolean {
+        return !!this._statsWriter;
     }
 
     public setStatsWriter(value: StatsWriter | null) {
