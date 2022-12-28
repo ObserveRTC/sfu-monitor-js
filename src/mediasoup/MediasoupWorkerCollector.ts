@@ -12,7 +12,7 @@ import { MediasoupNewRouterListener, MediasoupWorker } from "./MediasoupTypes";
 import { hash } from "../utils/hash";
 import { Appendix } from "../entries/StatsEntryInterfaces";
 
-const logger = createLogger(`MediasoupWorker`);
+const logger = createLogger(`MediasoupWorkerCollector`);
 
 export type MediasoupWorkerCollectorConfig = {
     /**
@@ -133,11 +133,17 @@ export class MediasoupWorkerCollector implements Collector {
                 ...this._config,
             };
             const routerCollector = new MediasoupRouterCollector(collectorsFacade, router, routerCollectorConfig);
-            routerCollector.setStatsWriter(this._statsWriter);
+            if (!routerCollector.hasStatsWriter) {
+                routerCollector.setStatsWriter(this._statsWriter);
+            }
             this._parent.add(routerCollector);
         };
         worker.observer.on("newrouter", this._newRouterListener);
         logger.debug(`Worker ${this.id} is watched`);
+    }
+
+    public get hasStatsWriter(): boolean {
+        return !!this._statsWriter;
     }
 
     public setStatsWriter(value: StatsWriter | null) {

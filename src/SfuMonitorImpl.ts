@@ -9,6 +9,7 @@ import { createLogger } from "./utils/logger";
 import { SfuMonitor, SfuMonitorConfig } from "./SfuMonitor";
 import EventEmitter from "events";
 import { Collectors, CollectorsImpl } from "./Collectors";
+import { MonitorMetrics } from "./MonitorMetrics";
 
 const logger = createLogger(`SfuMonitor`);
 
@@ -20,6 +21,8 @@ const supplyDefaultConfig = () => {
         // sendingPeriodInMs: 10000,
         sampler: supplySamplerDefaultConfig(),
         tickingTimeInMs: 1000,
+
+        statsExpirationTimeInMs: 60000,
     };
     return defaultConfig;
 };
@@ -46,6 +49,7 @@ export class SfuMonitorImpl implements SfuMonitor {
     private _eventer: EventsRelayer;
     private _statsStorage: StatsStorage;
     private _accumulator: Accumulator;
+    private _metrics: MonitorMetrics;
     private constructor(config: ConstructorConfig) {
         this._config = config;
         this._statsStorage = new StatsStorage();
@@ -55,6 +59,7 @@ export class SfuMonitorImpl implements SfuMonitor {
         this._sampler = this._makeSampler();
         this._createSender();
         this._createTimer();
+        this._metrics = this._createMonitorMetrics();
     }
 
     public get sfuId(): string {
@@ -72,6 +77,10 @@ export class SfuMonitorImpl implements SfuMonitor {
 
     public get storage(): StatsReader {
         return this._statsStorage;
+    }
+
+    public get metrics(): MonitorMetrics {
+        return this._metrics;
     }
 
     public get connected(): boolean {
@@ -124,6 +133,8 @@ export class SfuMonitorImpl implements SfuMonitor {
             }
         }
         logger.debug(`Collecting took `, elapsedInMs);
+        this._metrics.setCollectingTimeInMs(elapsedInMs);
+        this._metrics.setLastCollected(started);
     }
 
     public sample(): void {
@@ -132,6 +143,7 @@ export class SfuMonitorImpl implements SfuMonitor {
             this._accumulator.addSfuSample(sfuSample);
         }
         this._eventer.emitSampleCreated(sfuSample);
+        this._metrics.setLastSampled(Date.now());
     }
 
     public send(callback?: SamplesSentCallback): void {
@@ -151,6 +163,7 @@ export class SfuMonitorImpl implements SfuMonitor {
         for (const samples of queue) {
             this._sender.send(samples, callback);
         }
+        this._metrics.setLastSent(Date.now());
     }
 
     public get closed() {
@@ -242,5 +255,24 @@ export class SfuMonitorImpl implements SfuMonitor {
             });
         }
         this._timer = result;
+    }
+
+    private _createMonitorMetrics(): MonitorMetrics {
+        /* eslint-disable @typescript-eslint/no-this-alias */
+        const parent = this;
+        return new class extends MonitorMetrics {
+            public get numberOfStoredEntries(): number {
+                return parent.storage.getNumberOfInboundRtpPads() + 
+                    parent.storage.getNumberOfOutboundRtpPads() + 
+                    parent.storage.getNumberOfSctpChannels() + 
+                    parent.storage.getNumberOfTransports()
+                ;
+            }
+
+            public get numberOfCollectors(): number {
+                return parent._collectors.size;
+            }
+
+        }
     }
 }

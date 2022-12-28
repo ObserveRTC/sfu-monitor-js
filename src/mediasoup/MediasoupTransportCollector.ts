@@ -21,7 +21,7 @@ import { MediasoupDataProducerCollector, MediasoupDataProducerCollectorConfig } 
 import { MediasoupDataConsumerCollector, MediasoupDataConsumerCollectorConfig } from "./MediasoupDataConsumerCollector";
 import { Appendix } from "../entries/StatsEntryInterfaces";
 
-const logger = createLogger(`MediasoupTransport`);
+const logger = createLogger(`MediasoupTransportCollector`);
 
 export type MediasoupTransportCollectorConfig = {
     /**
@@ -143,6 +143,10 @@ export class MediasoupTransportCollector implements Collector {
         logger.debug(`Transport ${transportId} is watched`);
     }
 
+    public get hasStatsWriter(): boolean {
+        return !!this._statsWriter;
+    }
+
     public setStatsWriter(value: StatsWriter | null) {
         if (this._statsWriter && value !== null) {
             logger.warn(`StatsWriter has already been set`);
@@ -161,20 +165,22 @@ export class MediasoupTransportCollector implements Collector {
                 logger.warn(`StatsWriter is undefined, thus cannot create corresponded collectors`);
                 return;
             }
-            const producerCollectorConfig: MediasoupDataProducerCollectorConfig = {
+            const dataProducerCollectorConfig: MediasoupDataProducerCollectorConfig = {
                 pollStats: this._config.pollDataProducerStats,
                 appendix: this._config.sctpChannelAppendix,
             };
 
-            const producerCollector = new MediasoupDataProducerCollector(
+            const dataProducerCollector = new MediasoupDataProducerCollector(
                 collectorsFacade,
                 producer,
                 this._transport.id,
                 this._internal,
-                producerCollectorConfig
+                dataProducerCollectorConfig
             );
-            producerCollector.setStatsWriter(this._statsWriter);
-            this._parent.add(producerCollector);
+            if (!dataProducerCollector.hasStatsWriter) {
+                dataProducerCollector.setStatsWriter(this._statsWriter);
+            }
+            this._parent.add(dataProducerCollector);
         };
         this._transport.observer.on("newdataproducer", result);
         return result;
@@ -186,20 +192,22 @@ export class MediasoupTransportCollector implements Collector {
                 logger.warn(`StatsWriter is undefined, thus cannot create corresponded collectors`);
                 return;
             }
-            const dataProducerCollectorConfig: MediasoupProducerCollectorConfig = {
+            const producerCollectorConfig: MediasoupProducerCollectorConfig = {
                 pollStats: this._config.pollProducerStats,
                 appendix: this._config.inboundRtpApppendix,
             };
 
-            const dataProducerCollector = new MediasoupProducerCollector(
+            const producerCollector = new MediasoupProducerCollector(
                 collectorsFacade,
                 producer,
                 this._transport.id,
                 this._internal,
-                dataProducerCollectorConfig
+                producerCollectorConfig
             );
-            dataProducerCollector.setStatsWriter(this._statsWriter);
-            this._parent.add(dataProducerCollector);
+            if (!producerCollector.hasStatsWriter) {
+                producerCollector.setStatsWriter(this._statsWriter);
+            }
+            this._parent.add(producerCollector);
         };
         this._transport.observer.on("newproducer", result);
         return result;
@@ -223,7 +231,9 @@ export class MediasoupTransportCollector implements Collector {
                 this._internal,
                 consumerCollectorConfig
             );
-            consumerCollector.setStatsWriter(this._statsWriter);
+            if (!consumerCollector.hasStatsWriter) {
+                consumerCollector.setStatsWriter(this._statsWriter);
+            }
             this._parent.add(consumerCollector);
         };
         this._transport.observer.on("newconsumer", result);
@@ -248,7 +258,9 @@ export class MediasoupTransportCollector implements Collector {
                 this._internal,
                 dataConsumerCollectorConfig
             );
-            dataConsumerCollector.setStatsWriter(this._statsWriter);
+            if (!dataConsumerCollector.hasStatsWriter) {
+                dataConsumerCollector.setStatsWriter(this._statsWriter);
+            }
             this._parent.add(dataConsumerCollector);
         };
         this._transport.observer.on("newdataconsumer", result);

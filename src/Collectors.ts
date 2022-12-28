@@ -56,6 +56,10 @@ export class CollectorsImpl implements Collectors {
         this._statsWriter = value;
     }
 
+    public get size(): number {
+        return this._collectors.size;
+    }
+
     public get closed() {
         return this._closed;
     }
@@ -69,7 +73,12 @@ export class CollectorsImpl implements Collectors {
             logger.warn(`Cannot add collector if statsWriter is undefined`);
             return false;
         }
-        collector.setStatsWriter(this._statsWriter);
+        if (!collector.hasStatsWriter) {
+            collector.setStatsWriter(this._statsWriter);
+        }
+        if (this._collectors.has(collector.id)) {
+            logger.warn(`Collector ${collector.id} is replaced in collectors`);
+        }
         this._collectors.set(collector.id, collector);
         logger.info(`Collector ${collector.id} has been added`);
         return true;

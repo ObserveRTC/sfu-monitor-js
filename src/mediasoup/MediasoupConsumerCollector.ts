@@ -9,7 +9,7 @@ import { createLogger } from "../utils/logger";
 import { Collectors } from "../Collectors";
 import { Appendix } from "../entries/StatsEntryInterfaces";
 
-const logger = createLogger(`MediasoupCollector`);
+const logger = createLogger(`MediasoupConsumerCollector`);
 
 export type MediasoupConsumerCollectorConfig = {
     /**
@@ -62,6 +62,10 @@ export class MediasoupConsumerCollector implements Collector {
             logger.debug(`Consumer ${consumerId} on transport ${transportId} is removed`);
         });
         logger.debug(`Consumer ${consumerId} on transport ${transportId} is added`);
+    }
+
+    public get hasStatsWriter(): boolean {
+        return !!this._statsWriter;
     }
 
     public setStatsWriter(value: StatsWriter | null) {

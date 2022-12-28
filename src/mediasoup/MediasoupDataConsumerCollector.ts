@@ -7,7 +7,7 @@ import { Collectors } from "../Collectors";
 import { MediasoupDataConsumer } from "./MediasoupTypes";
 import { Appendix } from "../entries/StatsEntryInterfaces";
 
-const logger = createLogger(`MediasoupCollector`);
+const logger = createLogger(`MediasoupDataConsumerCollector`);
 
 export type MediasoupDataConsumerCollectorConfig = {
     /**
@@ -58,6 +58,10 @@ export class MediasoupDataConsumerCollector implements Collector {
             logger.debug(`DataConsumer ${dataConsumerId} on transport ${transportId} is removed`);
         });
         logger.debug(`DataConsumer ${dataConsumerId} on transport ${transportId} is added`);
+    }
+
+    public get hasStatsWriter(): boolean {
+        return !!this._statsWriter;
     }
 
     public setStatsWriter(value: StatsWriter | null) {

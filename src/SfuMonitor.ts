@@ -5,6 +5,7 @@ import { SamplesSentCallback, SenderConfig } from "./Sender";
 import { StatsReader } from "./entries/StatsStorage";
 import { AccumulatorConfig } from "./Accumulator";
 import { Collectors, CollectorsConfig } from "./Collectors";
+import { MonitorMetrics } from "./MonitorMetrics";
 
 export type SfuMonitorConfig = {
     /**
@@ -42,7 +43,7 @@ export type SfuMonitorConfig = {
     /**
      * By setting it stats items and entries are deleted if they are not updated.
      *
-     * DEFAULT: undefined
+     * DEFAULT: 60000
      */
     statsExpirationTimeInMs?: number;
 
@@ -83,9 +84,14 @@ export interface SfuMonitor {
     readonly storage: StatsReader;
 
     /**
-     * Acces to subscribe or unsubscribe to events
+     * Access to events to subscribe or unsubscribe
      */
     readonly events: EventsRegister;
+
+    /**
+     * Access to a general monitor related metrics
+     */
+    readonly metrics: MonitorMetrics;
 
     /**
      * Indicate if the monitor is connected to an observer or not

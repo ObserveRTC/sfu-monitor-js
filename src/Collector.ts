@@ -2,6 +2,7 @@ import { StatsWriter } from "./entries/StatsStorage";
 
 export interface Collector {
     readonly id: string;
+    readonly hasStatsWriter: boolean;
     setStatsWriter(writer: StatsWriter | null): void;
     /**
      * Collect stats and push it to the Observer
