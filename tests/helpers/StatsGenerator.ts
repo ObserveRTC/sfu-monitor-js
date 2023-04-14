@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { SfuInboundRtpPad, SfuOutboundRtpPad, SfuTransport, SfuSctpChannel } from "@observertc/schemas";
+import { SfuInboundRtpPad, SfuOutboundRtpPad, SfuTransport, SfuSctpChannel } from "@observertc/sample-schemas-js";
 
 const DEFAULT_MEDIA_STREAM_ID = uuidv4();
 const DEFAULT_MEDIA_SINK_ID = uuidv4();

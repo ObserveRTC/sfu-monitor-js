@@ -10,3 +10,10 @@ export function makePrefixedObj(obj: any, prefix?: string, camelCase?: boolean):
 }
 
 export const NULL_UUID = "00000000-0000-0000-0000-000000000000";
+
+export enum SFU_EVENT {
+    SFU_TRANSPORT_OPENED = "SFU_TRANSPORT_OPENED",
+    SFU_TRANSPORT_CLOSED = "SFU_TRANSPORT_CLOSED",
+    SFU_RTP_STREAM_ADDED = "SFU_RTP_STREAM_ADDED",
+    SFU_RTP_STREAM_REMOVED = "SFU_RTP_STREAM_REMOVED",
+}

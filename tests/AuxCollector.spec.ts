@@ -4,8 +4,8 @@ import {
     SfuSctpChannel,
     SfuTransport,
     W3CStats as W3C,
-} from "@observertc/schemas";
-import { AuxCollector } from "../src/AuxCollector";
+} from "@observertc/sample-schemas-js";
+import { AuxCollector, AuxCollectorImpl } from "../src/AuxCollector";
 import { StatsWriter } from "../src/entries/StatsStorage";
 import { createSfuInboundRtpPad } from "./helpers/StatsGenerator";
 
@@ -16,21 +16,12 @@ describe("AuxCollector", () => {
             updateOutboundRtpPad,
             updateSctpChannel,
             updateTransport,
-            removeInboundRtpPad,
-            removeOutboundRtpPad,
-            removeSctpChannel,
-            removeTransport,
         }: {
             updateInboundRtpPad?: (stats: SfuInboundRtpPad) => void;
             updateOutboundRtpPad?: (stats: SfuOutboundRtpPad) => void;
             updateSctpChannel?: (stats: SfuSctpChannel) => void;
             updateTransport?: (stats: SfuTransport) => void;
-            removeInboundRtpPad?: (id: string) => void;
-            removeOutboundRtpPad?: (id: string) => void;
-            removeSctpChannel?: (id: string) => void;
-            removeTransport?: (id: string) => void;
         }) => {
-            const collector = AuxCollector.create();
             const defaultHandler = () => {
                 throw new Error(`Unhandled listener is called`);
             };
@@ -39,12 +30,12 @@ describe("AuxCollector", () => {
                 updateOutboundRtpPad: updateOutboundRtpPad ?? defaultHandler,
                 updateSctpChannel: updateSctpChannel ?? defaultHandler,
                 updateTransport: updateTransport ?? defaultHandler,
-                removeInboundRtpPad: removeInboundRtpPad ?? defaultHandler,
-                removeOutboundRtpPad: removeOutboundRtpPad ?? defaultHandler,
-                removeSctpChannel: removeSctpChannel ?? defaultHandler,
-                removeTransport: removeTransport ?? defaultHandler,
             };
-            collector.setStatsWriter(statsWriter);
+            const collector = new class extends AuxCollectorImpl{
+                protected onClose() {
+
+                }
+            }(statsWriter);
             return collector;
         };
 
@@ -58,7 +49,7 @@ describe("AuxCollector", () => {
             });
             collector.addInboundRtpPadStatsSupplier(expected.padId, async () => expected);
 
-            await collector.collect();
+            await Promise.all(collector.createFetchers().map(getpromise => getpromise()));
 
             expect(expected).toEqual(actual);
         });

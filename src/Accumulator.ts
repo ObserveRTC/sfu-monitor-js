@@ -1,4 +1,4 @@
-import { SfuSample, Samples } from "@observertc/schemas";
+import { SfuSample, Samples } from "@observertc/sample-schemas-js";
 
 export type AccumulatorConfig = {
     maxSfuSamples?: number;

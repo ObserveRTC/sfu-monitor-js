@@ -1,70 +1,59 @@
-export type MediasoupSurrogateEventTypes = "newworker";
 
-export type MediasoupNewWorkerListener = (router: MediasoupWorkerSurrogate) => void;
-export type MediasoupSurrogateListener = MediasoupCloseListener | MediasoupNewWorkerListener;
-interface MediasoupSurrogateObserver {
-    addListener(eventType: MediasoupSurrogateEventTypes, listener: MediasoupNewWorkerListener): void;
-    removeListener(eventType: MediasoupSurrogateEventTypes, listener: MediasoupSurrogateListener): void;
+interface Observer<E extends Record<string, any[]>> {
+    addListener<K extends keyof E>(eventName: K, listener: (...args: E[K]) => void): Observer<E>;
+    removeListener<K extends keyof E>(eventName: K, listener: (...args: E[K]) => void): Observer<E>;
+    once<K extends keyof E>(eventName: K, listener: (...args: E[K]) => void): Observer<E>;
 }
+
+export type MediasoupObserverEventMap = {
+    newworker: [MediasoupWorkerSurrogate];
+};
 
 export interface MediasoupSurrogate {
     version: string;
-    observer: MediasoupSurrogateObserver;
+    observer: Observer<MediasoupObserverEventMap>
 }
 
-export type MediasoupWorkerEventTypes = "newrouter";
 
-export type MediasoupNewRouterListener = (router: MediasoupRouterSurrogate) => void;
-export type MediasoupWorkerListener = MediasoupCloseListener | MediasoupNewRouterListener;
-interface MediasoupWorkerObserver {
-    addListener(eventType: MediasoupWorkerEventTypes, listener: MediasoupNewRouterListener): void;
-    once(eventType: "close", listener: MediasoupCloseListener): void;
-    removeListener(eventType: MediasoupWorkerEventTypes, listener: MediasoupWorkerListener): void;
-}
+export type MediasoupWorkerObserverEventMap = {
+    newrouter: [MediasoupRouterSurrogate];
+    newwebrtcserver: [],
+    close: []
+};
 
 export interface MediasoupWorkerSurrogate {
     pid: number;
-    observer: MediasoupWorkerObserver;
+    observer: Observer<MediasoupWorkerObserverEventMap>;
 }
+
+export type MediasoupRouterObserverEventMap = {
+    newtransport: [MediasoupTransportSurrogate];
+    newrtpobserver: [],
+    close: []
+};
 
 export type MediasoupRouterEventTypes = "newtransport";
 
-export type MediasoupNewTransportListener = (transport: MediasoupTransportSurrogate) => void;
-export type MediasoupRouterListener = MediasoupCloseListener | MediasoupNewTransportListener;
-interface MediasoupRouterObserver {
-    addListener(eventType: MediasoupRouterEventTypes, listener: MediasoupNewTransportListener): void;
-    once(eventType: "close", listener: MediasoupCloseListener): void;
-    removeListener(eventType: MediasoupRouterEventTypes, listener: MediasoupRouterListener): void;
-}
-
 export interface MediasoupRouterSurrogate {
     id: string;
-    observer: MediasoupRouterObserver;
+    observer: Observer<MediasoupRouterObserverEventMap>;
 }
 
-export type MediasoupTransportEventTypes = "newproducer" | "newconsumer" | "newdataproducer" | "newdataconsumer";
-export type MediasoupCloseListener = () => void;
-export type MediasoupNewConsumerListener = (consumer: MediasoupConsumerSurrogate) => void;
-export type MediasoupNewProducerListener = (producer: MediasoupProducerSurrogate) => void;
-export type MediasoupNewDataProducerListener = (dataProducer: MediasoupDataProducerSurrogate) => void;
-export type MediasoupNewDataConsumerListener = (dataConsumer: MediasoupDataConsumerSurrogate) => void;
-export type MediasoupTransportListener =
-    | MediasoupCloseListener
-    | MediasoupNewConsumerListener
-    | MediasoupNewProducerListener
-    | MediasoupNewDataProducerListener
-    | MediasoupNewDataConsumerListener;
 
-interface MediasoupTransportObserver {
-    addListener(eventType: MediasoupTransportEventTypes, listener: MediasoupTransportListener): void;
-    once(eventType: "close", listener: MediasoupCloseListener): void;
-    removeListener(eventType: MediasoupTransportEventTypes, listener: MediasoupTransportListener): void;
-}
+export type MediasoupTransportObserverEventMap = {
+    newproducer: [MediasoupProducerSurrogate];
+    newconsumer: [MediasoupConsumerSurrogate];
+    newdataproducer: [MediasoupDataProducerSurrogate];
+    newdataconsumer: [MediasoupDataConsumerSurrogate];
+    close: [],
+    trace: [],
+};
+
 
 export interface MediasoupTransportSurrogate {
     id: string;
     getStats(): Promise<MediasoupTransportStats[]>;
-    observer: MediasoupTransportObserver;
+    observer: Observer<MediasoupTransportObserverEventMap>;
     
     /* eslint-disable @typescript-eslint/no-explicit-any */
     iceState?: any; // only webrtc transport have
@@ -73,8 +62,8 @@ export interface MediasoupTransportSurrogate {
     tuple?: any; // plain and pipe transport have it
 }
 
-interface MediasoupCommonObserver {
-    once(eventType: "close", listener: MediasoupCloseListener): void;
+interface MediasoupCommonObserverEventMap {
+    close: undefined
 }
 
 export interface MediasoupProducerSurrogate {
@@ -82,7 +71,9 @@ export interface MediasoupProducerSurrogate {
     kind: "audio" | "video";
     paused: boolean;
     getStats(): Promise<MediasoupProducerStats[]>;
-    observer: MediasoupCommonObserver;
+    observer: {
+        once<K extends keyof MediasoupCommonObserverEventMap>(eventType: K, listener: (data: MediasoupCommonObserverEventMap[K]) => void): void;
+    };
 }
 
 export type MediasoupConsumerPolledStats = MediasoupConsumerStats | MediasoupProducerStats;
@@ -92,20 +83,26 @@ export interface MediasoupConsumerSurrogate {
     paused: boolean;
     kind: "audio" | "video";
     getStats(): Promise<MediasoupConsumerPolledStats[]>;
-    observer: MediasoupCommonObserver;
+    observer: {
+        once<K extends keyof MediasoupCommonObserverEventMap>(eventType: K, listener: (data: MediasoupCommonObserverEventMap[K]) => void): void;
+    };
 }
 
 export interface MediasoupDataProducerSurrogate {
     readonly id: string;
     getStats(): Promise<MediasoupDataProducerStats[]>;
-    observer: MediasoupCommonObserver;
+    observer: {
+        once<K extends keyof MediasoupCommonObserverEventMap>(eventType: K, listener: (data: MediasoupCommonObserverEventMap[K]) => void): void;
+    };
 }
 
 export interface MediasoupDataConsumerSurrogate {
     readonly id: string;
     readonly dataProducerId: string;
     getStats(): Promise<MediasoupDataConsumerStats[]>;
-    observer: MediasoupCommonObserver;
+    observer: {
+        once<K extends keyof MediasoupCommonObserverEventMap>(eventType: K, listener: (data: MediasoupCommonObserverEventMap[K]) => void): void;
+    };
 }
 
 export type MediasoupProducerStats = {

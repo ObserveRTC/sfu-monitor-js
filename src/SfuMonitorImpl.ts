@@ -1,78 +1,108 @@
-import { CustomSfuEvent, ExtensionStat, Samples } from "@observertc/schemas";
-import { EventsRegister, EventsRelayer } from "./EventsRelayer";
-import { Sampler, supplyDefaultConfig as supplySamplerDefaultConfig } from "./Sampler";
-import { SamplesSentCallback, Sender, SenderConfig } from "./Sender";
+import { CustomSfuEvent, ExtensionStat, Samples } from "@observertc/sample-schemas-js";
+import { Sampler } from "./Sampler";
 import { Timer } from "./utils/Timer";
 import { StatsReader, StatsStorage } from "./entries/StatsStorage";
 import { Accumulator } from "./Accumulator";
 import { createLogger } from "./utils/logger";
-import { SfuMonitor, SfuMonitorConfig } from "./SfuMonitor";
-import EventEmitter from "events";
-import { Collectors, CollectorsImpl } from "./Collectors";
+import { SfuMonitor, SfuMonitorConfig, SfuMonitorEventsMap } from "./SfuMonitor";
+import { EventEmitter } from "events";
 import { MonitorMetrics } from "./MonitorMetrics";
+import { setLogLevel } from "./utils/logger";
+import { Collector } from "./Collector";
+import { MediasoupCollector, MediasoupCollectorConfig, MediasoupCollectorImpl } from "./mediasoup/MediasoupCollector";
+import { PromiseFetcher } from "./utils/PromiseFetcher";
+import { v4 as uuid } from 'uuid';
+import { AuxCollector, AuxCollectorImpl } from "./AuxCollector";
+import { SFU_EVENT } from "./utils/common";
 
 const logger = createLogger(`SfuMonitor`);
 
-type ConstructorConfig = SfuMonitorConfig;
-
 const supplyDefaultConfig = () => {
-    const defaultConfig: ConstructorConfig = {
-        // samplingPeriodInMs: 5000,
-        // sendingPeriodInMs: 10000,
-        sampler: supplySamplerDefaultConfig(),
+    const defaultConfig: SfuMonitorConfig = {
+        sfuId: uuid(),
+        logLevel: 'warn',
         tickingTimeInMs: 1000,
-
-        statsExpirationTimeInMs: 60000,
+        pollingBatchPaceTimeInMs: 0,
     };
     return defaultConfig;
 };
 
-const NO_SENDER_FOR_SENDING_FLAG = "noSenderForSending";
-
 export class SfuMonitorImpl implements SfuMonitor {
-    public static create(config?: SfuMonitorConfig): SfuMonitor {
-        if (config?.maxListeners !== undefined) {
-            EventEmitter.setMaxListeners(config.maxListeners);
-        }
-        const appliedConfig = config ? Object.assign(supplyDefaultConfig(), config) : supplyDefaultConfig();
+    public static create(config?: Partial<SfuMonitorConfig>): SfuMonitor {
+        const appliedConfig = Object.assign(supplyDefaultConfig(), config ?? {});
         const result = new SfuMonitorImpl(appliedConfig);
+        setLogLevel(config?.logLevel ?? "silent");
+        if (config?.maxListeners !== undefined) {
+            result._emitter.setMaxListeners(config.maxListeners);
+        }
         logger.info(`Created`, appliedConfig);
         return result;
     }
+
     private _closed = false;
-    private _config: ConstructorConfig;
-    private _collectors: CollectorsImpl;
+    private _collectors = new Map<string, Collector>();
+    private _emitter = new EventEmitter();
     private _sampler: Sampler;
-    private _sender?: Sender;
+    private _metrics = new MonitorMetrics();
     private _timer?: Timer;
-    private _flags: Set<string> = new Set();
-    private _eventer: EventsRelayer;
     private _statsStorage: StatsStorage;
     private _accumulator: Accumulator;
-    private _metrics: MonitorMetrics;
-    private constructor(config: ConstructorConfig) {
-        this._config = config;
-        this._statsStorage = new StatsStorage();
+    
+    private constructor(
+        public readonly config: SfuMonitorConfig
+    ) {
+        this._statsStorage = new StatsStorage(
+            this.config.createSfuEvents ? event => this.addCustomSfuEvent(event) : undefined
+        );
         this._accumulator = Accumulator.create(config.accumulator);
-        this._eventer = EventsRelayer.create();
-        this._collectors = this._makeCollectors();
-        this._sampler = this._makeSampler();
-        this._createSender();
+        this._sampler = new Sampler(
+            this.config.sfuId,
+            this._statsStorage,
+        )
         this._createTimer();
-        this._metrics = this._createMonitorMetrics();
+    }
+    
+    public addTransportOpenedEvent(transportId: string, timestamp?: number): void {
+        this.addCustomSfuEvent({
+            name: SFU_EVENT.SFU_TRANSPORT_OPENED,
+            timestamp: timestamp ?? Date.now(),
+            transportId,
+        });
+    }
+
+    public addTransportClosedEvent(transportId: string, timestamp?: number): void {
+        this.addCustomSfuEvent({
+            name: SFU_EVENT.SFU_TRANSPORT_CLOSED,
+            timestamp: timestamp ?? Date.now(),
+            transportId,
+        });
+    }
+
+    public addRtpStreamAdded(transportId: string, rtpPadId: string, sfuStreamId: string, sfuSinkId?: string, timestamp?: number): void {
+        this.addCustomSfuEvent({
+            name: SFU_EVENT.SFU_RTP_STREAM_ADDED,
+            timestamp: timestamp ?? Date.now(),
+            transportId,
+            sfuStreamId,
+            sfuSinkId,
+            value: rtpPadId,
+        });
+    }
+
+    public addRtpStreamRemoved(transportId: string, rtpPadId: string, sfuStreamId: string, sfuSinkId?: string, timestamp?: number): void {
+        this.addCustomSfuEvent({
+            name: SFU_EVENT.SFU_RTP_STREAM_REMOVED,
+            timestamp: timestamp ?? Date.now(),
+            transportId,
+            sfuStreamId,
+            sfuSinkId,
+            value: rtpPadId,
+        });
     }
 
     public get sfuId(): string {
         /* eslint-disable @typescript-eslint/no-non-null-assertion */
         return this._sampler.sfuId!;
-    }
-
-    public get events(): EventsRegister {
-        return this._eventer;
-    }
-
-    public get collectors(): Collectors {
-        return this._collectors;
     }
 
     public get storage(): StatsReader {
@@ -83,8 +113,19 @@ export class SfuMonitorImpl implements SfuMonitor {
         return this._metrics;
     }
 
-    public get connected(): boolean {
-        return this._sender?.closed == false;
+    public on<K extends keyof SfuMonitorEventsMap>(event: K, listener: (data: SfuMonitorEventsMap[K]) => void): this {
+        this._emitter.on(event, listener);
+        return this;
+    }
+
+    public once<K extends keyof SfuMonitorEventsMap>(event: K, listener: (data: SfuMonitorEventsMap[K]) => void): this {
+        this._emitter.once(event, listener);
+        return this;
+    }
+    
+    public off<K extends keyof SfuMonitorEventsMap>(event: K, listener: (data: SfuMonitorEventsMap[K]) => void): this {
+        this._emitter.off(event, listener);
+        return this;
     }
 
     public addExtensionStats(stats: ExtensionStat): void {
@@ -99,70 +140,94 @@ export class SfuMonitorImpl implements SfuMonitor {
         this._sampler.setMarker(marker);
     }
 
-    public connect(config: SenderConfig) {
-        if (this._sender) {
-            logger.info(`A sender has already been configured, it will be forcefully closed`);
-            this._sender.close();
-        }
-        this._config.sender = config;
-        this._createSender();
+    public createMediasoupCollector(config: MediasoupCollectorConfig): MediasoupCollector {
+        const collectors = this._collectors;
+        const collector = new class extends MediasoupCollectorImpl {
+            protected onClose(): void {
+                collectors.delete(collector.id);
+            }
+        }(
+            config,
+            this._statsStorage,
+        );
+        this._collectors.set(collector.id, collector);
+        return collector;
     }
 
-    public async collect(): Promise<void> {
-        const started = Date.now();
-        if (!(await this._collectors.collect())) {
-            return;
-        }
-        this._eventer.emitStatsCollected();
+    public createAuxCollector(): AuxCollector {
+        const collectors = this._collectors;
+        const collector = new class extends AuxCollectorImpl {
+            protected onClose(): void {
+                collectors.delete(collector.id);
+            }
+        }(
+            this._statsStorage,
+        );
+        this._collectors.set(collector.id, collector);
+        return collector;
+    }
 
-        if (this._config.statsExpirationTimeInMs) {
-            const expirationThresholdInMs = Date.now() - this._config.statsExpirationTimeInMs;
-            this._statsStorage.trim(expirationThresholdInMs);
+
+    public async collect(): Promise<void> {
+        const pollingBatchPaceTimeInMs = this.config.pollingBatchPaceTimeInMs ?? 0;
+        const started = Date.now();
+
+        // collect
+        const promiseFetcher = PromiseFetcher.builder()
+            .withBatchSize(this.config.pollingBatchSize ?? 0)
+            .withPace(pollingBatchPaceTimeInMs, pollingBatchPaceTimeInMs + 1)
+            .onCatchedError((err) => {
+                logger.warn(`Error occurred while collecting`, err);
+            });
+        for (const collector of Array.from(this._collectors.values())) {
+            const fetchers = collector.createFetchers();
+            for (const fetcher of fetchers) {
+                promiseFetcher.withPromiseSuppliers(fetcher);
+            }
         }
+        await promiseFetcher.build().fetch();
+
         const elapsedInMs = Date.now() - started;
-        const { collectingPeriodInMs } = this._config;
+
+        this._statsStorage.clean();
+
+        const { collectingPeriodInMs } = this.config;
         if (collectingPeriodInMs) {
             if (collectingPeriodInMs < elapsedInMs) {
                 logger.warn(
                     `Collecting from collector took ${elapsedInMs} and Collecting period is ${collectingPeriodInMs}!`
                 );
             } else if (collectingPeriodInMs / 2 < elapsedInMs) {
-                logger.info(
+                logger.debug(
                     `Collecting from collector took ${elapsedInMs} and Collecting period is ${collectingPeriodInMs}!`
                 );
             }
         }
         logger.debug(`Collecting took `, elapsedInMs);
         this._metrics.setCollectingTimeInMs(elapsedInMs);
-        this._metrics.setLastCollected(started);
     }
 
     public sample(): void {
         const sfuSample = this._sampler.make();
-        if (this._sender) {
+        const sendEventKey: keyof SfuMonitorEventsMap = 'send';
+        if (this._emitter.listenerCount(sendEventKey)) {
             this._accumulator.addSfuSample(sfuSample);
         }
-        this._eventer.emitSampleCreated(sfuSample);
+        this._emit('sample-created', {
+            sfuSample
+        });
         this._metrics.setLastSampled(Date.now());
     }
 
-    public send(callback?: SamplesSentCallback): void {
-        if (!this._sender) {
-            if (this._flags.has(NO_SENDER_FOR_SENDING_FLAG)) {
-                return;
-            }
-            this._flags.add(NO_SENDER_FOR_SENDING_FLAG);
-            logger.warn(`Cannot send samples, because no Sender is available`);
-            return;
-        }
-        const queue: Samples[] = [];
-        this._accumulator.drainTo((samples) => {
-            if (!samples) return;
-            queue.push(samples);
+    public send(): void {
+        const samples: Samples[] = [];
+        this._accumulator.drainTo((sfuSamples) => {
+            if (!sfuSamples) return;
+            samples.push(sfuSamples);
         });
-        for (const samples of queue) {
-            this._sender.send(samples, callback);
-        }
+        this._emit('send', {
+            samples
+        });
         this._metrics.setLastSent(Date.now());
     }
 
@@ -180,48 +245,20 @@ export class SfuMonitorImpl implements SfuMonitor {
                 this._timer.clear();
             }
             this._sampler.close();
-            if (this._sender && !this._sender.closed) {
-                this._sender.close();
-            }
         } finally {
             this._closed = true;
             logger.info(`Closed`);
         }
     }
 
-    private _makeCollectors(): CollectorsImpl {
-        const collectorsConfigConfig = this._config.collectors;
-        const result = CollectorsImpl.create(collectorsConfigConfig);
-        result.statsWriter = this._statsStorage;
-        return result;
+
+    private _emit<K extends keyof SfuMonitorEventsMap>(event: K, data: SfuMonitorEventsMap[K]): boolean {
+        return this._emitter.emit(event, data);
     }
 
-    private _makeSampler(): Sampler {
-        const samplerConfig = this._config.sampler;
-        const result = Sampler.builder().withConfig(samplerConfig).build();
-        result.statsProvider = this._statsStorage;
-        return result;
-    }
-
-    private _createSender(): void {
-        const { sender: senderConfig } = this._config;
-        if (!senderConfig) {
-            return;
-        }
-        this._sender = Sender.create(senderConfig)
-            .onError((err) => {
-                logger.warn(`Sender component is closed due to error`, err);
-                this._sender = undefined;
-                this._eventer.emitSenderDisconnected();
-            })
-            .onClosed(() => {
-                this._sender = undefined;
-            });
-        this._flags.delete(NO_SENDER_FOR_SENDING_FLAG);
-    }
 
     private _createTimer(): void {
-        const { collectingPeriodInMs, samplingPeriodInMs, sendingPeriodInMs } = this._config;
+        const { collectingPeriodInMs, samplingPeriodInMs, sendingPeriodInMs } = this.config;
         if (this._timer) {
             logger.warn(`Attempted to recreate timer.`);
             return;
@@ -229,7 +266,7 @@ export class SfuMonitorImpl implements SfuMonitor {
         if (!collectingPeriodInMs && !samplingPeriodInMs && !sendingPeriodInMs) {
             return;
         }
-        const result = new Timer(this._config.tickingTimeInMs);
+        const result = new Timer(this.config.tickingTimeInMs);
         if (collectingPeriodInMs && 0 < collectingPeriodInMs) {
             result.add({
                 type: "collect",
@@ -255,24 +292,5 @@ export class SfuMonitorImpl implements SfuMonitor {
             });
         }
         this._timer = result;
-    }
-
-    private _createMonitorMetrics(): MonitorMetrics {
-        /* eslint-disable @typescript-eslint/no-this-alias */
-        const parent = this;
-        return new class extends MonitorMetrics {
-            public get numberOfStoredEntries(): number {
-                return parent.storage.getNumberOfInboundRtpPads() + 
-                    parent.storage.getNumberOfOutboundRtpPads() + 
-                    parent.storage.getNumberOfSctpChannels() + 
-                    parent.storage.getNumberOfTransports()
-                ;
-            }
-
-            public get numberOfCollectors(): number {
-                return parent._collectors.size;
-            }
-
-        }
     }
 }

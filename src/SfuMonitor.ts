@@ -1,13 +1,24 @@
-import { CustomSfuEvent, ExtensionStat } from "@observertc/schemas";
-import { EventsRegister } from "./EventsRelayer";
-import { SamplerConfig } from "./Sampler";
-import { SamplesSentCallback, SenderConfig } from "./Sender";
+import { CustomSfuEvent, ExtensionStat, Samples, SfuSample } from "@observertc/sample-schemas-js";
 import { StatsReader } from "./entries/StatsStorage";
 import { AccumulatorConfig } from "./Accumulator";
-import { Collectors, CollectorsConfig } from "./Collectors";
 import { MonitorMetrics } from "./MonitorMetrics";
+import { AuxCollector } from "./AuxCollector";
+import { MediasoupCollector, MediasoupCollectorConfig } from "./mediasoup/MediasoupCollector";
+import { LogLevel } from "./utils/logger";
 
 export type SfuMonitorConfig = {
+    /**
+     * The identifier of the SFU.
+     *
+     * DEFAULT: a generated unique value
+     */
+    sfuId: string;
+
+    /**
+     * Sets the default logging level for sfu-monitor-js
+     */
+    logLevel: LogLevel;
+
     /**
      * Sets the maximum number of listeners for event emitters
      */
@@ -41,29 +52,24 @@ export type SfuMonitorConfig = {
     sendingPeriodInMs?: number;
 
     /**
-     * By setting it stats items and entries are deleted if they are not updated.
-     *
-     * DEFAULT: 60000
+     * Limits the number of stats polled at once from the collector. 
      */
-    statsExpirationTimeInMs?: number;
+    pollingBatchSize?: number;
 
     /**
-     * Config related to collecting stats
+     * Pacing time between polling batches of stats
      */
-    collectors?: CollectorsConfig;
+    pollingBatchPaceTimeInMs?: number;
 
     /**
-     * Sampling Component Related configurations
-     *
+     * Flag indicating if the monitor creates sfu events.
+     * If true, events happening on the collected sources create sfu events such as SFU_TRANSPORT_OPENED, SFU_TRANSPORT_CLOSED.
+     * 
+     * If this flag is false, the application is responsible for adding sfu events by calling the appropriate SfuMonitor method for the corresponding event.
+     * 
+     * DEFAULT: false
      */
-    sampler?: SamplerConfig;
-
-    /**
-     * Sending Component Related congurations
-     *
-     * default: undefined, means no sample is sent
-     */
-    sender?: SenderConfig;
+    createSfuEvents?: boolean;
 
     /**
      * If the sender component is configured,
@@ -72,11 +78,65 @@ export type SfuMonitorConfig = {
     accumulator?: AccumulatorConfig;
 };
 
+export interface SfuMonitorEventsMap {
+    'stats-collected': undefined,
+    'sample-created': {
+        sfuSample: SfuSample
+    },
+    'send': {
+        samples: Samples[]
+    }
+}
+
+/**
+ * SfuMonitor is responsible for monitoring and collecting SFU-related data.
+ */
 export interface SfuMonitor {
+    
     /**
-     * Access to the collectors the monitor has
+     * Registers a listener to be invoked when an event of the specified type is emitted.
+     *
+     * @template K - The event type, extending the keys of the SfuMonitorEventsMap.
+     * @param {K} event - The event name.
+     * @param {(data: SfuMonitorEventsMap[K]) => void} listener - The callback to be invoked when the event is emitted.
+     * @returns {this} - The instance of the class for chaining.
      */
-    readonly collectors: Collectors;
+    on<K extends keyof SfuMonitorEventsMap>(event: K, listener: (data: SfuMonitorEventsMap[K]) => void): this;
+
+    /**
+     * Registers a listener that will be invoked only once, when an event of the specified type is emitted.
+     *
+     * @template K - The event type, extending the keys of the SfuMonitorEventsMap.
+     * @param {K} event - The event name.
+     * @param {(data: SfuMonitorEventsMap[K]) => void} listener - The callback to be invoked when the event is emitted.
+     * @returns {this} - The instance of the class for chaining.
+     */
+    once<K extends keyof SfuMonitorEventsMap>(event: K, listener: (data: SfuMonitorEventsMap[K]) => void): this;
+
+    /**
+     * Removes the specified listener from the list of listeners for the specified event.
+     *
+     * @template K - The event type, extending the keys of the SfuMonitorEventsMap.
+     * @param {K} event - The event name.
+     * @param {(data: SfuMonitorEventsMap[K]) => void} listener - The callback to be removed from the list of listeners.
+     * @returns {this} - The instance of the class for chaining.
+     */
+    off<K extends keyof SfuMonitorEventsMap>(event: K, listener: (data: SfuMonitorEventsMap[K]) => void): this;
+
+    /**
+     * Creates an auxiliary collector.
+     *
+     * @returns {AuxCollector} - The created auxiliary collector.
+     */
+    createAuxCollector(): AuxCollector;
+
+    /**
+     * Creates a mediasoup collector with the specified configuration.
+     *
+     * @param {MediasoupCollectorConfig} config - The configuration object for the mediasoup collector.
+     * @returns {MediasoupCollector} - The created mediasoup collector.
+     */
+    createMediasoupCollector(config: MediasoupCollectorConfig): MediasoupCollector;
 
     /**
      * Access to the collected stats
@@ -84,19 +144,10 @@ export interface SfuMonitor {
     readonly storage: StatsReader;
 
     /**
-     * Access to events to subscribe or unsubscribe
-     */
-    readonly events: EventsRegister;
-
-    /**
      * Access to a general monitor related metrics
      */
     readonly metrics: MonitorMetrics;
 
-    /**
-     * Indicate if the monitor is connected to an observer or not
-     */
-    readonly connected: boolean;
     /**
      * Adds an arbitrary stats object will be sent to the backend observer
      * @param stats
@@ -110,11 +161,39 @@ export interface SfuMonitor {
     addCustomSfuEvent(event: CustomSfuEvent): void;
 
     /**
-     * Connects the Monitor to an observer
-     *
-     * @param config
+     * Adds a transport opened event to the SFU event list.
+     * @param transportId - The identifier of the opened transport.
+     * @param timestamp - Optional timestamp for the event. If not provided, the current date and time will be used.
      */
-    connect(config: SenderConfig): void;
+    addTransportOpenedEvent(transportId: string, timestamp?: number): void;
+
+    /**
+     * Adds a transport closed event to the custom SFU event list.
+     * @param transportId - The identifier of the closed transport.
+     * @param timestamp - Optional timestamp for the event. If not provided, the current date and time will be used.
+     */
+    addTransportClosedEvent(transportId: string, timestamp?: number): void;
+
+    /**
+     * Adds an RTP stream added event to the SFU event list.
+     * @param transportId - The identifier of the transport associated with the RTP stream.
+     * @param rtpPadId - The identifier of the RTP pad.
+     * @param sfuStreamId - The identifier of the SFU stream.
+     * @param sfuSinkId - Optional identifier of the SFU sink.
+     * @param timestamp - Optional timestamp for the event. If not provided, the current date and time will be used.
+     */
+    addRtpStreamAdded(transportId: string, rtpPadId: string, sfuStreamId: string, sfuSinkId?: string, timestamp?: number): void;
+
+    /**
+     * Adds an RTP stream removed event to the SFU event list.
+     * @param transportId - The identifier of the transport associated with the RTP stream.
+     * @param rtpPadId - The identifier of the RTP pad.
+     * @param sfuStreamId - The identifier of the SFU stream.
+     * @param sfuSinkId - Optional identifier of the SFU sink.
+     * @param timestamp - Optional timestamp for the event. If not provided, the current date and time will be used.
+     */
+    addRtpStreamRemoved(transportId: string, rtpPadId: string, sfuStreamId: string, sfuSinkId?: string, timestamp?: number): void;
+
 
     /**
      * Mark all of the created samples with a given string
@@ -135,7 +214,7 @@ export interface SfuMonitor {
     /**
      * Send samples
      */
-    send(callback?: SamplesSentCallback): void;
+    send(): void;
 
     /**
      * Indicate if the SfuObserver is closed or not
