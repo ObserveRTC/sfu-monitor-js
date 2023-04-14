@@ -12,10 +12,10 @@ export function getTransportType(transport: MediasoupTransportSurrogate): 'Plain
 			return 'PipeTransport';
 		case "DirectTransport":
 			return 'DirectTransport';
+		case "WebRtcTransport":
+			return 'WebRtcTransport';
 		default:
 			logger.warn(`Cannot infer transport type from transport constructor: ${transport.constructor.name}`);
-			// eslint-disable no-fallthrough
-		case "WebRtcTransport":
 			return 'WebRtcTransport';
 	}
 }
