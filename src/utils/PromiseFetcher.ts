@@ -16,16 +16,16 @@ type Pace = {
     maxPaceInMs: number;
 };
 
-interface Builder<U> {
-    withBatchSize(value: number): Builder<U>;
-    withPromiseSuppliers(...suppliers: PromiseSupplier<U>[]): Builder<U>;
-    onCatchedError(listener: ErrorListener): Builder<U>;
-    withPace(minPaceInMs: number, maxPaceInMs: number): Builder<U>;
+export interface PromiseFetcherBuilder<U> {
+    withBatchSize(value: number): PromiseFetcherBuilder<U>;
+    withPromiseSuppliers(...suppliers: PromiseSupplier<U>[]): PromiseFetcherBuilder<U>;
+    onCatchedError(listener: ErrorListener): PromiseFetcherBuilder<U>;
+    withPace(minPaceInMs: number, maxPaceInMs: number): PromiseFetcherBuilder<U>;
     build(): PromiseFetcher<U>;
 }
 
 export class PromiseFetcher<T> {
-    public static builder<U>(): Builder<U> {
+    public static builder<U>(): PromiseFetcherBuilder<U> {
         const fetcher = new PromiseFetcher<U>();
         const result = {
             withBatchSize: (value: number) => {
@@ -108,7 +108,7 @@ export class PromiseFetcher<T> {
             for (let j = 0; j < promises.length; ++j) {
                 const valueIndex = emittedBatch * batchSize + j;
                 const value = values.get(valueIndex);
-                if (!value) continue;
+                if (value === undefined) continue;
                 yield value;
             }
             ++emittedBatch;

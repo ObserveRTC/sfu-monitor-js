@@ -1,9 +1,9 @@
 export type MediasoupSurrogateEventTypes = "newworker";
 
-export type MediasoupNewWorkerListener = (router: MediasoupWorker) => void;
+export type MediasoupNewWorkerListener = (router: MediasoupWorkerSurrogate) => void;
 export type MediasoupSurrogateListener = MediasoupCloseListener | MediasoupNewWorkerListener;
 interface MediasoupSurrogateObserver {
-    on(eventType: MediasoupSurrogateEventTypes, listener: MediasoupNewWorkerListener): void;
+    addListener(eventType: MediasoupSurrogateEventTypes, listener: MediasoupNewWorkerListener): void;
     removeListener(eventType: MediasoupSurrogateEventTypes, listener: MediasoupSurrogateListener): void;
 }
 
@@ -14,40 +14,40 @@ export interface MediasoupSurrogate {
 
 export type MediasoupWorkerEventTypes = "newrouter";
 
-export type MediasoupNewRouterListener = (router: MediasoupRouter) => void;
+export type MediasoupNewRouterListener = (router: MediasoupRouterSurrogate) => void;
 export type MediasoupWorkerListener = MediasoupCloseListener | MediasoupNewRouterListener;
 interface MediasoupWorkerObserver {
-    on(eventType: MediasoupWorkerEventTypes, listener: MediasoupNewRouterListener): void;
+    addListener(eventType: MediasoupWorkerEventTypes, listener: MediasoupNewRouterListener): void;
     once(eventType: "close", listener: MediasoupCloseListener): void;
     removeListener(eventType: MediasoupWorkerEventTypes, listener: MediasoupWorkerListener): void;
 }
 
-export interface MediasoupWorker {
+export interface MediasoupWorkerSurrogate {
     pid: number;
     observer: MediasoupWorkerObserver;
 }
 
 export type MediasoupRouterEventTypes = "newtransport";
 
-export type MediasoupNewTransportListener = (transport: MediasoupTransport) => void;
+export type MediasoupNewTransportListener = (transport: MediasoupTransportSurrogate) => void;
 export type MediasoupRouterListener = MediasoupCloseListener | MediasoupNewTransportListener;
 interface MediasoupRouterObserver {
-    on(eventType: MediasoupRouterEventTypes, listener: MediasoupNewTransportListener): void;
+    addListener(eventType: MediasoupRouterEventTypes, listener: MediasoupNewTransportListener): void;
     once(eventType: "close", listener: MediasoupCloseListener): void;
     removeListener(eventType: MediasoupRouterEventTypes, listener: MediasoupRouterListener): void;
 }
 
-export interface MediasoupRouter {
+export interface MediasoupRouterSurrogate {
     id: string;
     observer: MediasoupRouterObserver;
 }
 
 export type MediasoupTransportEventTypes = "newproducer" | "newconsumer" | "newdataproducer" | "newdataconsumer";
 export type MediasoupCloseListener = () => void;
-export type MediasoupNewConsumerListener = (consumer: MediasoupConsumer) => void;
-export type MediasoupNewProducerListener = (producer: MediasoupProducer) => void;
-export type MediasoupNewDataProducerListener = (dataProducer: MediasoupDataProducer) => void;
-export type MediasoupNewDataConsumerListener = (dataConsumer: MediasoupDataConsumer) => void;
+export type MediasoupNewConsumerListener = (consumer: MediasoupConsumerSurrogate) => void;
+export type MediasoupNewProducerListener = (producer: MediasoupProducerSurrogate) => void;
+export type MediasoupNewDataProducerListener = (dataProducer: MediasoupDataProducerSurrogate) => void;
+export type MediasoupNewDataConsumerListener = (dataConsumer: MediasoupDataConsumerSurrogate) => void;
 export type MediasoupTransportListener =
     | MediasoupCloseListener
     | MediasoupNewConsumerListener
@@ -56,12 +56,12 @@ export type MediasoupTransportListener =
     | MediasoupNewDataConsumerListener;
 
 interface MediasoupTransportObserver {
-    on(eventType: MediasoupTransportEventTypes, listener: MediasoupTransportListener): void;
+    addListener(eventType: MediasoupTransportEventTypes, listener: MediasoupTransportListener): void;
     once(eventType: "close", listener: MediasoupCloseListener): void;
     removeListener(eventType: MediasoupTransportEventTypes, listener: MediasoupTransportListener): void;
 }
 
-export interface MediasoupTransport {
+export interface MediasoupTransportSurrogate {
     id: string;
     getStats(): Promise<MediasoupTransportStats[]>;
     observer: MediasoupTransportObserver;
@@ -77,7 +77,7 @@ interface MediasoupCommonObserver {
     once(eventType: "close", listener: MediasoupCloseListener): void;
 }
 
-export interface MediasoupProducer {
+export interface MediasoupProducerSurrogate {
     readonly id: string;
     kind: "audio" | "video";
     paused: boolean;
@@ -86,7 +86,7 @@ export interface MediasoupProducer {
 }
 
 export type MediasoupConsumerPolledStats = MediasoupConsumerStats | MediasoupProducerStats;
-export interface MediasoupConsumer {
+export interface MediasoupConsumerSurrogate {
     readonly id: string;
     readonly producerId: string;
     paused: boolean;
@@ -95,13 +95,13 @@ export interface MediasoupConsumer {
     observer: MediasoupCommonObserver;
 }
 
-export interface MediasoupDataProducer {
+export interface MediasoupDataProducerSurrogate {
     readonly id: string;
     getStats(): Promise<MediasoupDataProducerStats[]>;
     observer: MediasoupCommonObserver;
 }
 
-export interface MediasoupDataConsumer {
+export interface MediasoupDataConsumerSurrogate {
     readonly id: string;
     readonly dataProducerId: string;
     getStats(): Promise<MediasoupDataConsumerStats[]>;
@@ -197,9 +197,9 @@ export type MediasoupTransportType =
 
 export type MediasoupTransportStatsType =
     | MediasoupWebRtcTransportStats
-    | MediasoupPlainTransport
-    | MediasoupPipeTransport
-    | MediasoupDirectTransport;
+    | MediasoupPlainTransportStats
+    | MediasoupPipeTransportStats
+    | MediasoupDirectTransportStats;
 
 export type MediasoupWebRtcTransportStats = {
     bytesReceived?: number;
@@ -228,7 +228,7 @@ export type MediasoupWebRtcTransportStats = {
     type: "webrtc-transport";
 };
 
-export type MediasoupPlainTransport = {
+export type MediasoupPlainTransportStats = {
     bytesReceived?: number;
     bytesSent?: number;
     comedia?: boolean;
@@ -253,7 +253,7 @@ export type MediasoupPlainTransport = {
     type: "plain-rtp-transport";
 };
 
-export type MediasoupPipeTransport = {
+export type MediasoupPipeTransportStats = {
     probationBytesSent?: number;
     probationSendBitrate?: number;
     recvBitrate?: number;
@@ -274,7 +274,7 @@ export type MediasoupPipeTransport = {
     type: "pipe-transport";
 };
 
-export type MediasoupDirectTransport = {
+export type MediasoupDirectTransportStats = {
     probationBytesSent?: number;
     probationSendBitrate?: number;
     recvBitrate?: number;
@@ -296,9 +296,9 @@ export type MediasoupDirectTransport = {
 
 export type MediasoupTransportStats =
     | MediasoupWebRtcTransportStats
-    | MediasoupPlainTransport
-    | MediasoupPipeTransport
-    | MediasoupDirectTransport
+    | MediasoupPlainTransportStats
+    | MediasoupPipeTransportStats
+    | MediasoupDirectTransportStats
     | {
           type: string;
       };

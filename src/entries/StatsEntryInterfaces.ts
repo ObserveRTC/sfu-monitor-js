@@ -1,14 +1,15 @@
-import { SfuSctpChannel, SfuInboundRtpPad, SfuOutboundRtpPad, SfuTransport } from "@observertc/schemas";
+import { 
+    SfuSctpChannel, 
+    SfuInboundRtpPad, 
+    SfuOutboundRtpPad, 
+    SfuTransport
+} from "@observertc/sample-schemas-js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type Appendix = any;
 
 export interface StatsEntryAbs {
     id: string;
-    created: number;
-    updated: number;
-    touched: number;
-    hashCode: string;
 }
 
 /**
@@ -16,22 +17,13 @@ export interface StatsEntryAbs {
  * methods to navigate.
  */
 export interface SfuTransportEntry extends StatsEntryAbs {
-    appendix: Appendix;
+    appData: Record<string, unknown>;
     stats: SfuTransport;
     internal: boolean;
-    inboundRtpPads(): Generator<SfuInboundRtpPadEntry, void, undefined>;
-    outboundRtpPads(): Generator<SfuOutboundRtpPadEntry, void, undefined>;
-    sctpChannels(): Generator<SfuSctpChannelEntry, void, undefined>;
 
-    mediaSinks(): Generator<SfuMediaSinkEntry, void, undefined>;
-    mediaStreams(): Generator<SfuMediaStreamEntry, void, undefined>;
-
-    getNumberOfInboundRtpPads(): number;
-    getNumberOfOutboundRtpPads(): number;
-    getNumberOfSctpChannels(): number;
-
-    getNumberOfMediaStreams(): number;
-    getNumberOfMediaSinks(): number;
+    inboundRtpPads(): IterableIterator<SfuInboundRtpPadEntry>;
+    outboundRtpPads(): IterableIterator<SfuOutboundRtpPadEntry>;
+    sctpChannels(): IterableIterator<SfuSctpChannelEntry>;
 }
 
 /**
@@ -39,10 +31,11 @@ export interface SfuTransportEntry extends StatsEntryAbs {
  * methods to navigate.
  */
 export interface SfuInboundRtpPadEntry extends StatsEntryAbs {
-    appendix: Appendix;
+    appData: Record<string, unknown>;
     stats: SfuInboundRtpPad;
+    internal: boolean;
+
     getTransport(): SfuTransportEntry | undefined;
-    getMediaStream(): SfuMediaStreamEntry | undefined;
 }
 
 /**
@@ -50,41 +43,11 @@ export interface SfuInboundRtpPadEntry extends StatsEntryAbs {
  * methods to navigate.
  */
 export interface SfuOutboundRtpPadEntry extends StatsEntryAbs {
-    appendix: Appendix;
+    appData: Record<string, unknown>;
     stats: SfuOutboundRtpPad;
-    getTransport(): SfuTransportEntry | undefined;
-    getMediaStream(): SfuMediaStreamEntry | undefined;
-    getMediaSink(): SfuMediaSinkEntry | undefined;
-}
-
-export type SfuMediaStreamKind = "audio" | "video" | undefined;
-
-/**
- * Group a media source and provide methods to navigate
- */
-export interface SfuMediaStreamEntry {
-    id: string;
-    kind: SfuMediaStreamKind;
-    inboundRtpPads(): Generator<SfuInboundRtpPadEntry, void, undefined>;
-    mediaSinks(): Generator<SfuMediaSinkEntry, void, undefined>;
+    internal: boolean;
 
     getTransport(): SfuTransportEntry | undefined;
-    getNumberOfInboundRtpPads(): number;
-    getNumberOfMediaSinks(): number;
-}
-
-/**
- * Group a media sink and provide methods to navigate
- */
-export interface SfuMediaSinkEntry {
-    id: string;
-    kind: SfuMediaStreamKind;
-    outboundRtpPads(): Generator<SfuOutboundRtpPadEntry, void, undefined>;
-
-    getMediaStream(): SfuMediaStreamEntry | undefined;
-    getTransport(): SfuTransportEntry | undefined;
-
-    getNumberOfOutboundRtpPads(): number;
 }
 
 /**
@@ -92,7 +55,8 @@ export interface SfuMediaSinkEntry {
  * methods to navigate.
  */
 export interface SfuSctpChannelEntry extends StatsEntryAbs {
-    appendix: Appendix;
+    appData: Record<string, unknown>;
     stats: SfuSctpChannel;
+
     getTransport(): SfuTransportEntry | undefined;
 }

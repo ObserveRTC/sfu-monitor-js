@@ -1,54 +1,44 @@
 export { AuxCollector } from "./AuxCollector";
-export type { AuxCollectorConfig } from "./AuxCollector";
-
-export { TransportTypeFunction } from "./mediasoup/MediasoupRouterCollector";
-
-export type { SenderConfig } from "./Sender";
-export type { SamplerConfig } from "./Sampler";
 
 export type { StatsReader } from "./entries/StatsStorage";
 export type {
     SfuTransportEntry,
     SfuInboundRtpPadEntry,
     SfuOutboundRtpPadEntry,
-    SfuMediaStreamEntry,
-    SfuMediaSinkEntry,
     SfuSctpChannelEntry,
 } from "./entries/StatsEntryInterfaces";
 
-export type { SfuMonitorConfig, SfuMonitor } from "./SfuMonitor";
-export type { MediasoupMonitorConfig, MediasoupMonitor } from "./MediasoupMonitor";
+export type { SfuMonitorConfig, SfuMonitor, SfuMonitorEventsMap } from "./SfuMonitor";
 export type { MediasoupTransportType } from "./mediasoup/MediasoupTypes";
+export { 
+    MediasoupCollector, 
+} from "./mediasoup/MediasoupCollector";
 
-export type { ExtensionStat } from "@observertc/schemas";
-export type { CustomSfuEvent } from "@observertc/schemas";
+export type { 
+    MediasoupCollectorConfig 
+} from "./mediasoup/MediasoupCollector";
 
-import { MediasoupMonitor, MediasoupMonitorConfig } from "./MediasoupMonitor";
+export type {
+    Samples,
+    SfuSample,
+    SfuTransport,
+    SfuInboundRtpPad,
+    SfuOutboundRtpPad,
+    SfuSctpChannel,
+    SfuExtensionStats,
+    CustomSfuEvent,
+} from "@observertc/sample-schemas-js";
+
 import { SfuMonitor, SfuMonitorConfig } from "./SfuMonitor";
 import { SfuMonitorImpl } from "./SfuMonitorImpl";
+
 /**
  * Create an SfuMonitor
  * @param config config for the monitor
  */
-export function createSfuMonitor(config?: SfuMonitorConfig): SfuMonitor {
+export function createSfuMonitor(config?: Partial<SfuMonitorConfig>): SfuMonitor {
     return SfuMonitorImpl.create(config);
 }
 
-/**
- * Create a monitor for mediasoup
- * @param config config for the monitor
- */
-export function createMediasoupMonitor(config?: MediasoupMonitorConfig): MediasoupMonitor {
-    return MediasoupMonitor.create(config);
-}
+export { setLoggerFactory } from "./utils/logger";
 
-import { setLevel as setLoggersLevel } from "./utils/logger";
-import { LogLevelDesc } from "loglevel";
-/**
- * Sets the level of logging of the module
- *
- * possible values are: "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "SILENT"
- */
-export function setLogLevel(level: LogLevelDesc) {
-    setLoggersLevel(level);
-}

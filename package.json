@@ -1,6 +1,6 @@
 {
   "name": "@observertc/sfu-monitor-js",
-  "version": "1.1.1",
+  "version": "2.0.0",
   "description": "ObserveRTC SFU Integration Core Library",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -9,6 +9,7 @@
   },
   "scripts": {
     "prepare": "npm run build",
+    "prepublish": "pkgfiles",
     "prepublishOnly": "npm test && npm run lint",
     "preversion": "npm run lint",
     "lint": "./node_modules/.bin/eslint -c .eslintrc.js src/*",
@@ -25,16 +26,11 @@
   "author": "Balazs Kreith",
   "license": "Apache-2.0",
   "dependencies": {
-    "@observertc/schemas": "2.2.0",
+    "@observertc/sample-schemas-js": "2.2.1-rc.0",
     "@types/events": "^3.0.0",
     "@types/uuid": "^8.3.4",
     "@types/ws": "^8.5.3",
-    "js-base64": "^3.7.2",
-    "js-sha256": "^0.9.0",
-    "loglevel": "^1.8.0",
-    "protobufjs": "^6.11.2",
-    "uuid": "^8.3.2",
-    "ws": "^8.5.0"
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/jest": "^27.4.0",
@@ -43,7 +39,9 @@
     "bufferutil": "^4.0.6",
     "eslint": "^8.12.0",
     "jest": "^27.5.0",
+    "pkgfiles": "2.3.0",
     "ts-jest": "^27.1.4",
+    "typedoc": "^0.24.1",
     "typescript": "^4.6.3",
     "utf-8-validate": "^5.0.9"
   },

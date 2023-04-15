@@ -1,13 +1,8 @@
-import { StatsWriter } from "./entries/StatsStorage";
-
 export interface Collector {
-    readonly id: string;
-    readonly hasStatsWriter: boolean;
-    setStatsWriter(writer: StatsWriter | null): void;
     /**
-     * Collect stats and push it to the Observer
+     * Create a list of fetcher functions will fetch and update statsStorage
      */
-    collect(): Promise<void>;
+    createFetchers(): (() => Promise<void>)[];
     /**
      * Indicate if the Collector is closed or not
      */

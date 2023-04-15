@@ -1,26 +1,18 @@
 import EventEmitter from "events";
 import * as Types from "../../src/mediasoup/MediasoupTypes";
 import { v4 as uuidv4 } from "uuid";
-import { SfuInboundRtpPad, SfuOutboundRtpPad, SfuSctpChannel, SfuTransport } from "@observertc/schemas";
+import { SfuInboundRtpPad, SfuOutboundRtpPad, SfuSctpChannel, SfuTransport } from "@observertc/sample-schemas-js";
 import { StatsWriter } from "../../src/entries/StatsStorage";
 
 export function makeStatsWriterRelayer({
-    removeTransport,
     updateTransport,
-    removeInboundRtpPad,
     updateInboundRtpPad,
-    removeOutboundRtpPad,
     updateOutboundRtpPad,
-    removeSctpChannel,
     updateSctpChannel,
 }: {
-    removeTransport?: (transportId: string) => void;
     updateTransport?: (stats: SfuTransport) => void;
-    removeInboundRtpPad?: (rtpPadId: string) => void;
     updateInboundRtpPad?: (stats: SfuInboundRtpPad) => void;
-    removeOutboundRtpPad?: (rtpPadId: string) => void;
     updateOutboundRtpPad?: (stats: SfuOutboundRtpPad) => void;
-    removeSctpChannel?: (sctpStreamId: string) => void;
     updateSctpChannel?: (stats: SfuSctpChannel) => void;
 }) {
     const errorHandler = (methodName: string) => {
@@ -29,16 +21,12 @@ export function makeStatsWriterRelayer({
         };
     };
     const result: StatsWriter = {
-        removeTransport: removeTransport ?? errorHandler("removeTransport"),
         updateTransport: updateTransport ?? errorHandler("updateTransport"),
 
-        removeInboundRtpPad: removeInboundRtpPad ?? errorHandler("removeInboundRtpPad"),
         updateInboundRtpPad: updateInboundRtpPad ?? errorHandler("updateInboundRtpPad"),
 
-        removeOutboundRtpPad: removeOutboundRtpPad ?? errorHandler("removeOutboundRtpPad"),
         updateOutboundRtpPad: updateOutboundRtpPad ?? errorHandler("updateOutboundRtpPad"),
 
-        removeSctpChannel: removeSctpChannel ?? errorHandler("removeSctpChannel"),
         updateSctpChannel: updateSctpChannel ?? errorHandler("updateSctpChannel"),
     };
     return result;
@@ -81,7 +69,7 @@ export function createProducerStats(stats?: any): Types.MediasoupProducerStats {
     };
     return result;
 }
-export interface ProvidedProducer extends Types.MediasoupProducer {
+export interface ProvidedProducer extends Types.MediasoupProducerSurrogate {
     close(): void;
 }
 export function createProducer(stats?: any): ProvidedProducer {
@@ -115,7 +103,7 @@ export function createConsumerStats(stats?: any): Types.MediasoupConsumerStats {
     };
     return result;
 }
-export interface ProvidedConsumer extends Types.MediasoupConsumer {
+export interface ProvidedConsumer extends Types.MediasoupConsumerSurrogate {
     close(): void;
 }
 export function createConsumer(stats?: any): ProvidedConsumer {
@@ -151,7 +139,7 @@ export function createDataProducerStats(stats?: any): Types.MediasoupDataProduce
     };
     return result;
 }
-export interface ProvidedDataProducer extends Types.MediasoupDataProducer {
+export interface ProvidedDataProducer extends Types.MediasoupDataProducerSurrogate {
     close(): void;
 }
 export function createDataProducer(stats?: any): ProvidedDataProducer {
@@ -182,7 +170,7 @@ export function createDataConsumerStats(stats?: any): Types.MediasoupDataConsume
     };
     return result;
 }
-export interface ProvidedDataConsumer extends Types.MediasoupDataConsumer {
+export interface ProvidedDataConsumer extends Types.MediasoupDataConsumerSurrogate {
     close(): void;
 }
 export function createDataConsumer(stats?: any): ProvidedDataConsumer {
@@ -213,7 +201,7 @@ export function createWebRtcTransportStats(stats?: any): Types.MediasoupWebRtcTr
     };
     return result;
 }
-export interface ProvidedTransport extends Types.MediasoupTransport {
+export interface ProvidedTransport extends Types.MediasoupTransportSurrogate {
     produce(stats?: Types.MediasoupProducerStats): ProvidedProducer;
     consume(stats?: Types.MediasoupConsumerStats): ProvidedConsumer;
     produceData(stats?: Types.MediasoupDataProducerStats): ProvidedDataProducer;
@@ -229,7 +217,7 @@ export function createTransport(stats: Types.MediasoupTransportStatsType): Provi
             return [stats];
         },
         observer: {
-            on: (eventType: Types.MediasoupTransportEventTypes, listener: Types.MediasoupTransportListener) => {
+            addListener: (eventType: Types.MediasoupTransportEventTypes, listener: Types.MediasoupTransportListener) => {
                 emitter.on(eventType, listener);
             },
             once: (eventType: "close", listener: Types.MediasoupCloseListener) => {
@@ -275,7 +263,7 @@ export function createWebRtcTransport(): ProvidedTransport {
     return transport;
 }
 
-export interface ProvidedRouter extends Types.MediasoupRouter {
+export interface ProvidedRouter extends Types.MediasoupRouterSurrogate {
     createWebRtcTransport(stats?: any): ProvidedTransport;
     createPlainTransport(stats?: any): ProvidedTransport;
     createDirectTransport(stats?: any): ProvidedTransport;
@@ -288,7 +276,7 @@ export function createRouter(): ProvidedRouter {
     const result: ProvidedRouter = {
         id: DEFAULT_ROUTER_ID,
         observer: {
-            on: (eventType: Types.MediasoupRouterEventTypes, listener: Types.MediasoupRouterListener) => {
+            addListener: (eventType: Types.MediasoupRouterEventTypes, listener: Types.MediasoupRouterListener) => {
                 emitter.on(eventType, listener);
             },
             once: (eventType: "close", listener: Types.MediasoupCloseListener) => {
@@ -344,7 +332,7 @@ export function createRouter(): ProvidedRouter {
     return result;
 }
 
-export interface ProvidedWorker extends Types.MediasoupWorker {
+export interface ProvidedWorker extends Types.MediasoupWorkerSurrogate {
     createRouter(stats?: any): ProvidedRouter;
     close(): void;
 }
@@ -354,7 +342,7 @@ export function createWorker(): ProvidedWorker {
     const result: ProvidedWorker = {
         pid: DEFAULT_WORKER_ID,
         observer: {
-            on: (eventType: Types.MediasoupWorkerEventTypes, listener: Types.MediasoupWorkerListener) => {
+            addListener: (eventType: Types.MediasoupWorkerEventTypes, listener: Types.MediasoupWorkerListener) => {
                 emitter.on(eventType, listener);
             },
             once: (eventType: "close", listener: Types.MediasoupCloseListener) => {
@@ -390,7 +378,7 @@ export function createMediasoupSurrogate(): ProvidedMediasoup {
     const result: ProvidedMediasoup = {
         version: "3.6.10",
         observer: {
-            on: (eventType: Types.MediasoupSurrogateEventTypes, listener: Types.MediasoupSurrogateListener) => {
+            addListener: (eventType: Types.MediasoupSurrogateEventTypes, listener: Types.MediasoupSurrogateListener) => {
                 emitter.on(eventType, listener);
             },
             removeListener: (
