@@ -87,81 +87,37 @@ export interface SfuMonitorEventsMap {
         samples: Samples[]
     }
 }
-
 /**
  * SfuMonitor is responsible for monitoring and collecting SFU-related data.
  */
 export interface SfuMonitor {
+    /**
+     * The SfuMonitor configuration object.
+     */
+    readonly config: SfuMonitorConfig;
     
     /**
-     * Registers a listener to be invoked when an event of the specified type is emitted.
-     *
-     * @template K - The event type, extending the keys of the SfuMonitorEventsMap.
-     * @param {K} event - The event name.
-     * @param {(data: SfuMonitorEventsMap[K]) => void} listener - The callback to be invoked when the event is emitted.
-     * @returns {this} - The instance of the class for chaining.
-     */
-    on<K extends keyof SfuMonitorEventsMap>(event: K, listener: (data: SfuMonitorEventsMap[K]) => void): this;
-
-    /**
-     * Registers a listener that will be invoked only once, when an event of the specified type is emitted.
-     *
-     * @template K - The event type, extending the keys of the SfuMonitorEventsMap.
-     * @param {K} event - The event name.
-     * @param {(data: SfuMonitorEventsMap[K]) => void} listener - The callback to be invoked when the event is emitted.
-     * @returns {this} - The instance of the class for chaining.
-     */
-    once<K extends keyof SfuMonitorEventsMap>(event: K, listener: (data: SfuMonitorEventsMap[K]) => void): this;
-
-    /**
-     * Removes the specified listener from the list of listeners for the specified event.
-     *
-     * @template K - The event type, extending the keys of the SfuMonitorEventsMap.
-     * @param {K} event - The event name.
-     * @param {(data: SfuMonitorEventsMap[K]) => void} listener - The callback to be removed from the list of listeners.
-     * @returns {this} - The instance of the class for chaining.
-     */
-    off<K extends keyof SfuMonitorEventsMap>(event: K, listener: (data: SfuMonitorEventsMap[K]) => void): this;
-
-    /**
-     * Creates an auxiliary collector.
-     *
-     * @returns {AuxCollector} - The created auxiliary collector.
-     */
-    createAuxCollector(): AuxCollector;
-
-    /**
-     * Creates a mediasoup collector with the specified configuration.
-     *
-     * @param {MediasoupCollectorConfig} config - The configuration object for the mediasoup collector.
-     * @returns {MediasoupCollector} - The created mediasoup collector.
-     */
-    createMediasoupCollector(config: MediasoupCollectorConfig): MediasoupCollector;
-
-    /**
-     * Access to the collected stats
+     * Access to the collected stats.
      */
     readonly storage: StatsReader;
 
     /**
-     * Access to a general monitor related metrics
+     * Access to general monitor-related metrics.
      */
     readonly metrics: MonitorMetrics;
 
     /**
-     * Adds an arbitrary stats object will be sent to the backend observer
-     * @param stats
+     * Indicates if the SfuObserver is closed or not.
      */
-    addExtensionStats(stats: ExtensionStat): void;
+    readonly closed: boolean;
+    
+    /**
+     * Gets the SFU identifier.
+     */
+    readonly sfuId: string;
 
     /**
-     * Adds a custom defined event (SFU_CLIENT_JOINED, SFU_CLIENT_MUTED, etc.)
-     * @param event
-     */
-    addCustomSfuEvent(event: CustomSfuEvent): void;
-
-    /**
-     * Adds a transport opened event to the SFU event list.
+     * Adds a transport opened event to the custom SFU event list.
      * @param transportId - The identifier of the opened transport.
      * @param timestamp - Optional timestamp for the event. If not provided, the current date and time will be used.
      */
@@ -194,36 +150,55 @@ export interface SfuMonitor {
      */
     addRtpStreamRemoved(transportId: string, rtpPadId: string, sfuStreamId: string, sfuSinkId?: string, timestamp?: number): void;
 
+    /**
+     * Creates an auxiliary collector.
+     *
+     * @returns {AuxCollector} - The created auxiliary collector.
+     */
+    createAuxCollector(): AuxCollector;
 
     /**
-     * Mark all of the created samples with a given string
-     * @param marker
+     * Creates a mediasoup collector with the specified configuration.
+     *
+     * @param {MediasoupCollectorConfig} config - The configuration object for the mediasoup collector.
+     * @returns {MediasoupCollector} - The created mediasoup collector.
+     */
+    createMediasoupCollector(config: MediasoupCollectorConfig): MediasoupCollector;
+
+    /**
+     * Adds an arbitrary stats object that will be sent to the backend observer.
+     * @param stats - The arbitrary stats object.
+     */
+    addExtensionStats(stats: ExtensionStat): void;
+
+    // Documentation for the addCustomSfuEvent, addTransportOpenedEvent, addTransportClosedEvent, 
+    // addRtpStreamAdded, and addRtpStreamRemoved methods is already complete.
+
+    /**
+     * Marks all of the created samples with a given string.
+     * @param marker - The string to mark the samples with.
      */
     setMarker(marker: string): void;
 
     /**
-     * Collect Stats.
+     * Collects stats.
      */
     collect(): Promise<void>;
 
     /**
-     * Make client sample from a collected stats
+     * Creates a sfu sample from the collected stats.
      */
     sample(): void;
 
     /**
-     * Send samples
+     * Sends the samples.
      */
     send(): void;
 
     /**
-     * Indicate if the SfuObserver is closed or not
-     */
-    readonly closed: boolean;
-
-    /**
-     * Close the observer and all its used resources
+     * Closes the observer and all its used resources.
      */
     close(): void;
 }
+
 

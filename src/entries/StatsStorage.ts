@@ -14,8 +14,6 @@ import {
 // import { createLogger } from "../utils/logger";
 import { SFU_EVENT } from "../utils/common";
 
-// const logger = createLogger(`StatsStorage`);
-
 /**
  * Collection of methods to read the collected and organized stats
  */
@@ -63,7 +61,6 @@ export interface StatsReader {
      * @param id the identifier of the SCTP channel the monitored entry belongs to
      */
     getSctpChannel(id: string): SfuSctpChannelEntry | undefined;
-
 
     /**
      * Gets the number of tracked transports

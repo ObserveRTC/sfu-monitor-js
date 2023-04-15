@@ -12,16 +12,63 @@ export type OutboundRtpPadStatsSupplier = () => Promise<SfuOutboundRtpPad>;
 export type SctpStreamStatsSupplier = () => Promise<SfuSctpChannel>;
 
 
+/**
+ * Interface for auxiliary collectors.
+ */
 export interface AuxCollector {
+    /**
+     * Adds a transport stats supplier for a given transport ID.
+     * @param transportId - The identifier of the transport.
+     * @param supplier - The transport stats supplier.
+     */
     addTransportStatsSupplier(transportId: string, supplier: TransportStatsSupplier): void;
+
+    /**
+     * Removes a transport stats supplier for a given transport ID.
+     * @param transportId - The identifier of the transport.
+     */
     removeTransportStatsSupplier(transportId: string): void;
+
+    /**
+     * Adds an inbound RTP pad stats supplier for a given inbound RTP pad ID.
+     * @param inboundRtpPadId - The identifier of the inbound RTP pad.
+     * @param supplier - The inbound RTP pad stats supplier.
+     */
     addInboundRtpPadStatsSupplier(inboundRtpPadId: string, supplier: InboundRtpPadStatsSupplier): void;
+
+    /**
+     * Removes an inbound RTP pad stats supplier for a given inbound RTP pad ID.
+     * @param inboundRtpPadId - The identifier of the inbound RTP pad.
+     */
     removeInboundRtpPadStatsSupplier(inboundRtpPadId: string): void;
+
+    /**
+     * Adds an outbound RTP pad stats supplier for a given outbound RTP pad ID.
+     * @param outboundRtpPadId - The identifier of the outbound RTP pad.
+     * @param supplier - The outbound RTP pad stats supplier.
+     */
     addOutboundRtpPadStatsSupplier(outboundRtpPadId: string, supplier: OutboundRtpPadStatsSupplier): void;
+
+    /**
+     * Removes an outbound RTP pad stats supplier for a given outbound RTP pad ID.
+     * @param outboundRtpPadId - The identifier of the outbound RTP pad.
+     */
     removeOutboundRtpPadStatsSupplier(outboundRtpPadId: string): void;
+
+    /**
+     * Adds an SCTP stream stats supplier for a given SCTP stream ID.
+     * @param sctpStreamId - The identifier of the SCTP stream.
+     * @param supplier - The SCTP stream stats supplier.
+     */
     addSctpStreamStatsSupplier(sctpStreamId: string, supplier: SctpStreamStatsSupplier): void;
+
+    /**
+     * Removes an SCTP stream stats supplier for a given SCTP stream ID.
+     * @param sctpStreamId - The identifier of the SCTP stream.
+     */
     removeSctpStreamSupplier(sctpStreamId: string): void;
 }
+
 
 
 export abstract class AuxCollectorImpl implements AuxCollector, Collector {

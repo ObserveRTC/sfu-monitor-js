@@ -18,68 +18,64 @@ import {
 import { collectDataConsumerStats, collectNoDataConsumerStats } from "./collectDataConsumerStats";
 import { collectDataProducerStats, collectNoDataProducerStats } from "./collectDataProducerStats";
 
+/**
+ * Configuration options for the MediasoupCollector.
+ */
 export type MediasoupCollectorConfig = {
-	/**
-	 * The top level mediasoup object to observe events and monitor
-	 */
-	mediasoup?: MediasoupSurrogate
+    /**
+     * The top level mediasoup object to observe events and monitor.
+     */
+    mediasoup?: MediasoupSurrogate;
 
     /**
-     * Indicate if we want to poll the webrtc transport stats
-     *
-     * DEFAULT: false,
+     * Function to indicate if we want to poll the WebRTC transport stats.
+     * Default: false
      */
     pollWebRtcTransportStats?: (transportId: string) => boolean;
 
     /**
-     * Indicate if we want to poll the plain rtp transport stats
-     *
-     * DEFAULT: false,
+     * Function to indicate if we want to poll the plain RTP transport stats.
+     * Default: false
      */
     pollPlainRtpTransportStats?: (transportId: string) => boolean;
 
     /**
-     * Indicate if we want to poll the pipe transport stats
-     *
-     * DEFAULT: false,
+     * Function to indicate if we want to poll the pipe transport stats.
+     * Default: false
      */
     pollPipeTransportStats?: (transportId: string) => boolean;
 
     /**
-     * Indicate if we want to poll the direct transport stats
-     *
-     * DEFAULT: false,
+     * Function to indicate if we want to poll the direct transport stats.
+     * Default: false
      */
     pollDirectTransportStats?: (transportId: string) => boolean;
 
     /**
-     * Indicate if we want to poll the producer stats
-     *
-     * DEFAULT: false,
+     * Function to indicate if we want to poll the producer stats.
+     * Default: false
      */
     pollProducerStats?: (producerId: string) => boolean;
 
     /**
-     * Indicate if we want to poll the consumer stats
-     *
-     * DEFAULT: false,
+     * Function to indicate if we want to poll the consumer stats.
+     * Default: false
      */
     pollConsumerStats?: (consumerId: string) => boolean;
 
     /**
-     * Indicate if we want to poll the dataProducer stats
-     *
-     * DEFAULT: false,
+     * Function to indicate if we want to poll the dataProducer stats.
+     * Default: false
      */
     pollDataProducerStats?: (dataProducerId: string) => boolean;
 
     /**
-     * Indicate if we want to poll the data consumer stats
-     *
-     * DEFAULT: false,
+     * Function to indicate if we want to poll the data consumer stats.
+     * Default: false
      */
     pollDataConsumerStats?: (dataConsumerId: string) => boolean;
 };
+
 
 type WatchedTransport = {
 	type: 'WebRtcTransport' | 'PipeTransport' | 'PlainTransport' | 'DirectTransport',
@@ -112,17 +108,72 @@ type WatchedDataConsumer = {
 	transportId: string,
 }
 
+/**
+ * Interface for Mediasoup collectors.
+ */
 export interface MediasoupCollector {
-	addWorker(worker: MediasoupWorkerSurrogate): void;
-	addRouter(worker: MediasoupRouterSurrogate): void;
-	addTransport(worker: MediasoupTransportSurrogate, internal?: boolean): void;
-	addProducer(producer: MediasoupProducerSurrogate, transportId: string, internal?: boolean): void;
-	addConsumer(consumer: MediasoupConsumerSurrogate, transportId: string, internal?: boolean): void;
-	addDataProducer(dataProducer: MediasoupDataProducerSurrogate, transportId: string, internal?: boolean): void;
-	addDataConsumer(dataConsumer: MediasoupDataConsumerSurrogate, transportId: string, internal?: boolean): void;
-	closed: boolean;
-	close(): void;
+    /**
+     * Adds a Mediasoup worker surrogate.
+     * @param worker - The Mediasoup worker surrogate.
+     */
+    addWorker(worker: MediasoupWorkerSurrogate): void;
+
+    /**
+     * Adds a Mediasoup router surrogate.
+     * @param worker - The Mediasoup router surrogate.
+     */
+    addRouter(worker: MediasoupRouterSurrogate): void;
+
+    /**
+     * Adds a Mediasoup transport surrogate.
+     * @param worker - The Mediasoup transport surrogate.
+     * @param internal - Optional flag to indicate if it's an internal transport.
+     */
+    addTransport(worker: MediasoupTransportSurrogate, internal?: boolean): void;
+
+    /**
+     * Adds a Mediasoup producer surrogate.
+     * @param producer - The Mediasoup producer surrogate.
+     * @param transportId - The transport identifier.
+     * @param internal - Optional flag to indicate if it's an internal producer.
+     */
+    addProducer(producer: MediasoupProducerSurrogate, transportId: string, internal?: boolean): void;
+
+    /**
+     * Adds a Mediasoup consumer surrogate.
+     * @param consumer - The Mediasoup consumer surrogate.
+     * @param transportId - The transport identifier.
+     * @param internal - Optional flag to indicate if it's an internal consumer.
+     */
+    addConsumer(consumer: MediasoupConsumerSurrogate, transportId: string, internal?: boolean): void;
+
+    /**
+     * Adds a Mediasoup data producer surrogate.
+     * @param dataProducer - The Mediasoup data producer surrogate.
+     * @param transportId - The transport identifier.
+     * @param internal - Optional flag to indicate if it's an internal data producer.
+     */
+    addDataProducer(dataProducer: MediasoupDataProducerSurrogate, transportId: string, internal?: boolean): void;
+
+    /**
+     * Adds a Mediasoup data consumer surrogate.
+     * @param dataConsumer - The Mediasoup data consumer surrogate.
+     * @param transportId - The transport identifier.
+     * @param internal - Optional flag to indicate if it's an internal data consumer.
+     */
+    addDataConsumer(dataConsumer: MediasoupDataConsumerSurrogate, transportId: string, internal?: boolean): void;
+
+    /**
+     * Indicates if the collector is closed.
+     */
+    closed: boolean;
+
+    /**
+     * Closes the collector.
+     */
+    close(): void;
 }
+
 
 export abstract class MediasoupCollectorImpl implements MediasoupCollector, Collector {
 	

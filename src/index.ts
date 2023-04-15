@@ -18,8 +18,16 @@ export type {
     MediasoupCollectorConfig 
 } from "./mediasoup/MediasoupCollector";
 
-export type { ExtensionStat } from "@observertc/sample-schemas-js";
-export type { CustomSfuEvent } from "@observertc/sample-schemas-js";
+export type {
+    Samples,
+    SfuSample,
+    SfuTransport,
+    SfuInboundRtpPad,
+    SfuOutboundRtpPad,
+    SfuSctpChannel,
+    SfuExtensionStats,
+    CustomSfuEvent,
+} from "@observertc/sample-schemas-js";
 
 import { SfuMonitor, SfuMonitorConfig } from "./SfuMonitor";
 import { SfuMonitorImpl } from "./SfuMonitorImpl";
