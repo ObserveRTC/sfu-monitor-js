@@ -1,6 +1,15 @@
 import { SfuSctpChannel } from "@observertc/sample-schemas-js";
 import { MediasoupDataConsumerSurrogate } from "./MediasoupTypes";
 
+/**
+ * Creates an SfuSctpChannel object with noReport set to true.
+ * This function is used when there are no stats available for a data consumer.
+ *
+ * @param transportId - The ID of the transport.
+ * @param internal - Indicates whether the data consumer is internal.
+ * @param dataConsumer - The MediasoupDataConsumerSurrogate object.
+ * @returns A new SfuSctpChannel object.
+ */
 export function collectNoDataConsumerStats(
 	transportId: string,
 	internal: boolean,
@@ -15,6 +24,15 @@ export function collectNoDataConsumerStats(
 	}
 }
 
+/**
+ * Collects stats from a Mediasoup data consumer and returns an array of SfuSctpChannel objects.
+ * If no stats are available, it returns an array with a single SfuSctpChannel object created by collectNoDataConsumerStats.
+ *
+ * @param transportId - The ID of the transport.
+ * @param internal - Indicates whether the data consumer is internal.
+ * @param dataConsumer - The MediasoupDataConsumerSurrogate object.
+ * @returns A Promise that resolves to an array of SfuSctpChannel objects.
+ */
 export async function collectDataConsumerStats(
 	transportId: string,
 	internal: boolean,

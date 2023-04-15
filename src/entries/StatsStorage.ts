@@ -277,7 +277,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 ...entry.stats,
                 ...stats,
             };
-            entry.visited = false;
+            entry.visited = true;
         }
     }
 
@@ -312,7 +312,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 ...entry.stats,
                 ...stats,
             };
-            entry.visited = false;
+            entry.visited = true;
         }
     }
 

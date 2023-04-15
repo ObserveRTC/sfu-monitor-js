@@ -203,6 +203,7 @@ export class SfuMonitorImpl implements SfuMonitor {
                 );
             }
         }
+        this._emit('stats-collected', undefined);
         logger.debug(`Collecting took `, elapsedInMs);
         this._metrics.setCollectingTimeInMs(elapsedInMs);
     }
