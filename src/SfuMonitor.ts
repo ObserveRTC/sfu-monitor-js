@@ -115,6 +115,36 @@ export interface SfuMonitor {
      * Gets the SFU identifier.
      */
     readonly sfuId: string;
+    
+    /**
+     * on - Binds a listener function to a specific event.
+     *
+     * @template K - The type of the event key, which should be a key of the SfuMonitorEventsMap.
+     * @param {K} event - The event key for which the listener function should be bound.
+     * @param {(data: SfuMonitorEventsMap[K]) => void} listener - The listener function to be called when the event is triggered.
+     * @returns {this} - Returns the instance of the SfuMonitor to allow for method chaining.
+     */
+    on<K extends keyof SfuMonitorEventsMap>(event: K, listener: (data: SfuMonitorEventsMap[K]) => void): this;
+
+    /**
+     * off - Unbinds a listener function from a specific event.
+     *
+     * @template K - The type of the event key, which should be a key of the SfuMonitorEventsMap.
+     * @param {K} event - The event key for which the listener function should be unbound.
+     * @param {(data: SfuMonitorEventsMap[K]) => void} listener - The listener function to be unbound from the event.
+     * @returns {this} - Returns the instance of the SfuMonitor to allow for method chaining.
+     */
+    off<K extends keyof SfuMonitorEventsMap>(event: K, listener: (data: SfuMonitorEventsMap[K]) => void): this;
+
+    /**
+     * once - Binds a listener function to a specific event, but only for the first time the event is triggered.
+     *
+     * @template K - The type of the event key, which should be a key of the SfuMonitorEventsMap.
+     * @param {K} event - The event key for which the listener function should be bound.
+     * @param {(data: SfuMonitorEventsMap[K]) => void} listener - The listener function to be called only once when the event is triggered.
+     * @returns {this} - Returns the instance of the SfuMonitor to allow for method chaining.
+     */
+    once<K extends keyof SfuMonitorEventsMap>(event: K, listener: (data: SfuMonitorEventsMap[K]) => void): this;
 
     /**
      * Adds a transport opened event to the custom SFU event list.

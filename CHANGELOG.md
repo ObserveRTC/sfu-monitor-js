@@ -1,3 +1,6 @@
+# 2.0.1
+ * expose (forgotten) event handler methods for SfuMonitor: `on`, `once`, `off`
+
 # 2.0.0
 
 ## Conceptual changes
