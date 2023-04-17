@@ -222,6 +222,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 id: transportId,
                 stats,
                 visited: true,
+                sampled: false,
 
                 inboundRtpPads,
                 outboundRtpPads,
@@ -235,10 +236,15 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 transportId: newEntry.stats.transportId,
             });
         } else {
-            entry.stats = {
-                ...entry.stats,
-                ...stats,
-            };
+            if (entry.sampled) {
+                entry.stats = stats;    
+                entry.sampled = false;
+            } else {
+                entry.stats = {
+                    ...entry.stats,
+                    ...stats,
+                };
+            }
             entry.visited = true;
         }
         
@@ -256,6 +262,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 internal: !!stats.internal,
                 stats,
                 visited: true,
+                sampled: false,
                 getTransport: () => {
                     return this._transports.get(transportId);
                 },
@@ -270,10 +277,15 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 value: newEntry.stats.padId
             });
         } else {
-            entry.stats = {
-                ...entry.stats,
-                ...stats,
-            };
+            if (entry.sampled) {
+                entry.stats = stats;  
+                entry.sampled = false;  
+            } else {
+                entry.stats = {
+                    ...entry.stats,
+                    ...stats,
+                };
+            }
             entry.visited = true;
         }
     }
@@ -290,6 +302,7 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 internal: !!stats.internal,
                 stats,
                 visited: true,
+                sampled: false,
                 getTransport: () => {
                     return this._transports.get(transportId);
                 },
@@ -305,10 +318,15 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 value: newEntry.stats.padId
             });
         } else {
-            entry.stats = {
-                ...entry.stats,
-                ...stats,
-            };
+            if (entry.sampled) {
+                entry.stats = stats;
+                entry.sampled = false; 
+            } else {
+                entry.stats = {
+                    ...entry.stats,
+                    ...stats,
+                };
+            }
             entry.visited = true;
         }
     }
@@ -324,16 +342,22 @@ export class StatsStorage implements StatsReader, StatsWriter {
                 id: sctpChannelId,
                 stats,
                 visited: true,
+                sampled: false,
                 getTransport: () => {
                     return this._transports.get(transportId);
                 },
             });
             this._sctpChannels.set(newEntry.id, newEntry);
         } else {
-            entry.stats = {
-                ...entry.stats,
-                ...stats,
-            };
+            if (entry.sampled) {
+                entry.stats = stats;
+                entry.sampled = false;
+            } else {
+                entry.stats = {
+                    ...entry.stats,
+                    ...stats,
+                };
+            }
             entry.visited = true;
         }
     }

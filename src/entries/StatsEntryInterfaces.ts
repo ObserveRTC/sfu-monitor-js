@@ -20,6 +20,7 @@ export interface SfuTransportEntry extends StatsEntryAbs {
     appData: Record<string, unknown>;
     stats: SfuTransport;
     internal: boolean;
+    sampled: boolean;
 
     inboundRtpPads(): IterableIterator<SfuInboundRtpPadEntry>;
     outboundRtpPads(): IterableIterator<SfuOutboundRtpPadEntry>;
@@ -34,6 +35,7 @@ export interface SfuInboundRtpPadEntry extends StatsEntryAbs {
     appData: Record<string, unknown>;
     stats: SfuInboundRtpPad;
     internal: boolean;
+    sampled: boolean;
 
     getTransport(): SfuTransportEntry | undefined;
 }
@@ -46,6 +48,7 @@ export interface SfuOutboundRtpPadEntry extends StatsEntryAbs {
     appData: Record<string, unknown>;
     stats: SfuOutboundRtpPad;
     internal: boolean;
+    sampled: boolean;
 
     getTransport(): SfuTransportEntry | undefined;
 }
@@ -57,6 +60,7 @@ export interface SfuOutboundRtpPadEntry extends StatsEntryAbs {
 export interface SfuSctpChannelEntry extends StatsEntryAbs {
     appData: Record<string, unknown>;
     stats: SfuSctpChannel;
-
+    sampled: boolean;
+    
     getTransport(): SfuTransportEntry | undefined;
 }

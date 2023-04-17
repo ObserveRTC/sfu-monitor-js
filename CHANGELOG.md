@@ -1,3 +1,6 @@
+# 2.0.2
+ * Keep polled stats in the storage even if a consecutive poll indicate noReport until sampled
+
 # 2.0.1
  * expose (forgotten) event handler methods for SfuMonitor: `on`, `once`, `off`
 

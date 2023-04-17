@@ -68,21 +68,25 @@ export class Sampler {
             if (!sfuSample.transports) sfuSample.transports = [];
             const stats = { ...transportEntry.stats };
             sfuSample.transports.push(stats);
+            transportEntry.sampled = true;
         }
         for (const inboundRtpPadEntry of this._statsReader.inboundRtpPads()) {
             if (!sfuSample.inboundRtpPads) sfuSample.inboundRtpPads = [];
             const stats = { ...inboundRtpPadEntry.stats };
             sfuSample.inboundRtpPads.push(stats);
+            inboundRtpPadEntry.sampled = true;
         }
         for (const outboundRtpPadEntry of this._statsReader.outboundRtpPads()) {
             if (!sfuSample.outboundRtpPads) sfuSample.outboundRtpPads = [];
             const stats = { ...outboundRtpPadEntry.stats };
             sfuSample.outboundRtpPads.push(stats);
+            outboundRtpPadEntry.sampled = true;
         }
         for (const sctpChannelEntry of this._statsReader.sctpChannels()) {
             if (!sfuSample.sctpChannels) sfuSample.sctpChannels = [];
             const stats = { ...sctpChannelEntry.stats };
             sfuSample.sctpChannels.push(stats);
+            sctpChannelEntry.sampled = true;
         }
         logger.debug(`Assembled SfuSample`, sfuSample);
         return sfuSample;
