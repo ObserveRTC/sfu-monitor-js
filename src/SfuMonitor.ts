@@ -218,7 +218,7 @@ export interface SfuMonitor {
     /**
      * Creates a sfu sample from the collected stats.
      */
-    sample(): void;
+    sample(): SfuSample;
 
     /**
      * Sends the samples.

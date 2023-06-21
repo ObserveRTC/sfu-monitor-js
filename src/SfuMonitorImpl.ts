@@ -1,4 +1,4 @@
-import { CustomSfuEvent, ExtensionStat, Samples } from "@observertc/sample-schemas-js";
+import { CustomSfuEvent, ExtensionStat, Samples, SfuSample } from "@observertc/sample-schemas-js";
 import { Sampler } from "./Sampler";
 import { Timer } from "./utils/Timer";
 import { StatsReader, StatsStorage } from "./entries/StatsStorage";
@@ -208,7 +208,7 @@ export class SfuMonitorImpl implements SfuMonitor {
         this._metrics.setCollectingTimeInMs(elapsedInMs);
     }
 
-    public sample(): void {
+    public sample(): SfuSample {
         const sfuSample = this._sampler.make();
         const sendEventKey: keyof SfuMonitorEventsMap = 'send';
         if (this._emitter.listenerCount(sendEventKey)) {
@@ -218,6 +218,7 @@ export class SfuMonitorImpl implements SfuMonitor {
             sfuSample
         });
         this._metrics.setLastSampled(Date.now());
+        return sfuSample;
     }
 
     public send(): void {
